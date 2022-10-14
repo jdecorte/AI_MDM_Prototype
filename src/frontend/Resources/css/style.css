@@ -1,0 +1,69 @@
+#overzicht{
+    padding: 0rem;
+}
+
+div.css-ocqkz7{
+    align-items: center;
+}
+
+.own_card{
+    font-weight: 700;
+}
+
+#containerDuplicateCards{
+    overflow-y: scroll;
+    max-height: 35rem;
+    /* overflow-x: scroll; */
+    
+}
+
+#containerDuplicateCards > div{
+    max-height: inherit;
+    overflow-y: scroll;
+}
+
+.e1wqxbhn1{
+    font-size: 80% !important;
+}
+
+.materialcard{
+    width: 90% !important;
+}
+
+.materialcard > div{
+    border-radius: 4px !important;
+    background: #fff !important;
+    box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05) !important;
+      transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12) !important;
+    padding: 20px 20px 20px 20px;
+    margin-bottom: 2rem !important;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    
+}
+
+.materialcard > div > div{
+    /* width: 95% !important; */
+    overflow-x: scroll !important;
+}
+
+
+
+.materialcard:hover > div{
+    box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06) !important;
+}
+
+div [data-testid="stJson"]{
+    overflow-y: scroll !important;
+    max-height: 20rem !important;
+    /* overflow-x: scroll; */
+    
+}
+
+
+.css-1ht1j8u{
+    overflow-x: scroll !important;
+    text-overflow: initial !important;
+}
+
+
