@@ -40,11 +40,16 @@ class DomainController(FlaskView):
         rfc = RuleFindingConfig.create_from_json(rule_finding_config_in_json)
 
         # gebruik de gegevens uit rfc om mee te geven aan create_column_rules_from_dataframe
-        self._create_column_rules_from_dataframe(df=df, binning_option=rfc.binning_option, min_confidence=rfc.confidence, dropping_options=rfc.dropping_options, min_support=rfc.min_support, min_lift=rfc.lift, max_len=rfc.rule_length, filterer_string=rfc.filtering_string)
-        to_return = json.dumps({k: v.parse_self_to_view().to_json() for (k,v) in self.rule_mediator.get_all_column_rules().items()})
-        print("DOMAINCONTROLLER")
-        print(to_return)
-        return to_return
+        # self._create_column_rules_from_dataframe(df=df, binning_option=rfc.binning_option, min_confidence=rfc.confidence, dropping_options=rfc.dropping_options, min_support=rfc.min_support, min_lift=rfc.lift, max_len=rfc.rule_length, filterer_string=rfc.filtering_string)
+        
+        df_to_use = df.astype(str)
+        df_OHE = self.data_prepper.transform_data_frame_to_OHE(df_to_use, drop_nan=False)
+        
+        # Voor de RuleMediator wordt aangemaakt, moet de df_OHE reeds voldoen aan de dropping en binning opties
+        self.rule_mediator = RuleMediator(original_df=df_to_use, df_OHE=df_OHE)
+        self.rule_mediator.create_column_rules_from_clean_dataframe(rfc.min_support, rfc.rule_length, rfc.lift, rfc.confidence, filterer_string=rfc.filtering_string)
+        
+        return json.dumps({k: v.parse_self_to_view().to_json() for (k,v) in self.rule_mediator.get_all_column_rules().items()})
 
     def _create_column_rules_from_dataframe(self, df, min_support : float, max_len : int, 
                           min_lift : float, min_confidence : float, filterer_string : str, binning_option: Dict[str, BinningEnum], dropping_options : Dict[str,Dict[str, str]]) -> None:
@@ -59,6 +64,21 @@ class DomainController(FlaskView):
         # Voor de RuleMediator wordt aangemaakt, moet de df_OHE reeds voldoen aan de dropping en binning opties
         self.rule_mediator = RuleMediator(original_df=df_to_use, df_OHE=df_OHE)
         self.rule_mediator.create_column_rules_from_clean_dataframe(min_support, max_len, min_lift, min_confidence, filterer_string=filterer_string)
+
+    @route('/get_column_rule_from_string', methods=['GET','POST'])
+    def get_column_rule_from_string(self,dataframe_in_json="", rule_string=""):
+        if dataframe_in_json == "" and rule_string=="":
+            data_to_use = json.loads(request.data)
+            dataframe_in_json = data_to_use["dataframe_in_json"]
+            rule_string = data_to_use["rule_string"]
+
+        df = pd.read_json(dataframe_in_json)
+        df_to_use = df.astype(str)
+        df_OHE = self.data_prepper.transform_data_frame_to_OHE(df_to_use, drop_nan=False)
+        
+        # Voor de RuleMediator wordt aangemaakt, moet de df_OHE reeds voldoen aan de dropping en binning opties
+        self.rule_mediator = RuleMediator(original_df=df_to_use, df_OHE=df_OHE)
+        return self.rule_mediator.get_column_rule_from_string(rule_string=rule_string).parse_self_to_view().to_json()
 
 
     # def _get_all_column_rules(self):

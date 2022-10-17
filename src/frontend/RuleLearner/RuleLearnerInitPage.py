@@ -208,18 +208,7 @@ class RuleLearnerInitPage:
 
             json_rule_finding_config = rule_finding_config.to_json()
             found_rules = self.handler.get_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config)
-            st.write(found_rules)
-            st.session_state['gevonden_rules_list'] = found_rules
-
-
-            # for k,v in found_rules_in_json.items():
-            #     for v1 in enumerate(v):
-            #         dict_of_found_rules[k].append(ColumnRuleView.parse_from_json(json_string=v1[1]))
-
-            # st.session_state['gevonden_rules_dataframe'] = dict_of_found_rules
-            # Bij reloaden van pagina moet er nu anders geroute worden
-
-
-            # st.session_state["currentState"] = "BekijkRules"
-            # st.experimental_rerun()
+            st.session_state['gevonden_rules_dict'] = found_rules
+            st.session_state["currentState"] = "BekijkRules"
+            st.experimental_rerun()
 
