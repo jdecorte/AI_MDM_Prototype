@@ -24,11 +24,12 @@ class DomainController(FlaskView):
 
     # DATA CLEANING
 
-    def clean_data_frame(self,df, json_string) -> pd.DataFrame:
+    @route('/clean_dataframe', methods=['GET','POST'])
+    def clean_dataframe(self,df, json_string) -> pd.DataFrame:
         return self.data_prepper.clean_data_frame(df, json_string)
 
-    @route('/t', methods=['GET','POST'])
-    def create_column_rules_and_return_in_json(self,dataframe_in_json="", rule_finding_config_in_json="") -> json:
+    @route('/get_all_column_rules_from_df_and_config', methods=['GET','POST'])
+    def get_all_column_rules_from_df_and_config(self,dataframe_in_json="", rule_finding_config_in_json="") -> json:
 
         if dataframe_in_json == "" and rule_finding_config_in_json=="":
             data_to_use = json.loads(request.data)
@@ -39,12 +40,11 @@ class DomainController(FlaskView):
         rfc = RuleFindingConfig.create_from_json(rule_finding_config_in_json)
 
         # gebruik de gegevens uit rfc om mee te geven aan create_column_rules_from_dataframe
-        self._create_column_rules_from_dataframe(df=df, binning_option=rfc.binning_option, min_confidence=rfc.confidence, dropping_options=rfc.dropping_options, min_support=rfc.min_support, min_lift=rfc.lift, max_len=rfc.rule_length, filterer_string=rfc.filtering_string )
-        
-        return json.dumps({
-        "def" : [x.parse_self_to_view().to_json() for x in self.get_cr_definitions_dict().values()],
-        "always" : [x.parse_self_to_view().to_json() for x in self.get_cr_with_100_confidence_dict().values()],
-        "not_always" : [x.parse_self_to_view().to_json() for x in self.get_cr_without_100_confidence_dict().values()]})
+        self._create_column_rules_from_dataframe(df=df, binning_option=rfc.binning_option, min_confidence=rfc.confidence, dropping_options=rfc.dropping_options, min_support=rfc.min_support, min_lift=rfc.lift, max_len=rfc.rule_length, filterer_string=rfc.filtering_string)
+        to_return = json.dumps({k: v.parse_self_to_view().to_json() for (k,v) in self.rule_mediator.get_all_column_rules().items()})
+        print("DOMAINCONTROLLER")
+        print(to_return)
+        return to_return
 
     def _create_column_rules_from_dataframe(self, df, min_support : float, max_len : int, 
                           min_lift : float, min_confidence : float, filterer_string : str, binning_option: Dict[str, BinningEnum], dropping_options : Dict[str,Dict[str, str]]) -> None:
@@ -61,20 +61,20 @@ class DomainController(FlaskView):
         self.rule_mediator.create_column_rules_from_clean_dataframe(min_support, max_len, min_lift, min_confidence, filterer_string=filterer_string)
 
 
-    def get_all_column_rules(self):
-        return self.rule_mediator.get_all_column_rules()
+    # def _get_all_column_rules(self):
+    #     return self.rule_mediator.get_all_column_rules()
 
-    def get_cr_definitions_dict(self):
-        return self.rule_mediator.get_cr_definitions_dict()
+    # def get_cr_definitions_dict(self):
+    #     return self.rule_mediator.get_cr_definitions_dict()
 
-    def get_non_definition_column_rules_dict(self):
-        return self.rule_mediator.get_non_definition_column_rules_dict()
+    # def get_non_definition_column_rules_dict(self):
+    #     return self.rule_mediator.get_non_definition_column_rules_dict()
 
-    def get_cr_with_100_confidence_dict(self):
-        return self.rule_mediator.get_cr_with_100_confidence_dict()
+    # def get_cr_with_100_confidence_dict(self):
+    #     return self.rule_mediator.get_cr_with_100_confidence_dict()
 
-    def get_cr_without_100_confidence_dict(self):
-        return self.rule_mediator.get_cr_without_100_confidence_dict()
+    # def get_cr_without_100_confidence_dict(self):
+    #     return self.rule_mediator.get_cr_without_100_confidence_dict()
 
     # SUGGESTIONS
     def get_suggestions_given_dataframe_and_column_rules(self, df) -> pd.DataFrame:
