@@ -39,36 +39,66 @@ class RuleLearnerInitPage:
             gridOptions = gb.build()
             grid_response = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True)
 
-
-            # Toon de form om de RuleFindingConfig file te gebruiken
-                
             # Default values:
-            default_rule_length = 3
-            default_min_support = 0.0001
-            default_lift = 1.0
-            default_confidence = 0.95
-            default_filtering_string = FiltererEnum.Z_SCORE
-            default_binning_option = BinningEnum.K_MEANS
-            # default_dropping_options = {DroppingEnum.DROP_NAN: str(False), DroppingEnum.DROP_WITH_UPPER_BOUND:str(50)}
-            default_dropping_options = {}
+            if "rule_length" in st.session_state:
+                default_rule_length = st.session_state["rule_length"]
+            else:
+                default_rule_length = 3
+            # ////////
+            if "min_support" in st.session_state:
+                default_min_support = st.session_state["min_support"]
+            else:
+                default_min_support = 0.0001
+            # ////////
+            if "lift" in st.session_state:
+                default_lift = st.session_state["lift"]
+            else:
+                default_lift = 1.0
+            # ////////
+            if "confidence" in st.session_state:
+                default_confidence = st.session_state["confidence"]
+            else:
+                default_confidence = 0.95
+            # ////////
+            if "filtering_string" in st.session_state:
+                default_filtering_string = st.session_state["filtering_string"]
+            else:
+                default_filtering_string = FiltererEnum.Z_SCORE
+            # ////////
+            if "binning_option" in st.session_state:
+                default_binning_option = st.session_state["binning_option"]
+            else:
+                default_binning_option = BinningEnum.K_MEANS
+            # ////////
+            if "dropping_options" in st.session_state:
+                default_dropping_options = st.session_state["dropping_options"]
+            else:
+                # default_dropping_options = {DroppingEnum.DROP_NAN: str(False), DroppingEnum.DROP_WITH_UPPER_BOUND:str(50)}
+                default_dropping_options = {}
+            # END DEFAULTS
+
 
 
             st.header("Opties:")
             tab1, tab2, tab3 = st.tabs(["Algoritme", "Dropping", "Binning"])
             # Algoritme
             with tab1:
-                form_rule_length = st.number_input('Rule length:', value=default_rule_length, format="%d")
-                form_min_support = st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support )
-                form_lift = st.slider('Minimum lift', 0.0, 10.0, default_lift)
-                form_confidence = st.slider('Minimum confidence', 0.0, 1.0, default_confidence)
-                form_filtering_string = st.selectbox('Filtering Type:', [e.value for e in FiltererEnum] , index=[e.value for e in FiltererEnum].index(default_filtering_string))
+                form_rule_length = st.number_input('Rule length:', value=default_rule_length, format="%d", key="rule_length")
+                form_min_support = st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support, key="min_support")
+                form_lift = st.slider('Minimum lift', 0.0, 10.0, default_lift, key="lift")
+                form_confidence = st.slider('Minimum confidence', 0.0, 1.0, default_confidence, key="confidence")
+                form_filtering_string = st.selectbox('Filtering Type:', [e.value for e in FiltererEnum] , index=[e.value for e in FiltererEnum].index(default_filtering_string), key="filtering_string")
 
             # Dropping
             with tab2:
                 colA, colB,_, colC = st.columns([3,4,1,8])
 
                 preview_default_to_show = self._create_default_dropping_dict(default_dropping_options)
-                preview_total_to_show = self._create_total_dropping_dict({})
+
+                if "dropping_options" in st.session_state:
+                    preview_total_to_show = self._create_total_dropping_dict(st.session_state["dropping_options"])
+                else:
+                    preview_total_to_show = self._create_total_dropping_dict({})
                 
             
                 with colB:
@@ -124,7 +154,6 @@ class RuleLearnerInitPage:
                         if preview_total_to_show is None:
                             preview_total_to_show = self._create_total_dropping_dict({})
                         
-                        
                         for k,v in temp_dict.items():
                             for v1, v2 in v.items():
                                 if k not in preview_total_to_show:
@@ -144,11 +173,14 @@ class RuleLearnerInitPage:
                 st.subheader("Opties die zullen worden toegepast:")
                 st.write(preview_total_to_show)
 
-            # Binning TODO
             with tab3:
 
                 colA_binning, colB_binning = st.columns(2)
-                preview_total_to_show_binning = self._create_total_binning_dict({})
+
+                if "binning_option" in st.session_state:
+                    preview_total_to_show_binning = self._create_total_binning_dict(st.session_state["binning_option"])
+                else:
+                    preview_total_to_show_binning = self._create_total_binning_dict({})
 
                 with colA_binning:
                     st.subheader("Default Binning Option:")
@@ -207,8 +239,7 @@ class RuleLearnerInitPage:
                 )
 
             json_rule_finding_config = rule_finding_config.to_json()
-            found_rules = self.handler.get_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config)
-            st.session_state['gevonden_rules_dict'] = found_rules
+            st.session_state['gevonden_rules_dict'] = self.handler.get_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config)
             st.session_state["currentState"] = "BekijkRules"
             st.experimental_rerun()
 

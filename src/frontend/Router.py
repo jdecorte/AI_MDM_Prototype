@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from src.frontend.RuleLearner.RuleLearnerSuggestionsPage import RuleLearnerSuggestionsPage
 
 from src.frontend.RuleLearner.RuleLearnerInitPage import RuleLearnerInitPage
 from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSummaryRulesPage
@@ -85,3 +86,6 @@ class Router:
 
         if st.session_state["currentState"] == "BekijkRules":
             RuleLearnerSummaryRulesPage(canvas=canvas, handler=self.handler).show()
+
+        if st.session_state["currentState"] == "BekijkSuggesties":
+            RuleLearnerSuggestionsPage(canvas=canvas, handler=self.handler).show()

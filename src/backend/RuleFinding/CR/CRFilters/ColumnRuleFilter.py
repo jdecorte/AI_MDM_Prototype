@@ -107,7 +107,7 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
 
             filteredIncreases_df["RuleString"] = filteredIncreases_df["Rule"].apply(lambda x: x.rule_string)
             # print(filteredIncreases_df[["RuleString", "Type Increase", "zscores", "Increased"]])
-            filteredIncreases_df.to_csv('filteredIncreaseDF.csv',index=False)
+            # filteredIncreases_df.to_csv('filteredIncreaseDF.csv',index=False)
 
 
         # Extra prints:

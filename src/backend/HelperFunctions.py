@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import itertools
 from typing import List, Set, Dict, Iterable, Any
+import os
+# from python_arptable import get_arp_table
 
 class HelperFunctions:
 
@@ -42,3 +44,27 @@ class HelperFunctions:
             returns: list of subsets of s that all have one fewer element
         """
         return list(map(set, itertools.combinations(s, len(s)-1)))
+
+    @staticmethod
+    def save_results_to(json_string: str, unique_id: str, md5_hash: str, file_name:str ):
+        dir_path = f"storage/{unique_id}/{md5_hash}"
+        os.makedirs(dir_path, exist_ok=True)
+
+        with open(f"{dir_path}/{file_name}.json", 'w') as outfile:
+            outfile.write(json_string)
+    
+    @staticmethod
+    def save_params_to(json_string: str, unique_id: str, md5_hash: str, file_name:str ):
+        dir_path = f"storage/{unique_id}/{md5_hash}/params/"
+        os.makedirs(dir_path, exist_ok=True)
+        with open(f"{dir_path}/{file_name}.json", 'w') as outfile:
+            outfile.write(json_string)
+        
+
+    # @staticmethod
+    # def mac_from_ip(ip):
+    #     arp_table = get_arp_table()
+    #     for entry in arp_table:
+    #         if entry['IP address'] == ip:
+    #             return entry['HW address']
+    #     return None
