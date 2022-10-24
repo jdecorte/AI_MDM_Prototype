@@ -41,6 +41,16 @@ class DomainController(FlaskView):
 
         return to_return
 
+    # FETCHING OF FILES FOR GUI STATE:
+    @route('/fetch_file_from_filepath', methods=['GET','POST'])
+    def fetch_file_from_filepath(self, filepath:str=""):
+        if filepath == "":
+            data_to_use = json.loads(request.data)
+            filepath = data_to_use["filepath"]
+        with open(filepath, "r") as json_file:
+            content = json_file.read()
+        return content
+
     # DATA CLEANING
     @route('/clean_dataframe', methods=['GET','POST'])
     def clean_dataframe(self,df, json_string) -> pd.DataFrame:

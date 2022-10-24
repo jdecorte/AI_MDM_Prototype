@@ -49,7 +49,8 @@ def main():
 
     if uploaded_file:
 
-        st.sidebar.write(st.session_state)
+        # DEBUG
+        # st.sidebar.write(st.session_state)
 
         # Check of het een nieuwe file is op basis van file naam:
         if st.session_state["dataframe_name"] != uploaded_file.name:
@@ -77,12 +78,12 @@ def main():
         # Aanmaken van Router object:
         router = Router(handler=handler)
 
-        if functionality_selectbox == "Data Profiling":
-            router.routeDataProfiling()
-        if functionality_selectbox == "Data Cleaning":
-            router.routeDataCleaning()
-        if functionality_selectbox == "De-duplicatie":
-            router.routeDeduplication()
+        # if functionality_selectbox == "Data Profiling":
+        #     router.routeDataProfiling()
+        # if functionality_selectbox == "Data Cleaning":
+        #     router.routeDataCleaning()
+        # if functionality_selectbox == "De-duplicatie":
+        #     router.routeDeduplication()
         if functionality_selectbox == "Rule-learning":
             router.route_rule_learning()
 
