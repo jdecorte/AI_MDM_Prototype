@@ -25,12 +25,12 @@ class HelperFunctions:
             fullset: an iterable of items
             returns: a list of all non-empty subsets of the given iterable
             
-            Find all non empty subsets consisting of elements from the given iterable.
+            Find all subsets consisting of elements from the given iterable.
         """
         listrep = list(fullset)
         n = len(listrep)
         toReturn = [set([listrep[k] for k in range(n) if i&1<<k]) for i in range(2**n)]
-        # del toReturn[0]
+        
         return toReturn
     
     @staticmethod

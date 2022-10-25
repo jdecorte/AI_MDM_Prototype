@@ -7,22 +7,6 @@ from sklearn.feature_selection import SequentialFeatureSelector
 
 from rule_finder import *
 
-def test_findsubsets():
-    subsets : List[Set[Any]] = findsubsets("a")
-    assert len(subsets) == 2
-    assert subsets[0] == set()
-    assert subsets[-1] == set("a")
-
-    subsets : List[Set[Any]] = findsubsets(set("a"))
-    assert len(subsets) == 2
-    assert subsets[0] == set()
-    assert subsets[-1] == set("a")
-
-    subsets : List[Set[Any]] = findsubsets(["a", "b"])
-    assert len(subsets) == 4
-    assert subsets[-1] == set("ab")
-
-
 def test_subsets_minus_one():
     s = set(["A", "B", "C"])
     subsets = subsets_minus_one(s)
