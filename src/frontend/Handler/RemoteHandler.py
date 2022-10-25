@@ -36,3 +36,8 @@ class RemoteHandler(IHandler):
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
         return json.dumps(requests.post(f"{self.connection_string}/get_saved_params", data=json.dumps(data)).json())
+
+    def fetch_file_from_filepath(self, filepath:str):
+        data = {}
+        data["filepath"] = filepath
+        return json.dumps(requests.post(f"{self.connection_string}/fetch_file_from_filepath", data=json.dumps(data)).json())

@@ -22,3 +22,7 @@ class IHandler(ABC):
     @abstractmethod
     def get_saved_params(self,dataframe_in_json=""):
         raise Exception("Not implemented Exception")
+
+    @abstractmethod
+    def fetch_file_from_filepath(self, filepath:str):
+        raise Exception("Not implemented Exception")

@@ -24,3 +24,7 @@ class LocalHandler(IHandler):
     def get_saved_params(self,dataframe_in_json):
         return self.dc.get_saved_params(dataframe_in_json=dataframe_in_json)
 
+    def fetch_file_from_filepath(self, filepath:str):
+        return self.dc.fetch_file_from_filepath(filepath=filepath)
+
+

@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import hashlib
 from src.shared.Views.ColumnRuleView import ColumnRuleView
+from src.frontend.Handler.IHandler import IHandler
 class StateManager:
     def __init__(self) -> None:
         pass
@@ -15,23 +16,19 @@ class StateManager:
         st.session_state[id] = False
 
     @staticmethod
-    def restore_params(file_path:str) -> None:
-        with open(file_path, "r") as json_file:
-            params_content = json.loads(json_file.read())
-
+    def restore_params(file_path:str, handler:IHandler) -> None:
+        params_content = handler.fetch_file_from_filepath(filepath=file_path)
         if "rule_finding_config" in params_content:
             for k,v in params_content["rule_finding_config"].items():
                 st.session_state[k] = v
             return
-
+        return
 
     @staticmethod
-    def restore_state(file_path:str) -> None:
-        file_string = file_path.split("\\")[1]
-        with open(file_path, "r") as json_file:
-            past_result_content = json_file.read()
-        # past_result_content = open(file_path,"r").read()
-        past_result_content_dict = json.loads(past_result_content)
+    def restore_state(**kwargs) -> None:
+        file_string = kwargs["file_path"].split("\\")[1]
+        content = kwargs["handler"].fetch_file_from_filepath(filepath=kwargs["file_path"])
+        past_result_content_dict = json.loads(content)
         part_to_check_functionality = file_string.split('_')[0]
         part_to_check_state = file_string.split('_')[1]
 
@@ -45,8 +42,8 @@ class StateManager:
 
 
                 md5_file_name = hashlib.md5(past_result_content_dict["rule_finding_config"].encode('utf-8')).hexdigest()
-                param_path = file_path.split('\\')[0] + "/params/" + md5_file_name + '.json'
-                StateManager.restore_params(param_path)
+                param_path = kwargs["file_path"].split('\\')[0] + "/params/" + md5_file_name + '.json'
+                StateManager.restore_params(param_path, kwargs["handler"])
                 return 
             if part_to_check_state == 'suggestions':
                 # Zoek de rules-file die hieraan gelinkt is, om zo ook de 

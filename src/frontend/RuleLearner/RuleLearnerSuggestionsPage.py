@@ -1,10 +1,12 @@
 from ast import arg
 from cgitb import handler
+import rlcompleter
 import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 from streamlit.components.v1 import html
+from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
 
@@ -42,4 +44,7 @@ class RuleLearnerSuggestionsPage:
 
             with colb2:
                 # Dit gaat niet moeten, moet eigenlijk impliciet gebeuren waneer de gebruiker terug keert naar de vorige fase
-                st.checkbox("Herbereken regels op basis van de gewijzigde velden")
+                herbereken = st.checkbox("Herbereken regels op basis van de gewijzigde velden")
+                if herbereken:
+                    rlosp = RuleLearnerOptionsSubPage()
+                    rlosp.show()

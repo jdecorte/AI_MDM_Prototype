@@ -63,7 +63,7 @@ def main():
         for e in json.loads(handler.get_saved_results(st.session_state["dataframe"].to_json())):
             splitted = e.split("\\")[1]
             if splitted.split("_")[0] == st.session_state["current_functionality"]:
-                button_container.button("⏪ "+ splitted, on_click=StateManager.restore_state, args=(e,))
+                button_container.button("⏪ "+ splitted, on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": e})
 
 
         # Toevoegen van download knop:
