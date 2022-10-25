@@ -33,6 +33,28 @@ def test_get_column_rule_string():
     assert value_rule.get_column_rule_string() == "A,B => C"
 
 
+def test_rule_element_str():
+    rl = vre.ValueRuleElement("column", "value")
+
+    assert str(rl) == "column=value"
+
+
+def test_rule_element_eq():
+    rl1 = vre.ValueRuleElement("column", "value")    
+    rl2 = vre.ValueRuleElement("column", "value2")
+    rl3 = vre.ValueRuleElement("column", "value")
+    rl4 = vre.ValueRuleElement("column2", "value")
+
+
+    assert rl1 != rl2
+
+    assert rl1 == rl1
+
+    assert rl1 == rl3
+
+    assert rl4 != rl1
+
+
 
 
 

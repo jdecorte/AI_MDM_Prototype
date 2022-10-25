@@ -43,50 +43,6 @@ def test_subsets_minus_one():
     assert set(["A", "C"]) in subsets
     assert set(["B", "C"]) in subsets
     
-def test_rule_element_str():
-    rl = RuleElement("column", "value")
-
-    assert str(rl) == "column=value"
-
-def test_rule_element_eq():
-    rl1 = RuleElement("column", "value")    
-    rl2 = RuleElement("column", "value2")
-    rl3 = RuleElement("column", "value")
-
-
-    assert rl1 != rl2
-
-    assert rl1 == rl1
-
-    assert rl1 == rl3
-
-
-def test_value_rule():
-    rl1 = RuleElement("A", "a")
-    rl2 = RuleElement("B", "b")
-
-    rl3 = RuleElement("C", "c")
-    rl4 = RuleElement("D", "d")
-
-    value_rule = ValueRule([rl1, rl2], [rl3, rl4], 0.2, 2.5, 0.99)
-
-    assert str(value_rule) == "A=a,B=b || C=c,D=d || 0.2 || 2.5 || 0.99"
-
-def test_value_rule_column_rule_string():
-    rl1 = RuleElement("A", "a")
-    rl2 = RuleElement("B", "b")
-
-    rl3 = RuleElement("C", "c")
-    rl4 = RuleElement("D", "d")
-
-    value_rule = ValueRule([rl1, rl2], [rl3, rl4], 0.2, 2.5, 0.99)
-
-    assert value_rule.get_column_rule_string() == "A,B => C,D"
-
-    value_rule = ValueRule([rl2, rl1], [rl4, rl3], 0.2, 2.5, 0.99)
-
-    assert value_rule.get_column_rule_string() == "A,B => C,D"
-
 def test_filter_constant_columns():
     # Test whether column with nothing but Na values gets removed
 
