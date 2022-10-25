@@ -15,7 +15,7 @@ class DroppingCommand_UniquenessBound(DroppingCommand):
         self.series = series
         self.uniqueness_bound = uniqueness_bound
  
-    def execute(self) -> pd.Series():
+    def execute(self) -> pd.Series:
         if self.series.value_counts(normalize=True).max() > self.uniqueness_bound:
             return None
         else:
@@ -28,7 +28,7 @@ class DroppingCommand_LowerBound(DroppingCommand):
         self.series = series
         self.lower_bound = lower_bound
  
-    def execute(self) -> pd.Series():
+    def execute(self) -> pd.Series:
         if self.series.nunique() < self.lower_bound:
             return None
         else:
@@ -42,7 +42,7 @@ class DroppingCommand_UpperBound(DroppingCommand):
         self.series = series
         self.upper_bound = upper_bound
  
-    def execute(self) -> pd.Series():
+    def execute(self) -> pd.Series:
         if self.series.nunique() > self.upper_bound:
             return None
         else:
