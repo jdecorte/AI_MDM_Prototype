@@ -6,10 +6,10 @@ class ValueRule:
         Class representing a value rule.
 
         A value rule represents a logical consequence as follows:
-        if A_1 = a_1 and A_2 = a_2 and ... A_n = a_n then C_1 = c_1 and  C_2 = c_2 and .... C_m = c_m
+        if A_1 = a_1 and A_2 = a_2 and ... A_n = a_n then C = c
 
-        The column names A_i and their corresponding values a_i are stored (using `RuleElement`) 
-        as well as the column names C_j and their corresponding values c_j.
+        The column names A_i and their corresponding values a_i are stored (using `ValueRuleElement`) 
+        as well as the column name C and its corresponding values c.
 
         Furthermore, a value rule has a support, lift and confidence.
     """
