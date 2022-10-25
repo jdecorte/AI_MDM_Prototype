@@ -7,26 +7,6 @@ from sklearn.feature_selection import SequentialFeatureSelector
 
 from rule_finder import *
 
-def test_subsets_minus_one():
-    s = set(["A", "B", "C"])
-    subsets = subsets_minus_one(s)
-
-    assert len(subsets) == len(s)
-
-    assert set(["A", "B"]) in subsets
-    assert set(["A", "C"]) in subsets
-    assert set(["B", "C"]) in subsets
-
-    # Check that it also works for frozenset
-    s = frozenset(["A", "B", "C"])
-    subsets = subsets_minus_one(s)
-
-    assert len(subsets) == len(s)
-
-    assert set(["A", "B"]) in subsets
-    assert set(["A", "C"]) in subsets
-    assert set(["B", "C"]) in subsets
-    
 def test_filter_constant_columns():
     # Test whether column with nothing but Na values gets removed
 
@@ -411,64 +391,6 @@ def test_create_mapping():
 
     assert len(value_mapping) == 1
     assert value_mapping[frozenset(["D_d","C_c"])] == "B_b2"
-
-
-
-def test_ColumnRule_init():
-    rule_string = "A => B"
-
-    value_mapping = {
-        frozenset(["A_a1"]) : "B_b1",
-        frozenset(["A_a2"]) : "B_b2",
-    }
-
-    df = pd.DataFrame(
-        {'A' : ["a1", "a1", "a2"],
-         'B' : ["x", "y", "z"],
-         'C' : ["c", "c", "c"]
-        }
-    )
-
-    cr = ColumnRule(rule_string, value_mapping, df)
-
-    df_to_be_corrected = cr.df_to_correct
-
-    assert df_to_be_corrected.shape == (3,6)
-    assert "SUGGEST_CON" in df_to_be_corrected.columns
-    assert "FOUND_CON" in df_to_be_corrected.columns
-    assert "RULESTRING" in df_to_be_corrected.columns
-
-    assert df_to_be_corrected['FOUND_CON'].equals(pd.Series(["x", "y", "z"]))
-    assert df_to_be_corrected['SUGGEST_CON'].equals(pd.Series(["b1", "b1", "b2"]))
-    assert df_to_be_corrected['RULESTRING'].equals(pd.Series([rule_string, rule_string, rule_string]))
-
-def test_ColumnRule_init_bis():
-    # Test that correct rows do not appear in the dataframe to correct    
-    rule_string = "A => B"
-
-    value_mapping = {
-        frozenset(["A_a1"]) : "B_b1",
-        frozenset(["A_a2"]) : "B_b2",
-    }
-
-    df = pd.DataFrame(
-        {'A' : ["a1", "a1", "a1","a1", "a1", "a2", "a2"],
-         'B' : ["b1", "b1", "b1", "x", "y", "z", "b2"],
-         'C' : ["c", "c", "c","c", "c", "c", "c"]
-        }
-    )
-
-    cr = ColumnRule(rule_string, value_mapping, df)
-    df_to_be_corrected = cr.df_to_correct
-
-    assert df_to_be_corrected.shape == (3,6)
-
-    assert (df_to_be_corrected['FOUND_CON'].reset_index(drop=True).
-        equals(pd.Series(["x", "y", "z"])))
-    assert (df_to_be_corrected['SUGGEST_CON'].reset_index(drop=True).
-        equals(pd.Series(["b1", "b1", "b2"])))
-    assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True).
-        equals(pd.Series([rule_string, rule_string, rule_string])))
 
 
 def test_expand_single_column_rule():
