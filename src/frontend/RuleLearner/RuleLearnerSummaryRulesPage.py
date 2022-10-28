@@ -58,7 +58,7 @@ class RuleLearnerSummaryRulesPage:
                 with colsug2:
                     find_suggestions_btn =  st.button('Geef Suggesties')
                     if find_suggestions_btn:
-                        st.session_state['suggesties_df'] = self.handler.get_suggestions_given_dataframe_and_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),list_of_rule_string_in_json=json.dumps([x['Regel'] for x in response_selection_suggestion_finder['selected_rows']]))
+                        st.session_state['suggesties_df'] = self.handler.get_suggestions_given_dataframe_and_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),list_of_rule_string_in_json=json.dumps([x['Regel'] for x in response_selection_suggestion_finder['selected_rows']]), seq=st.session_state["current_seq"])
                         st.session_state["currentState"] = "BekijkSuggesties"
                         StateManager.reset_all_buttons()
                         st.experimental_rerun()

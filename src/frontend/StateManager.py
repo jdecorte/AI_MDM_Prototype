@@ -15,42 +15,37 @@ class StateManager:
     def turn_state_button_false(id):
         st.session_state[id] = False
 
-    @staticmethod
-    def restore_params(file_path:str, handler:IHandler) -> None:
-        params_content = handler.fetch_file_from_filepath(filepath=file_path)
-        if "rule_finding_config" in params_content:
-            for k,v in params_content["rule_finding_config"].items():
-                st.session_state[k] = v
-            return
-        return
 
     @staticmethod
     def restore_state(**kwargs) -> None:
+        
         file_string = kwargs["file_path"].split("\\")[1]
         content = kwargs["handler"].fetch_file_from_filepath(filepath=kwargs["file_path"])
         past_result_content_dict = json.loads(content)
         part_to_check_functionality = file_string.split('_')[0]
         part_to_check_state = file_string.split('_')[1]
 
+        # SET CURRENT_SEQ TO CHOSEN ONE
+        st.session_state["current_seq"] = kwargs["chosen_seq"]
+
         # Grote If statement
         if part_to_check_functionality == "Rule-learning":
             if part_to_check_state == 'rules':
                 st.session_state["currentState"] = "BekijkRules"
-                st.session_state["gevonden_rules_dict"] = {k: ColumnRuleView.parse_from_json(v) for k,v in json.loads(past_result_content_dict["response"]).items()}
-                for k,v in json.loads(past_result_content_dict["rule_finding_config"]).items():
+                st.session_state["gevonden_rules_dict"] = {k: ColumnRuleView.parse_from_json(v) for k,v in past_result_content_dict["result"].items()}
+                for k,v in json.loads(past_result_content_dict["params"]["rule_finding_config_in_json"]).items():
                     st.session_state[k] = v
-
-
-                md5_file_name = hashlib.md5(past_result_content_dict["rule_finding_config"].encode('utf-8')).hexdigest()
-                param_path = kwargs["file_path"].split('\\')[0] + "/params/" + md5_file_name + '.json'
-                StateManager.restore_params(param_path, kwargs["handler"])
-                return 
+                
             if part_to_check_state == 'suggestions':
                 # Zoek de rules-file die hieraan gelinkt is, om zo ook de 
                 st.session_state["currentState"] = "BekijkSuggesties"
-                st.session_state["suggesties_df"] = json.dumps(past_result_content_dict["response"])
-                return
+                st.session_state["suggesties_df"] = json.dumps(past_result_content_dict["result"])
+
+                # FETCH PATH OF OTHER FILE FROM SESSION_MAP
+                StateManager.restore_state(kwargs={"handler" : kwargs["handler"], "file_path":  st.session_state["session_map"][kwargs["chosen_seq"]]["rules"], "chosen_seq": kwargs["chosen_seq"]})
+                
             return
+        return       
 
     @staticmethod
     def go_back_to_previous_in_flow(current_state: str) -> None:

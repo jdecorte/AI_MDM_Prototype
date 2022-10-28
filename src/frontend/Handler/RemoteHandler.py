@@ -9,10 +9,11 @@ class RemoteHandler(IHandler):
     def __init__(self, connection_string) -> None:
         self.connection_string = connection_string
 
-    def get_column_rules(self, dataframe_in_json, rule_finding_config_in_json) -> List[ColumnRuleView]:
+    def get_column_rules(self, dataframe_in_json, rule_finding_config_in_json, seq) -> List[ColumnRuleView]:
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
         data["rule_finding_config_in_json"] = rule_finding_config_in_json
+        data["seq"] = seq
         return  {k: ColumnRuleView.parse_from_json(v) for (k,v) in requests.post(f"{self.connection_string}/get_all_column_rules_from_df_and_config", data=json.dumps(data)).json().items()}
 
     def get_column_rule_from_string(self,dataframe_in_json, rule_string):
@@ -21,10 +22,11 @@ class RemoteHandler(IHandler):
         data["rule_string"] = rule_string
         return ColumnRuleView.parse_from_json(json.dumps(requests.post(f"{self.connection_string}/get_column_rule_from_string", data=json.dumps(data)).json()))
 
-    def get_suggestions_given_dataframe_and_column_rules(self,dataframe_in_json, list_of_rule_string_in_json):
+    def get_suggestions_given_dataframe_and_column_rules(self,dataframe_in_json, list_of_rule_string_in_json, seq):
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
         data["list_of_rule_string_in_json"] = list_of_rule_string_in_json
+        data["seq"] = seq
         return json.dumps(requests.post(f"{self.connection_string}/get_suggestions_given_dataframe_and_column_rules", data=json.dumps(data)).json())
 
     def get_saved_results(self,dataframe_in_json):
@@ -41,3 +43,8 @@ class RemoteHandler(IHandler):
         data = {}
         data["filepath"] = filepath
         return json.dumps(requests.post(f"{self.connection_string}/fetch_file_from_filepath", data=json.dumps(data)).json())
+
+    def get_session_map(self, dataframe_in_json):
+        data = {}
+        data["dataframe_in_json"] = dataframe_in_json
+        return json.dumps(requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json())

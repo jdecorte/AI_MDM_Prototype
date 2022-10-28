@@ -45,7 +45,6 @@ def main():
         handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
     else:
         handler = LocalHandler()
-    
 
     if uploaded_file:
 
@@ -59,13 +58,24 @@ def main():
             st.session_state["dataframe"] = df
             st.session_state["dataframe_name"] = uploaded_file.name
 
+
+        # LOAD IN SESSION_MAP
+        st.session_state['session_map'] = handler.get_session_map(dataframe_in_json=st.session_state["dataframe"].to_json())
+
+        # CALCULATE CURRENT SEQ IF NOT ALREADY PRESENT
+        if "current_seq" not in st.session_state:
+            st.session_state["current_seq"] = str(max([int(x) for x in st.session_state['session_map'].keys()], default=0)+1)
+
+        st.write(st.session_state)
+        # CREATE BUTTONS FROM SESSION_MAP TODO
         button_container =  st.sidebar.expander("Voorgaande Resultaten op deze dataset", expanded=False)
-        for e in json.loads(handler.get_saved_results(st.session_state["dataframe"].to_json())):
-            splitted = e.split("\\")[1]
-            if splitted.split("_")[0] == st.session_state["current_functionality"]:
-                button_container.button("⏪ "+ splitted, on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": e})
 
-
+        for seq,method_dict in st.session_state['session_map'].items():
+            button_container.write(seq)
+            for method, file_name in method_dict.items():
+                button_container.write(method)
+                button_container.button("⏪ "+ file_name.split("\\")[1], on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": file_name, "chosen_seq": seq})
+        
         # Toevoegen van download knop:
         # st.sidebar.button('Download huidige dataset')
         st.sidebar.download_button(

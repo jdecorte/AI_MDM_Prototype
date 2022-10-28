@@ -61,6 +61,6 @@ class RuleLearnerInitPage:
                 json_rule_finding_config = rule_finding_config.to_json()
 
                 # Set session_state attributes
-                st.session_state['gevonden_rules_dict'] = self.handler.get_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config)
+                st.session_state['gevonden_rules_dict'] = self.handler.get_column_rules(dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config, seq=st.session_state["current_seq"])
                 st.session_state["currentState"] = "BekijkRules"
                 st.experimental_rerun()
