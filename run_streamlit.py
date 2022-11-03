@@ -26,7 +26,7 @@ def main():
     # Sidebar vullen met functionaliteit-mogelijkheden
     functionality_selectbox = st.sidebar.selectbox(
         "Functionaliteit:",
-        ("Data Profiling","Data Cleaning", "De-duplicatie", "Rule-learning")
+        ("Data Profiling","Data Cleaning", "De-duplicatie", "Rule-learning"), index=3
     )
     st.session_state["current_functionality"] = functionality_selectbox
 
@@ -49,7 +49,7 @@ def main():
     if uploaded_file:
 
         # DEBUG
-        # st.sidebar.write(st.session_state)
+        st.sidebar.write(st.session_state)
 
         # Check of het een nieuwe file is op basis van file naam:
         if st.session_state["dataframe_name"] != uploaded_file.name:

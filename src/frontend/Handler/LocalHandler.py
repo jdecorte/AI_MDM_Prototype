@@ -18,16 +18,13 @@ class LocalHandler(IHandler):
     def get_suggestions_given_dataframe_and_column_rules(self,dataframe_in_json, list_of_rule_string_in_json, seq):
         return self.dc.get_suggestions_given_dataframe_and_column_rules(dataframe_in_json=dataframe_in_json, list_of_rule_string_in_json=list_of_rule_string_in_json, seq=seq)
 
-    def get_saved_results(self,dataframe_in_json):
-        return self.dc.get_saved_results(dataframe_in_json=dataframe_in_json)
-
-    def get_saved_params(self,dataframe_in_json):
-        return self.dc.get_saved_params(dataframe_in_json=dataframe_in_json)
-
     def fetch_file_from_filepath(self, filepath:str):
         return self.dc.fetch_file_from_filepath(filepath=filepath)
 
     def get_session_map(self, dataframe_in_json):
         return self.dc.get_session_map(dataframe_in_json=dataframe_in_json)
+
+    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
+        return self.dc.recalculate_column_rules(old_dataframe_in_json=old_dataframe_in_json, new_dataframe_in_json=new_dataframe_in_json, rule_finding_config_in_json=rule_finding_config_in_json, affected_columns=json.dumps(affected_columns))
 
 

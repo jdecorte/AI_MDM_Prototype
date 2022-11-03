@@ -29,16 +29,6 @@ class RemoteHandler(IHandler):
         data["seq"] = seq
         return json.dumps(requests.post(f"{self.connection_string}/get_suggestions_given_dataframe_and_column_rules", data=json.dumps(data)).json())
 
-    def get_saved_results(self,dataframe_in_json):
-        data = {}
-        data["dataframe_in_json"] = dataframe_in_json
-        return json.dumps(requests.post(f"{self.connection_string}/get_saved_results", data=json.dumps(data)).json())
-
-    def get_saved_params(self,dataframe_in_json):
-        data = {}
-        data["dataframe_in_json"] = dataframe_in_json
-        return json.dumps(requests.post(f"{self.connection_string}/get_saved_params", data=json.dumps(data)).json())
-
     def fetch_file_from_filepath(self, filepath:str):
         data = {}
         data["filepath"] = filepath
@@ -48,3 +38,11 @@ class RemoteHandler(IHandler):
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
         return requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json()
+
+    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
+        data = {}
+        data["old_dataframe_in_json"] = old_dataframe_in_json
+        data["new_dataframe_in_json"] = new_dataframe_in_json
+        data["rule_finding_config_in_json"] = rule_finding_config_in_json
+        data["affected_columns"] = json.dumps(affected_columns)
+        return requests.post(f"{self.connection_string}/recalculate_column_rules", data=json.dumps(data)).json()

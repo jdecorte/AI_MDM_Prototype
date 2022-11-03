@@ -38,10 +38,8 @@ class DomainController(FlaskView):
             content = json_file.read()
         return content
 
-
-
     # VERIFICATION IN LOCAL STORAGE
-    def _verify_in_local_storage(self,md5_to_check:str,unique_storage_id,md5_of_dataframe, seq) -> json:
+    def _verify_in_local_storage(self,md5_to_check:str,unique_storage_id,md5_of_dataframe, seq, save_file=True) -> json:
         # If method returns None -> Was not in storage with specific settings
         list_of_globs = glob.glob(f"storage/{unique_storage_id}/{md5_of_dataframe}/*.json")
         for gl in list_of_globs:
@@ -49,7 +47,8 @@ class DomainController(FlaskView):
             if md5_to_check == found_md5:
                 with open(gl, "r") as json_file:
                     to_return = json.loads(json_file.read())
-                self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl,True)
+                if save_file:
+                    self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl,True)
                 return to_return["result"]
         return None
         
@@ -79,6 +78,8 @@ class DomainController(FlaskView):
         path = f"storage/{unique_storage_id}/{md5_of_dataframe}/session_map.json"
         with open(path, "r") as json_file:
             content = json.loads(json_file.read())
+
+        # Check if session_id is present -> else make new one
         if session_id in content:
             if is_in_local:
                 # Create new Session ID to back up
@@ -154,16 +155,60 @@ class DomainController(FlaskView):
         self.rule_mediator = RuleMediator(original_df=df_to_use, df_OHE=df_OHE)
         return self.rule_mediator.get_column_rule_from_string(rule_string=rule_string).parse_self_to_view().to_json()
 
+    @route('/recalculate_column_rules', methods=['GET','POST'])
+    def recalculate_column_rules(self, old_dataframe_in_json="", new_dataframe_in_json="", rule_finding_config_in_json="", affected_columns=""):
 
-    @route('/get_saved_results', methods=['GET','POST'])
-    def get_saved_results(self,dataframe_in_json=""):
+        md5_of_old_dataframe = hashlib.md5(old_dataframe_in_json.encode('utf-8')).hexdigest()
+        md5_of_new_dataframe = hashlib.md5(new_dataframe_in_json.encode('utf-8')).hexdigest()
+        md5_of_config = hashlib.md5(rule_finding_config_in_json.encode('utf-8')).hexdigest()
+
+        print("APPELSIEN")
+        print(md5_of_new_dataframe)
+        print(md5_of_old_dataframe)
+
+        # Check if remote or local
         unique_storage_id = "Local"
-        if dataframe_in_json == "":
+        if old_dataframe_in_json == "" and new_dataframe_in_json=="" and rule_finding_config_in_json=="" and affected_columns=="":
             data_to_use = json.loads(request.data)
-            dataframe_in_json = data_to_use["dataframe_in_json"]
             unique_storage_id = request.remote_addr
-        return json.dumps(self._get_all_json_for_dataframe(unique_storage_id,hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest()))
+            old_dataframe_in_json = data_to_use["old_dataframe_in_json"]
+            new_dataframe_in_json = data_to_use["new_dataframe_in_json"]
+            rule_finding_config_in_json = data_to_use["rule_finding_config_in_json"]
+            affected_columns = data_to_use["affected_columns"]
 
+
+        # Haal het resultaat op uit de juiste file -> Deze dictionary zijn de oude gevonden column_rules.
+        dict_of_column_rules = self._verify_in_local_storage(md5_to_check=md5_of_config, md5_of_dataframe=md5_of_old_dataframe, unique_storage_id=unique_storage_id, seq="", save_file=False)
+
+        # Pas deze aan: Meest domme manier is om get_column_rule_from_string aan te roepen en op die manier deze te vervangen
+        for k in dict_of_column_rules.keys():
+            ks = k.split(" => ")
+            ksr = ks[1]
+            ksl_list = ks[0].split(",")
+            kstotal = [ksr] + ksl_list
+            for e in json.loads(affected_columns):
+                if e in kstotal:
+                    print("APPELSIEN")
+                    print(e)
+                    dict_of_column_rules[k] = self.get_column_rule_from_string(dataframe_in_json=new_dataframe_in_json, rule_string=k)
+                    break
+
+        # Roep get_session_map aan gewoon om session_map.json te instantiëren -> TODO MOET ANDERS
+        _ = self.get_session_map(dataframe_in_json=new_dataframe_in_json)
+
+        # Maak save_dump
+        save_dump = json.dumps({"result": dict_of_column_rules, "params": {"rule_finding_config_in_json" : rule_finding_config_in_json}})
+
+        
+        
+        # Schrijf dit weg naar de schijf en pas session map aan.
+        parsed_date_time = datetime.now().strftime("%m_%d_%H_%M_%S")
+        file_name = f"Rule-learning_rules_{parsed_date_time}_{md5_of_config}"
+        file_path = f"storage/{unique_storage_id}/{md5_of_new_dataframe}\\{file_name}.json"
+        HelperFunctions.save_results_to(unique_id=unique_storage_id, md5_hash=md5_of_new_dataframe
+                                        ,json_string=save_dump, file_name=file_name)
+        self._write_to_session_map(unique_storage_id,md5_of_new_dataframe,"rules","1",file_path, False)
+        
 
     # SUGGESTIONS
     @route('/get_suggestions_given_dataframe_and_column_rules', methods=['POST'])

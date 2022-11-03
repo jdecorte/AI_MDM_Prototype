@@ -16,17 +16,13 @@ class IHandler(ABC):
         raise Exception("Not implemented Exception")
 
     @abstractmethod
-    def get_saved_results(self,dataframe_in_json):
-        raise Exception("Not implemented Exception")
-
-    @abstractmethod
-    def get_saved_params(self,dataframe_in_json):
-        raise Exception("Not implemented Exception")
-
-    @abstractmethod
     def fetch_file_from_filepath(self, filepath:str):
         raise Exception("Not implemented Exception")
 
     @abstractmethod
     def get_session_map(self, dataframe_in_json):
+        raise Exception("Not implemented Exception")
+
+    @abstractmethod
+    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
         raise Exception("Not implemented Exception")
