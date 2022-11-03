@@ -72,7 +72,7 @@ class RuleLearnerSummaryRulesPage:
                     cr = st.session_state["gevonden_rules_dict"][more_info]
                     gb2 = GridOptionsBuilder.from_dataframe(cr.value_mapping)
                     gb2.configure_grid_options(fit_columns_on_grid_load=True)
-                    more_info_mapping = AgGrid(
+                    _ = AgGrid(
                         cr.value_mapping,
                         height= 150,
                         editable=False,
@@ -81,13 +81,14 @@ class RuleLearnerSummaryRulesPage:
                         update_mode="no_update",
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
-                        enable_enterprise_modules = False
+                        enable_enterprise_modules = False,
+                        key="gb2"
                     )
 
                     st.write("Rijen die niet voldoen aan mapping")
                     gb3 = GridOptionsBuilder.from_dataframe(st.session_state['dataframe'].iloc[cr.idx_to_correct])
                     gb3.configure_grid_options(fit_columns_on_grid_load=True)
-                    more_info_mapping = AgGrid(
+                    _ = AgGrid(
                         st.session_state['dataframe'].iloc[cr.idx_to_correct],
                         height= 150,
                         editable=False,
@@ -96,7 +97,8 @@ class RuleLearnerSummaryRulesPage:
                         update_mode="no_update",
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
-                        enable_enterprise_modules = False
+                        enable_enterprise_modules = False,
+                        key="gb3"
                     )
 
             st.header("Valideer eigen regel:")
@@ -144,7 +146,8 @@ class RuleLearnerSummaryRulesPage:
                         update_mode="no_update",
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
-                        enable_enterprise_modules = False)
+                        enable_enterprise_modules = False, 
+                        key="gb4")
 
 
 
