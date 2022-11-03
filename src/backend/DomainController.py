@@ -49,7 +49,7 @@ class DomainController(FlaskView):
             if md5_to_check == found_md5:
                 with open(gl, "r") as json_file:
                     to_return = json.loads(json_file.read())
-                self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl)
+                self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl,True)
                 return to_return["result"]
         return None
         
@@ -75,14 +75,19 @@ class DomainController(FlaskView):
                 content = json.loads(json_file.read())
                 return content
 
-    def _write_to_session_map(self,unique_storage_id,md5_of_dataframe, method_name:str, session_id:str, file_name_of_results:str):
+    def _write_to_session_map(self,unique_storage_id,md5_of_dataframe, method_name:str, session_id:str, file_name_of_results:str, is_in_local:bool):
         path = f"storage/{unique_storage_id}/{md5_of_dataframe}/session_map.json"
         with open(path, "r") as json_file:
             content = json.loads(json_file.read())
         if session_id in content:
+            if is_in_local:
+                # Create new Session ID to back up
+                new_id = str(len(content.keys()) + 1)
+                new_dict = content[session_id].copy()
+                content[new_id] = new_dict
             content[session_id][method_name] = file_name_of_results
         else:
-             content[session_id] = {method_name:file_name_of_results}
+            content[session_id] = {method_name:file_name_of_results}
         with open(path, "w+") as json_file:
             json_file.write(json.dumps(content))
         
@@ -131,7 +136,7 @@ class DomainController(FlaskView):
         file_path = f"storage/{unique_storage_id}/{md5_of_dataframe}\\{file_name}.json"
         HelperFunctions.save_results_to(unique_id=unique_storage_id, md5_hash= hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest()
                                         ,json_string=save_dump, file_name=file_name)
-        self._write_to_session_map(unique_storage_id,md5_of_dataframe,"rules",seq,file_path)
+        self._write_to_session_map(unique_storage_id,md5_of_dataframe,"rules",seq,file_path, False)
         # RETURN RESULTS
         return json.dumps(result)
 
@@ -204,7 +209,7 @@ class DomainController(FlaskView):
         file_path = f"storage/{unique_storage_id}/{md5_of_dataframe}\\{file_name}.json"
         HelperFunctions.save_results_to(unique_id=unique_storage_id, md5_hash= hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest()
                                         ,json_string=save_dump, file_name=file_name)
-        self._write_to_session_map(unique_storage_id,md5_of_dataframe,"suggestions",seq,file_path)                                
+        self._write_to_session_map(unique_storage_id,md5_of_dataframe,"suggestions",seq,file_path, False)                                
 
         # RETURN RESULTS
         return json.dumps(result)

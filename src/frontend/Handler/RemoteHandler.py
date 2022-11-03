@@ -47,4 +47,4 @@ class RemoteHandler(IHandler):
     def get_session_map(self, dataframe_in_json):
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
-        return json.dumps(requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json())
+        return requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json()

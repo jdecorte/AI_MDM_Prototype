@@ -66,7 +66,6 @@ def main():
         if "current_seq" not in st.session_state:
             st.session_state["current_seq"] = str(max([int(x) for x in st.session_state['session_map'].keys()], default=0)+1)
 
-        st.write(st.session_state)
         # CREATE BUTTONS FROM SESSION_MAP TODO
         button_container =  st.sidebar.expander("Voorgaande Resultaten op deze dataset", expanded=False)
 
@@ -74,7 +73,7 @@ def main():
             button_container.write(seq)
             for method, file_name in method_dict.items():
                 button_container.write(method)
-                button_container.button("⏪ "+ file_name.split("\\")[1], on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": file_name, "chosen_seq": seq})
+                button_container.button("⏪ "+seq+ file_name.split("\\")[1], on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": file_name, "chosen_seq": seq})
         
         # Toevoegen van download knop:
         # st.sidebar.button('Download huidige dataset')
