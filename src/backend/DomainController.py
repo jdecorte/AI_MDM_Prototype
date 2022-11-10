@@ -162,9 +162,6 @@ class DomainController(FlaskView):
         md5_of_new_dataframe = hashlib.md5(new_dataframe_in_json.encode('utf-8')).hexdigest()
         md5_of_config = hashlib.md5(rule_finding_config_in_json.encode('utf-8')).hexdigest()
 
-        print("APPELSIEN")
-        print(md5_of_new_dataframe)
-        print(md5_of_old_dataframe)
 
         # Check if remote or local
         unique_storage_id = "Local"
@@ -188,8 +185,6 @@ class DomainController(FlaskView):
             kstotal = [ksr] + ksl_list
             for e in json.loads(affected_columns):
                 if e in kstotal:
-                    print("APPELSIEN")
-                    print(e)
                     dict_of_column_rules[k] = self.get_column_rule_from_string(dataframe_in_json=new_dataframe_in_json, rule_string=k)
                     break
 

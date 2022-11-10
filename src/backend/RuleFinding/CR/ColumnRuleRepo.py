@@ -15,9 +15,9 @@ class ColumnRuleRepo:
         self.noDefinitions_dict= cr_dict["NoDefinitions"]
 
 
-    def keep_only_interesting_column_rules(self, filterer: ColumnRuleFilter, confidence_bound:float):
+    def keep_only_interesting_column_rules(self, filterer: ColumnRuleFilter, confidence_bound:float, original_df):
         # Verander noDefinitions_dict
-        self.noDefinitions_dict = filterer.execute(rules=self.noDefinitions_dict,rule_confidence_bound = confidence_bound )
+        self.noDefinitions_dict = filterer.execute(rules=self.noDefinitions_dict,rule_confidence_bound = confidence_bound, original_df = original_df )
         self.noDefinitions_dict = self.filter_reverse_rules_with_lower_confidence()
 
 

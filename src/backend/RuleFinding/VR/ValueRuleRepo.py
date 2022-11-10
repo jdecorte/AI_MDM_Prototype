@@ -20,7 +20,11 @@ class ValueRuleRepo:
         self.value_rules_dict = self._filter_low_support_rules(min_support)
 
         potential_conf_dict = self._create_potential_conf_dict_from_value_rules()
+        print('potential_conf_dict')
+        print(potential_conf_dict)
+
         dict_of_antecedents_to_list_of_column_rules = self._create_dict_of_column_rules_with_potential_confidence_from_value_rules(potential_conf_dict)
+
         list_of_kept_rules_after_potential_conf_filter = self._filter_on_potential_conf_of_rules(potential_conf_dict,dict_of_antecedents_to_list_of_column_rules,self.value_rules_dict)
 
         return list_of_kept_rules_after_potential_conf_filter
@@ -51,6 +55,7 @@ class ValueRuleRepo:
                                 if rs in dict_of_kept_rules_to_be_filtered:
                                     # TODO: should we also keep these rules for later reference
                                     cfg.logger.debug(f"Remove column rule {rs}, because of {e}")
+                                    print(f"Remove column rule {rs}, because of {e}")
                                     del dict_of_kept_rules_to_be_filtered[rs]
 
 

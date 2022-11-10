@@ -11,6 +11,7 @@ from src.backend.RuleFinding.CR.ColumnRuleRepo import ColumnRuleRepo
 from src.backend.RuleFinding.AR.AssociationRuleFinder import AssociationRuleFinder
 from src.shared.Enums.FiltererEnum import FiltererEnum
 from src.backend.RuleFinding.CR.CRFilters.ColumnRuleFilter import ColumnRuleFilter_ZScore
+from src.backend.RuleFinding.CR.CRFilters.ColumnRuleFilter import ColumnRuleFilter_Entropy
 
 class RuleMediator:
     def __init__(self, df_OHE, original_df) -> None:
@@ -38,7 +39,7 @@ class RuleMediator:
         # Maak een CR Repo aan door de dict van ColumnRules mee te geven
         self.column_rule_repo = ColumnRuleRepo(cr_dict)
         # Roep getInteresting Rules methode aan op de Repo -> Verschillende implementaties en RETURN deze.
-        self.column_rule_repo.keep_only_interesting_column_rules(filterer=self._parse_filterer_string(filterer_string), confidence_bound=min_confidence)
+        self.column_rule_repo.keep_only_interesting_column_rules(filterer=self._parse_filterer_string(filterer_string), confidence_bound=min_confidence, original_df=self.original_df)
 
 
     def get_column_rule_from_string(self, rule_string: str):
@@ -73,6 +74,8 @@ class RuleMediator:
         filter_to_return = None
         if s == FiltererEnum.Z_SCORE:
             filter_to_return = ColumnRuleFilter_ZScore()
+        elif s == FiltererEnum.ENTROPY:
+            filter_to_return = ColumnRuleFilter_Entropy()
         else:
             raise Exception("Invalid Parsing of Filterer string")
         return filter_to_return

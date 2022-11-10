@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import numpy as np
 import config as cfg
+import math
 
 from typing import Sequence, Dict
 from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
@@ -10,8 +11,89 @@ from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
 class ColumnRuleFilter(ABC):
 
     @abstractmethod
-    def execute(self, rules, rule_confidence_bound) -> Dict[str, ColumnRule]:
+    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
         raise Exception("Not implemented Exception")
+
+class ColumnRuleFilter_Entropy(ColumnRuleFilter):
+
+    def __init__(self) -> None:
+        pass
+
+    def _calculate_entropy(self,row, df):
+        querystring_list = []
+        pre = row[:-1]
+        if pre.empty:
+            return 0
+        post = row[-1:]
+        for k,v in pre.items():
+            querystring_list.append(f"`{k}` == '{v}'")
+        querystring = " and ".join(querystring_list)
+        df_new = df.query(querystring)
+        total_instances = len(df_new)
+        # Zit maar 1 k-v pair in
+        for k,v in post.items():
+            other_query_string = f"`{k}` == '{v}'"
+        correct_instances = len(df_new.query(other_query_string))
+        percentage_correct = correct_instances / total_instances
+        if math.isclose(1,percentage_correct):
+            entropy = 0
+        
+        else:
+            if math.isclose(0,percentage_correct):
+                percentage_correct = 0.0001
+            entropy = (-1*percentage_correct) * math.log(percentage_correct, 2) + (-1*(1-percentage_correct) * math.log(1-percentage_correct, 2))
+        
+        return entropy
+        
+ 
+    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
+
+        interesting_rules: Dict[str, ColumnRule] = {}
+
+        # Bvb: 1 -> ["a->b", "b->c", "X->Y"]
+        dict_ante_size_to_list_of_rules = {}
+
+        # Filter rules HARDCODED (Nog te veranderen)
+        rules = [r for r in rules.values() if r.confidence >= rule_confidence_bound] 
+        dict_entropy = {}
+
+        for _, column_rule in enumerate(sorted(rules, key=lambda r : len(r.antecedent_set))):
+            vm = column_rule.mapping_df
+            print(column_rule.rule_string)
+            dict_entropy[column_rule.rule_string] = np.sum(vm.apply(lambda row : self._calculate_entropy(row, original_df), axis = 1))
+            if str(len(column_rule.antecedent_set)) in dict_ante_size_to_list_of_rules:
+                new_list = dict_ante_size_to_list_of_rules[str(len(column_rule.antecedent_set))]
+                new_list.append(column_rule)
+                dict_ante_size_to_list_of_rules[str(len(column_rule.antecedent_set))] = new_list
+            else:
+                dict_ante_size_to_list_of_rules[str(len(column_rule.antecedent_set))] = [column_rule]
+
+        min_val_in_dictAnteSize = min(list(map(int, dict_ante_size_to_list_of_rules.keys())))
+
+        for anteLength, listOfRules in dict_ante_size_to_list_of_rules.items():
+            if int(anteLength) == min_val_in_dictAnteSize:
+                for r in listOfRules:
+                    print(f"Regel Toegevoegd: {r.rule_string}, met entropy: {dict_entropy[r.rule_string]}")
+                    interesting_rules[r.rule_string] = r
+                        
+            else:
+                for r in listOfRules:
+                    listOfPrevLengthRules = [i for i in dict_ante_size_to_list_of_rules[str(int(anteLength)-1)] if i.consequent_set == r.consequent_set and i.antecedent_set.issubset(r.antecedent_set)]
+                    if len(listOfPrevLengthRules) != 0:
+                        if(min([dict_entropy[y.rule_string] for y in listOfPrevLengthRules])> dict_entropy[r.rule_string]):
+                            print(f"Regel Toegevoegd: {r.rule_string}, met entropy: {dict_entropy[r.rule_string]}")
+                            interesting_rules[r.rule_string] = r
+                            print(f"Meer algemene regels zijn verwijderd:")
+                            for e in listOfPrevLengthRules:
+                                print(e.rule_string)
+                                if e.rule_string in interesting_rules:
+                                    del interesting_rules[e.rule_string]
+                            
+                    else:
+                        print(f"Regel Toegevoegd: {r.rule_string}, met entropy: {dict_entropy[r.rule_string]}")
+                        interesting_rules[r.rule_string] = r
+
+        return interesting_rules
 
 
 class ColumnRuleFilter_ZScore(ColumnRuleFilter):
@@ -20,7 +102,7 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
         pass
         
  
-    def execute(self, rules, rule_confidence_bound) -> Dict[str, ColumnRule]:
+    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
         """
             Only keep 'interesting' rules. An 'interesting' rule r is one whose confidence 
             is such that there is no rule whose antecedent set is a subset of the 
@@ -106,12 +188,5 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
                 interesting_rules[e.rule_string] = e
 
             filteredIncreases_df["RuleString"] = filteredIncreases_df["Rule"].apply(lambda x: x.rule_string)
-            # print(filteredIncreases_df[["RuleString", "Type Increase", "zscores", "Increased"]])
-            # filteredIncreases_df.to_csv('filteredIncreaseDF.csv',index=False)
-
-
-        # Extra prints:
-        # for k, v in interesting_rules.items():
-        #     print(f"{k} met een confidence van {v.confidence}")
         
         return interesting_rules

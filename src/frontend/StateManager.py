@@ -106,11 +106,18 @@ class StateManager:
         if "select_all_suggestions_btn" not in st.session_state:
             st.session_state["select_all_suggestions_btn"] = False
 
+        if "calculate_entropy_btn" not in st.session_state:
+            st.session_state["calculate_entropy_btn"] = False
+
+
+            
+
     @staticmethod
     def reset_all_buttons():
         StateManager.turn_state_button_false("validate_own_rule_btn")
         StateManager.turn_state_button_false("add_own_rule_btn")
         StateManager.turn_state_button_false("select_all_suggestions_btn")
         StateManager.turn_state_button_false("select_all_rules_btn")
+        StateManager.turn_state_button_false("calculate_entropy_btn")
         
         

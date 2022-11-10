@@ -7,7 +7,7 @@ PATH = "./rule_finder.log"
 
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 
 
 

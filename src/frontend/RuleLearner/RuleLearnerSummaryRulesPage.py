@@ -8,11 +8,33 @@ from streamlit.components.v1 import html
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
 import json
+import math
 
 class RuleLearnerSummaryRulesPage:
     def __init__(self, canvas, handler: IHandler) -> None:
         self.canvas = canvas
         self.handler = handler
+
+    def _calculate_entropy(self,row, df, len_vm):
+        querystring_list = []
+        pre = row[:-1]
+        post = row[-1:]
+        for k,v in pre.items():
+            querystring_list.append(f"`{k}` == {v}")
+        querystring = " and ".join(querystring_list)
+        df_new = df.query(querystring)
+        total_instances = len(df_new)
+        # Zit maar 1 k-v pair in
+        for k,v in post.items():
+            other_query_string = f"`{k}` == {v}"
+        correct_instances = len(df_new.query(other_query_string))
+        percentage_correct = correct_instances / total_instances
+        if math.isclose(1,percentage_correct):
+            entropy = 0
+        else:
+            entropy = (-1*percentage_correct) * math.log(percentage_correct, 2) + (-1*(1-percentage_correct) * math.log(1-percentage_correct, 2))
+        
+        return entropy
 
     def show(self): 
 
@@ -153,8 +175,23 @@ class RuleLearnerSummaryRulesPage:
 
                 with col_bb4:
                     add_own_rule_btn = st.button("Voeg eigen regel toe voor suggesties", on_click=StateManager.turn_state_button_true, args=("add_own_rule_btn",))
+                    calculate_entropy_btn = st.button("Bereken entropy voor specifieke regel",  on_click=StateManager.turn_state_button_true, args=("calculate_entropy_btn",))
+
 
             if st.session_state["add_own_rule_btn"] == True:
                 st.session_state["gevonden_rules_dict"][found_rule.rule_string] = found_rule
                 StateManager.reset_all_buttons()
                 st.experimental_rerun()
+
+            if st.session_state["calculate_entropy_btn"] == True:
+                vm = found_rule.value_mapping
+                df = st.session_state["dataframe"]
+                vm['entropy'] = vm.apply(lambda row : self._calculate_entropy(row, df, len(vm)), axis = 1)
+                st.write(vm)
+                st.write("SOM:")
+                st.write(np.sum(vm['entropy'].values))
+                
+
+
+
+            
