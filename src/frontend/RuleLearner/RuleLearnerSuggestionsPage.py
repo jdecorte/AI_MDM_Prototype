@@ -24,6 +24,7 @@ class RuleLearnerSuggestionsPage:
 
             
             df_with_predictions = pd.read_json(eval(st.session_state["suggesties_df"]))
+            df_with_predictions = df_with_predictions[df_with_predictions.columns.drop(list(df_with_predictions.filter(regex='(__SCORE.*|__PREDICTION.*|__BEST_SCORE)')))]
             suggestions_rows_selected = []
             list_of_df_idx = []
             if st.session_state["select_all_suggestions_btn"] == True:

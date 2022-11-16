@@ -91,8 +91,8 @@ def main():
         #     router.routeDataProfiling()
         # if functionality_selectbox == "Data Cleaning":
         #     router.routeDataCleaning()
-        # if functionality_selectbox == "De-duplicatie":
-        #     router.routeDeduplication()
+        if functionality_selectbox == "De-duplicatie":
+            router.route_dedupe()
         if functionality_selectbox == "Rule-learning":
             router.route_rule_learning()
 

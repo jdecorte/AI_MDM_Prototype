@@ -104,10 +104,10 @@ class RuleLearnerSummaryRulesPage:
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
                         enable_enterprise_modules = False,
-                        key="gb2"
+                        
                     )
 
-                    st.write("Rijen die niet voldoen aan mapping")
+                    st.write("Rijen die niet voldoen aan mapping:")
                     gb3 = GridOptionsBuilder.from_dataframe(st.session_state['dataframe'].iloc[cr.idx_to_correct])
                     gb3.configure_grid_options(fit_columns_on_grid_load=True)
                     _ = AgGrid(
@@ -120,7 +120,7 @@ class RuleLearnerSummaryRulesPage:
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
                         enable_enterprise_modules = False,
-                        key="gb3"
+                        
                     )
 
             st.header("Valideer eigen regel:")
@@ -169,7 +169,7 @@ class RuleLearnerSummaryRulesPage:
                         fit_columns_on_grid_load=True,
                         theme="streamlit",
                         enable_enterprise_modules = False, 
-                        key="gb4")
+                        )
 
 
 

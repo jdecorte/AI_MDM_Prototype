@@ -11,12 +11,69 @@ from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
 class ColumnRuleFilter(ABC):
 
     @abstractmethod
-    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
+    def execute(self, rules) -> Dict[str, ColumnRule]:
         raise Exception("Not implemented Exception")
+
+    def filter_based_on_confidence_bound(self, rules, rule_confidence_bound):
+        return {k:r for k,r in rules.items() if r.confidence >= rule_confidence_bound}
+
+    def filter_reverse_rules_with_lower_confidence(self, rules_dict):
+        list_interesting_rules = self._filter_reverse_rules_with_lower_confidence(list(rules_dict.values()))["ToKeep"]
+        return {cr.rule_string: cr for cr in list_interesting_rules}
+
+    def _filter_reverse_rules_with_lower_confidence(self, rules: Sequence[ColumnRule]) -> Dict[str, Sequence[ColumnRule]]:
+        """
+        Reduce the number of rules by applying the following logic: if both "A => B" and "B => A"
+        are present, only keep the rule that has the highest confidence of the two. In case of a tie, 
+        keep both.
+
+        rules: sequence of rules that need to be filtered
+        returns: dictionary with two keys: "ToKeep" and "ToDiscard". Each of these keys point 
+        to a list of relevant column rules
+        """
+        result = {
+            "ToKeep" : [],
+            "ToDiscard" : []
+        }
+
+        # Cache of rules that we have seen so far
+        seen: Dict[str, ColumnRule] = {} 
+
+        for column_rule in rules:
+            cfg.logger.debug(f"Considering column_rule {column_rule}")
+
+            inverse_rule_string = column_rule.rule_string.split(" => ")[1] + \
+                " => " + column_rule.rule_string.split(" => ")[0]
+            if inverse_rule_string in seen:
+                cfg.logger.debug(f"We have already seen {inverse_rule_string}")
+                inverse_rule = seen[inverse_rule_string]
+                if math.isclose(inverse_rule.confidence, column_rule.confidence):
+                    cfg.logger.debug(f"Both rules have similar confidence. Keeping both")
+                    result["ToKeep"].append(column_rule)
+                    result["ToKeep"].append(inverse_rule)
+                elif inverse_rule.confidence > column_rule.confidence:
+                    cfg.logger.debug(f"{inverse_rule_string} has higher confidence then {column_rule.rule_string}. Discarding {column_rule.rule_string}")
+                    result["ToKeep"].append(inverse_rule)
+                    result["ToDiscard"].append(column_rule)
+                else:
+                    cfg.logger.debug(f"{inverse_rule_string} has lower confidence then {column_rule.rule_string}. Discarding {inverse_rule_string}")
+                    result["ToKeep"].append(column_rule)
+                    result["ToDiscard"].append(inverse_rule)
+
+                del seen[inverse_rule_string]
+            else:
+                seen[column_rule.rule_string] = column_rule
+
+        # Add all rules still in the cache to the ToKeep list
+        result["ToKeep"].extend(seen.values())
+
+        return result
+
 
 class ColumnRuleFilter_Entropy(ColumnRuleFilter):
 
-    def __init__(self) -> None:
+    def __init__(self, original_df) -> None:
+        self.original_df = original_df
         pass
 
     def _calculate_entropy(self,row, df):
@@ -46,21 +103,18 @@ class ColumnRuleFilter_Entropy(ColumnRuleFilter):
         return entropy
         
  
-    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
+    def execute(self, rules) -> Dict[str, ColumnRule]:
 
         interesting_rules: Dict[str, ColumnRule] = {}
 
         # Bvb: 1 -> ["a->b", "b->c", "X->Y"]
-        dict_ante_size_to_list_of_rules = {}
-
-        # Filter rules HARDCODED (Nog te veranderen)
-        rules = [r for r in rules.values() if r.confidence >= rule_confidence_bound] 
+        dict_ante_size_to_list_of_rules = {}         
         dict_entropy = {}
 
-        for _, column_rule in enumerate(sorted(rules, key=lambda r : len(r.antecedent_set))):
+        for _, column_rule in enumerate(sorted(rules.values(), key=lambda r : len(r.antecedent_set))):
             vm = column_rule.mapping_df
             print(column_rule.rule_string)
-            dict_entropy[column_rule.rule_string] = np.sum(vm.apply(lambda row : self._calculate_entropy(row, original_df), axis = 1))
+            dict_entropy[column_rule.rule_string] = np.sum(vm.apply(lambda row : self._calculate_entropy(row, self.original_df), axis = 1))
             if str(len(column_rule.antecedent_set)) in dict_ante_size_to_list_of_rules:
                 new_list = dict_ante_size_to_list_of_rules[str(len(column_rule.antecedent_set))]
                 new_list.append(column_rule)
@@ -102,7 +156,7 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
         pass
         
  
-    def execute(self, rules, rule_confidence_bound, original_df) -> Dict[str, ColumnRule]:
+    def execute(self, rules) -> Dict[str, ColumnRule]:
         """
             Only keep 'interesting' rules. An 'interesting' rule r is one whose confidence 
             is such that there is no rule whose antecedent set is a subset of the 
@@ -120,19 +174,15 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
 
 
         interesting_rules: Dict[str, ColumnRule] = {}
-
         # Bvb: 1 -> ["a->b", "b->c", "X->Y"]
         dict_ante_size_to_list_of_rules = {}
-
-        # Filter rules HARDCODED (Nog te veranderen)
-        rules = [r for r in rules.values() if r.confidence >= rule_confidence_bound]
 
         # Antecedent van Old Rule is steeds een deelverzameling van de antecente van Rule
         # Increased is de increase in confidence van Rule t.o.v. Old Rule
         lemma_df = pd.DataFrame(columns=["Increased", "Old Rule", "Rule"])
 
 
-        for _, column_rule in enumerate(sorted(rules, key=lambda r : len(r.antecedent_set))):
+        for _, column_rule in enumerate(sorted(rules.values(), key=lambda r : len(r.antecedent_set))):
             if str(len(column_rule.antecedent_set)) in dict_ante_size_to_list_of_rules:
                 new_list = dict_ante_size_to_list_of_rules[str(len(column_rule.antecedent_set))]
                 new_list.append(column_rule)

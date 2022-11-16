@@ -11,6 +11,7 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 # from src.frontend import Cleaner
 from src.frontend.Handler.IHandler import IHandler
 from streamlit_pandas_profiling import st_profile_report
+from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
 
 
 class Router:
@@ -89,3 +90,9 @@ class Router:
 
         if st.session_state["currentState"] == "BekijkSuggesties":
             RuleLearnerSuggestionsPage(canvas=canvas, handler=self.handler).show()
+
+    def route_dedupe(self):
+        canvas = st.empty()
+                
+        if st.session_state["currentState"] == None:
+            DeDupeInitPage(canvas=canvas, handler=self.handler).show()
