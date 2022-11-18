@@ -35,24 +35,28 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
 
     # Sidebar vullen met Remote of local functionaliteit
-    type_handler_input = st.sidebar.radio(
-    "Type Handler:",
-    ('Remote', 'Local'), horizontal=True )
+    if functionality_selectbox in ["Data Cleaning", "Rule-learning"]:
+        type_handler_input = st.sidebar.radio(
+        "Type Handler:",
+        ('Remote', 'Local'), horizontal=True )
 
-    if type_handler_input == 'Remote':
-        remote_url = st.sidebar.text_input('Remote Location', '127.0.0.1')
-        remote_port = st.sidebar.text_input('Port', '5000')       
-        handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
+        if type_handler_input == 'Remote':
+            remote_url = st.sidebar.text_input('Remote Location', '127.0.0.1')
+            remote_port = st.sidebar.text_input('Port', '5000')       
+            handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
+        else:
+            handler = LocalHandler()
     else:
         handler = LocalHandler()
 
     if uploaded_file:
 
         # DEBUG
-        st.sidebar.write(st.session_state)
+        st.sidebar.write(st.session_state["currentState"])
 
         # Check of het een nieuwe file is op basis van file naam:
         if st.session_state["dataframe_name"] != uploaded_file.name:
+            # StateManager.clear_session_state()
             st.session_state["currentState"] = None
             df = pd.read_csv(uploaded_file, delimiter=',')
             st.session_state["dataframe"] = df

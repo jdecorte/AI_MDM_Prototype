@@ -26,11 +26,10 @@ from dedupe._typing import (
 
 
 class DeDupeLabelPage:
-    def __init__(self, canvas, handler: IHandler) -> None:
+    def __init__(self, canvas) -> None:
         self.canvas = canvas
-        self.handler = handler
 
-    def _mark_pair(deduper: dedupe.api.ActiveMatching, labeled_pair) -> None:
+    def _mark_pair(self,deduper: dedupe.api.ActiveMatching, labeled_pair) -> None:
         record_pair, label = labeled_pair
         examples: TrainingData = {"distinct": [], "match": []}
         if label == "unsure":
@@ -53,90 +52,47 @@ class DeDupeLabelPage:
         > deduper.prepare_training(data)
         > dedupe.streamlit_label(deduper)
         """
-        LabeledPair = Tuple[RecordDictPair, Literal["match", "distinct", "unsure"]]
-        finished = False
-        use_previous = False
         fields = unique(var.field for var in deduper.data_model.primary_variables)
+        n_match = len(st.session_state["deduper"].training_pairs["match"]) - st.session_state['number_of_unsure']
+        n_distinct = len(deduper.training_pairs["distinct"]) - st.session_state['number_of_unsure']
+        n_unsure = st.session_state['number_of_unsure']
 
-        buffer_len = 1  # Max number of previous operations
-        unlabeled: list[RecordDictPair] = []
-        labeled: list[LabeledPair] = []
+        record_pair = deduper.uncertain_pairs().pop()           
+        colA, colB = st.columns([5,3])
+        with colA:
+            st.write("Below are two records that look similar and might be duplicate records. Label at least 10 records as ‘duplicates’ and 10 records as ‘non-duplicates’")
+            temp_df = pd.DataFrame.from_dict({"Yes":f"{n_match}/10", "No":f"{n_distinct}/10", "Unsure":f"{n_unsure}"}, orient='index')
+            st.dataframe(temp_df)
+            
+        with colB:
+            st.write('See a lot of records that don’t match? You may get better results if select different columns or compare existing columns differently')
 
-        n_match = len(deduper.training_pairs["match"])
-        n_distinct = len(deduper.training_pairs["match"])
+        st.table(pd.DataFrame().assign(Field= fields, Record_1 = [v1 for k1,v1 in record_pair[0].items() if k1 in fields], Record_2 = [v2 for k2,v2 in record_pair[1].items() if k2 in fields]))
 
-        while not finished:
-            if use_previous:
-                record_pair, label = labeled.pop(0)
-                if label == "match":
-                    n_match -= 1
-                elif label == "distinct":
-                    n_distinct -= 1
-                use_previous = False
-            else:
-                try:
-                    if not unlabeled:
-                        unlabeled = deduper.uncertain_pairs()
+        colBB, colCC, colDD, colEE  = st.columns([1,1,1,1])
+        with colBB:
+            duplicate_btn = st.button('Duplicaat')
+            if duplicate_btn:
+                self._mark_pair(deduper, (record_pair, "match"))
 
-                    record_pair = unlabeled.pop()
-                except IndexError:
-                    break
+        with colCC:
+            not_duplicate_btn = st.button('Geen duplicaat')
+            if not_duplicate_btn:
+                self._mark_pair(deduper, (record_pair, "distinct"))
 
-            for record in record_pair:
-                for field in fields:
-                    line = "%s : %s" % (field, record[field])
-                    st.write(line)
-                st.write()
-            st.write(f"{n_match}/10 positive, {n_distinct}/10 negative")
-            st.write("Do these records refer to the same thing?")
+        with colDD:
+            unsure_duplicate_btn = st.button('Onzeker')
+            if unsure_duplicate_btn:
+                self._mark_pair(deduper, (record_pair, "unsure"))
+                st.session_state['number_of_unsure'] = st.session_state['number_of_unsure'] + 1
 
-            valid_response = False
-            user_input = ""
-            while not valid_response:
-                if labeled:
-                    st.write("(y)es / (n)o / (u)nsure / (f)inished / (p)revious")
-                    valid_responses = {"y", "n", "u", "f", "p"}
-                else:
-                    st.write("(y)es / (n)o / (u)nsure / (f)inished")
-                    valid_responses = {"y", "n", "u", "f"}
-                user_input = input()
-                if user_input in valid_responses:
-                    valid_response = True
-
-            if user_input == "y":
-                labeled.insert(0, (record_pair, "match"))
-                n_match += 1
-            elif user_input == "n":
-                labeled.insert(0, (record_pair, "distinct"))
-                n_distinct += 1
-            elif user_input == "u":
-                labeled.insert(0, (record_pair, "unsure"))
-            elif user_input == "f":
-                st.write("Finished labeling")
-                finished = True
-            elif user_input == "p":
-                use_previous = True
-                unlabeled.append(record_pair)
-
-            while len(labeled) > buffer_len:
-                self._mark_pair(deduper, labeled.pop())
-
-        for labeled_pair in labeled:
-            self._mark_pair(deduper, labeled_pair)
+        with colEE:
+            finish_label_btn = st.button('Finish')
+            if finish_label_btn:
+                pass
+        
 
     def show(self): 
         with self.canvas.container(): 
             st.title("DeDupe")
-
-            fields = [
-            {'field': 'name', 'type': 'String'},
-            {'field': 'addr', 'type': 'String'},
-            {'field': 'city', 'type': 'String'},
-            {'field': 'type', 'type': 'String'},
-            ]
-            st.session_state["deduper"] = dedupe.Dedupe(fields)
-            st.session_state["deduper_data"] = st.session_state["dataframe"].to_dict(orient="index")
-            st.session_state["deduper"].prepare_training(st.session_state["deduper_data"])
-
-            st.write('starting active labeling...')
             self.streamlit_label(st.session_state["deduper"])

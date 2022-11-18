@@ -15,6 +15,10 @@ class StateManager:
     def turn_state_button_false(id):
         st.session_state[id] = False
 
+    @staticmethod
+    def clear_session_state():
+        st.session_state = {}
+
 
     @staticmethod
     def restore_state(**kwargs) -> None:
@@ -46,7 +50,7 @@ class StateManager:
 
     @staticmethod
     def go_back_to_previous_in_flow(current_state: str) -> None:
-        if current_state == "BekijkRules":
+        if current_state == "BekijkRules" or current_state == "LabelRecords":
             st.session_state["currentState"] = None
             return
         if current_state == "BekijkSuggesties":
@@ -108,9 +112,24 @@ class StateManager:
 
         if "calculate_entropy_btn" not in st.session_state:
             st.session_state["calculate_entropy_btn"] = False
+        
+        if "use_previous_label_btn" not in st.session_state:
+            st.session_state["use_previous_label_btn"] = False
 
+        # DEDUPE
 
-            
+        if "dedupe_type_dict" not in st.session_state:
+            st.session_state['dedupe_type_dict'] = {}
+
+        if "training_unlabeled" not in st.session_state:
+            st.session_state["training_unlabeled"] = []
+
+        if "training_labeled" not in st.session_state:
+            st.session_state["training_labeled"] = []
+
+        if 'number_of_unsure' not in st.session_state:
+            st.session_state['number_of_unsure'] = 0
+
 
     @staticmethod
     def reset_all_buttons():
