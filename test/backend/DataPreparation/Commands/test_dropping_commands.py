@@ -17,6 +17,7 @@ def test_drop_lower_bound():
     result = drop_command.execute()
     assert result is None
 
+
 def test_upper_bound():
     series = pd.Series(["a", "b", "c", "d", "d", "c", "b", "a"])
     drop_command = dc.DroppingCommand_UpperBound(series, 2)
@@ -31,10 +32,11 @@ def test_upper_bound():
     result = drop_command.execute()
     assert result is series
 
+
 def test_uniqueness_bound():
-    l = ["a"] * 90 +  ["b"] * 5 + ["c"] * 5 
-    random.shuffle(l)
-    series = pd.Series(l)
+    values = ["a"] * 90 + ["b"] * 5 + ["c"] * 5
+    random.shuffle(values)
+    series = pd.Series(values)
 
     drop_command = dc.DroppingCommand_UniquenessBound(series, 0.85)
     result = drop_command.execute()

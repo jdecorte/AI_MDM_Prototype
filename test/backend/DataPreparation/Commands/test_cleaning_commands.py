@@ -21,18 +21,18 @@ def test_string_to_float():
     tofloat_command = cc.CleaningCommand_StringToFloat(series)
     result = tofloat_command.execute()
 
-    assert result.equals(pd.Series([10.0,-20.5, 3.1415]))
+    assert result.equals(pd.Series([10.0, -20.5, 3.1415]))
+
 
 def test_string_to_float_with_errors():
-    series = pd.Series([" +10.0   ", "  -20.5    ", "3.1415", "random", "3.14 m", "m +3.14", "m -3.14 x +5.12 m"])
+    series = pd.Series([
+        " +10.0   ", "  -20.5    ",
+        "3.1415", "random", "3.14 m",
+        "m +3.14", "m -3.14 x +5.12 m"])
 
     tofloat_command = cc.CleaningCommand_StringToFloat(series)
     result = tofloat_command.execute()
 
-
     assert result.shape == series.shape, "Wrong length"
-
-    print(f"The result is {result}")
-
-
-    assert result.equals(pd.Series([10.0,-20.5, 3.1415, pd.NA, 3.14, 3.14, 5.12]))
+    assert result.equals(
+        pd.Series([10.0, -20.5, 3.1415, pd.NA, 3.14, 3.14, 5.12]))
