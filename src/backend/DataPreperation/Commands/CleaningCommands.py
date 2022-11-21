@@ -30,7 +30,7 @@ class CleaningCommand_StringToFloat(CleaningCommand):
     def execute(self) -> pd.Series:
         return self.series.apply(lambda stringValue: self._extract_float_from_string(stringValue))
 
-    def _extract_float_from_string(s: str) -> float:
+    def _extract_float_from_string(self, s: str) -> float:
         lst = re.findall(r"[-+]?\d*\.\d+|\d+", str(s))
         if len(lst)> 0:
             return max([float(i) for i in lst])
