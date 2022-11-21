@@ -17,7 +17,7 @@ def test_drop_lower_bound():
     result = drop_command.execute()
     assert result is None
 
-def test_upper_lower_bound():
+def test_upper_bound():
     series = pd.Series(["a", "b", "c", "d", "d", "c", "b", "a"])
     drop_command = dc.DroppingCommand_UpperBound(series, 2)
     result = drop_command.execute()
@@ -30,7 +30,6 @@ def test_upper_lower_bound():
     drop_command = dc.DroppingCommand_UpperBound(series, 4)
     result = drop_command.execute()
     assert result is series
-
 
 def test_uniqueness_bound():
     l = ["a"] * 90 +  ["b"] * 5 + ["c"] * 5 
@@ -48,13 +47,3 @@ def test_uniqueness_bound():
     drop_command = dc.DroppingCommand_UniquenessBound(series, 0.99)
     result = drop_command.execute()
     assert result is series
-
-
-
-
-
-
-
-
-
-
