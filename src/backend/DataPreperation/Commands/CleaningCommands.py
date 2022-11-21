@@ -22,6 +22,8 @@ class CleaningCommand_Trim(CleaningCommand):
 
 
 class CleaningCommand_StringToFloat(CleaningCommand):
+    """ Gets the "last" floating point number from a string. 
+    """
 
     def __init__(self, series: pd.Series) -> None:
         self.series = series
@@ -35,4 +37,4 @@ class CleaningCommand_StringToFloat(CleaningCommand):
         if len(lst)> 0:
             return max([float(i) for i in lst])
         else:
-            return pd.nan
+            return pd.NA
