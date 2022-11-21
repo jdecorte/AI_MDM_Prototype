@@ -12,6 +12,7 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 from src.frontend.Handler.IHandler import IHandler
 from streamlit_pandas_profiling import st_profile_report
 from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
+from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage
 
 
 class Router:
@@ -95,4 +96,7 @@ class Router:
         canvas = st.empty()
                 
         if st.session_state["currentState"] == None:
-            DeDupeInitPage(canvas=canvas, handler=self.handler).show()
+            DeDupeInitPage(canvas=canvas).show()
+        
+        if st.session_state["currentState"] == "LabelRecords":
+            DeDupeLabelPage(canvas=canvas).show()

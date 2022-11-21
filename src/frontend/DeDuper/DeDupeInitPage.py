@@ -16,12 +16,24 @@ from src.frontend.DeDuper.DeDupeTypesEnum import DeDupeTypesEnum
 
 
 class DeDupeInitPage:
-    def __init__(self, canvas, handler: IHandler) -> None:
+    def __init__(self, canvas) -> None:
         self.canvas = canvas
-        self.handler = handler
+
+    def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
+        return [{'field':k, 'type':v} for k,v in dict_of_types.items()]
 
 
     def show(self): 
+
+        # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
+        st.session_state['dedupe_type_dict'] = {
+            "name":"String",
+            "addr":"String",
+            "city":"String",
+            "type":"String",
+            "class": "Price"
+        }
+
         with self.canvas.container(): 
             st.title("DeDupe")
             st.markdown(f"<h4>Ingeladen Dataset: </h4>", unsafe_allow_html=True)
@@ -51,25 +63,26 @@ class DeDupeInitPage:
             with col_1:
                 add_btn = st.button("Add")
                 if add_btn:
-                    if "dedupe_type_dict" not in st.session_state:
-                        st.session_state['dedupe_type_dict'] = {}
                     st.session_state["dedupe_type_dict"][selected_col] = selected_type
                     
             with col_2:
                 remove_btn = st.button("Remove")
                 if remove_btn:
-                    if "dedupe_type_dict" not in st.session_state:
-                        st.session_state['dedupe_type_dict'] = {}
                     if selected_col in st.session_state["dedupe_type_dict"]:
                         del st.session_state["dedupe_type_dict"][selected_col]
             
             with col_3:
-                if "dedupe_type_dict" in st.session_state:
-                    if len(st.session_state['dedupe_type_dict'].values()) > 0:
-                        start_training_btn = st.button("Start training")
+                if len(st.session_state['dedupe_type_dict'].values()) > 0:
+                    start_training_btn = st.button("Start training")
+                    if start_training_btn:
+                        st.session_state["deduper"] = dedupe.Dedupe(self._transform_type_dict_to_correct_format_for_dedupe(st.session_state['dedupe_type_dict']))
+                        st.session_state["deduper_data"] = st.session_state["dataframe"].to_dict(orient="index")
+                        st.session_state["deduper"].prepare_training(st.session_state["deduper_data"])
+                        st.session_state["currentState"] = "LabelRecords"                            
+                        st.experimental_rerun()
 
             st.write("Actieve selectie:")
-            if "dedupe_type_dict" not in st.session_state or st.session_state['dedupe_type_dict'] == {}:
+            if st.session_state['dedupe_type_dict'] == {}:
                 st.write("U heeft nog geen kolommen gekozen")
             else:
                 st.write(st.session_state["dedupe_type_dict"])
