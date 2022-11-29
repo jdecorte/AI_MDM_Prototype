@@ -13,6 +13,7 @@ from src.frontend.Handler.IHandler import IHandler
 from streamlit_pandas_profiling import st_profile_report
 from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
 from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage
+from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage
 
 
 class Router:
@@ -96,7 +97,10 @@ class Router:
         canvas = st.empty()
                 
         if st.session_state["currentState"] == None:
-            DeDupeInitPage(canvas=canvas).show()
+            DeDupeInitPage(canvas=canvas, handler=self.handler).show()
         
         if st.session_state["currentState"] == "LabelRecords":
-            DeDupeLabelPage(canvas=canvas).show()
+            DeDupeLabelPage(canvas=canvas, handler=self.handler).show()
+
+        if st.session_state["currentState"] == "LabelClusters":
+            DeDupeClusterPage(canvas=canvas, handler=self.handler).show()

@@ -121,14 +121,14 @@ class StateManager:
         if "dedupe_type_dict" not in st.session_state:
             st.session_state['dedupe_type_dict'] = {}
 
-        if "training_unlabeled" not in st.session_state:
-            st.session_state["training_unlabeled"] = []
-
-        if "training_labeled" not in st.session_state:
-            st.session_state["training_labeled"] = []
-
         if 'number_of_unsure' not in st.session_state:
             st.session_state['number_of_unsure'] = 0
+
+        if "stashed_label_pair" not in st.session_state:
+            st.session_state["stashed_label_pair"] = None
+
+        if "record_pair" not in st.session_state:
+            st.session_state["record_pair"] = None
 
 
     @staticmethod

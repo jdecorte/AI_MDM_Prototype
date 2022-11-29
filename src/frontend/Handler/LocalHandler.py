@@ -27,4 +27,16 @@ class LocalHandler(IHandler):
     def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
         return self.dc.recalculate_column_rules(old_dataframe_in_json=old_dataframe_in_json, new_dataframe_in_json=new_dataframe_in_json, rule_finding_config_in_json=rule_finding_config_in_json, affected_columns=json.dumps(affected_columns))
 
+    def create_deduper_object(self, dedupe_type_dict) -> json:
+        return self.dc.create_deduper_object(dedupe_type_dict)
+
+    def dedupe_next_pair(self) -> json:
+        return self.dc.deduper_next_pair()
+    
+    def dedupe_mark_pair(self, labeled_pair) -> json:
+        raise Exception("Not implemented Exception")
+
+    def dedupe_get_stats(self) -> json:
+        raise Exception("Not implemented Exception")
+
 

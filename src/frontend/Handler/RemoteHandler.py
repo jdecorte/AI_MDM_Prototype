@@ -46,3 +46,18 @@ class RemoteHandler(IHandler):
         data["rule_finding_config_in_json"] = rule_finding_config_in_json
         data["affected_columns"] = json.dumps(affected_columns)
         return requests.post(f"{self.connection_string}/recalculate_column_rules", data=json.dumps(data)).json()
+
+    # DEDUPE
+    def create_deduper_object(self, dedupe_type_dict) -> json:
+        data = {}
+        data["dedupe_type_dict"] = dedupe_type_dict
+        return requests.post(f"{self.connection_string}/create_deduper_object", data=json.dumps(data)).json()
+
+    def dedupe_next_pair(self) -> json:
+        return requests.get(f"{self.connection_string}/create_deduper_object").json()
+    
+    def dedupe_mark_pair(self, labeled_pair) -> json:
+        raise Exception("Not implemented Exception")
+
+    def dedupe_get_stats(self) -> json:
+        raise Exception("Not implemented Exception")

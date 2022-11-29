@@ -4,6 +4,8 @@ import json
 import hashlib
 import glob
 import os
+import redis
+import dedupe
 from src.backend.HelperFunctions import HelperFunctions
 from datetime import datetime
 
@@ -12,12 +14,22 @@ from src.backend.Suggestions.SuggestionFinder import SuggestionFinder
 from src.backend.DataPreperation.DataPrepper import DataPrepper
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.shared.Enums.BinningEnum import BinningEnum
+from src.backend.Deduplication.DeDupeIO import DeDupeIO
 from typing import Dict
-from flask import request
-from flask import Flask, json
+from flask import Flask, json, session, request
 from flask_classful import FlaskView, route
+from flask_session import Session
 
 app = Flask(__name__)
+
+app.secret_key = 'TETRA2022'
+
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
+
+server_session = Session(app)
 
 class DomainController(FlaskView):
     
@@ -26,9 +38,33 @@ class DomainController(FlaskView):
         self.data_prepper = DataPrepper()
         self.rule_mediator = None
         self.suggestion_finder = None
+        self.deduper = None
 
     # DEDUPE METHODS
+    @route('/create_dedupe_object', methods=['GET','POST'])
+    def create_deduper_object(self, dedupe_type_dict) -> json:
+        if dedupe_type_dict == "":
+            data_to_use = json.loads(request.data)
+            dedupe_type_dict = data_to_use["dedupe_type_dict"]
+            session['deduper'] = DeDupeIO(dedupe.Dedupe(dedupe_type_dict))
+        else:
+            self.deduper = DeDupeIO(dedupe.Dedupe(dedupe_type_dict))
+
+    @route('/dedupe_next_pair', methods=['GET','POST'])
+    def deduper_next_pair(self) -> json:
+        return json.dumps(session['deduper'].next_pair())
     
+    @route('/deduper_mark_pair', methods=['GET','POST'])
+    def deduper_mark_pair(self, labeled_pair) -> json:
+        if labeled_pair == "":
+            data_to_use = json.loads(request.data)
+            labeled_pair = data_to_use["labeled_pair"]
+        session['deduper'].mark_pair(labeled_pair)
+        return json.dumps(session['deduper'].next_pair())
+
+    @route('/deduper_get_stats', methods=['GET','POST'])
+    def deduper_get_stats(self) -> json:
+        return json.dumps(session['deduper'].get_stats())
 
 
     # FETCHING OF FILES FOR GUI STATE:
@@ -98,7 +134,7 @@ class DomainController(FlaskView):
             
     # DATA CLEANING
     @route('/clean_dataframe', methods=['GET','POST'])
-    def clean_dataframe(self,df, json_string) -> pd.DataFrame:
+    def clean_dataframe(self,df, json_string):
         return self.data_prepper.clean_data_frame(df, json_string)
 
     # RULE LEARNING

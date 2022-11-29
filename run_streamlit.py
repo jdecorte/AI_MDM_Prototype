@@ -35,17 +35,14 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
 
     # Sidebar vullen met Remote of local functionaliteit
-    if functionality_selectbox in ["Data Cleaning", "Rule-learning"]:
-        type_handler_input = st.sidebar.radio(
-        "Type Handler:",
-        ('Remote', 'Local'), horizontal=True )
+    type_handler_input = st.sidebar.radio(
+    "Type Handler:",
+    ('Remote', 'Local'), horizontal=True )
 
-        if type_handler_input == 'Remote':
-            remote_url = st.sidebar.text_input('Remote Location', '127.0.0.1')
-            remote_port = st.sidebar.text_input('Port', '5000')       
-            handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
-        else:
-            handler = LocalHandler()
+    if type_handler_input == 'Remote':
+        remote_url = st.sidebar.text_input('Remote Location', '127.0.0.1')
+        remote_port = st.sidebar.text_input('Port', '5000')       
+        handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
     else:
         handler = LocalHandler()
 
@@ -61,6 +58,7 @@ def main():
             df = pd.read_csv(uploaded_file, delimiter=',')
             st.session_state["dataframe"] = df
             st.session_state["dataframe_name"] = uploaded_file.name
+            print('NEW SESSION')
 
 
         # LOAD IN SESSION_MAP
