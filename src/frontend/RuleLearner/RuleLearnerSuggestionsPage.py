@@ -129,4 +129,4 @@ class RuleLearnerSuggestionsPage:
                 gb.configure_selection('multiple', pre_selected_rows= rows_selected)
                 gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
                 gridOptions = gb.build()
-                _ = AgGrid(st.session_state["temp_dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True, theme="light")
+                _ = AgGrid(st.session_state["temp_dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True)
