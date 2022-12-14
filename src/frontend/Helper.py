@@ -80,7 +80,6 @@ def transformColumnToNumberCluster(df, col, n, type):
         return df, list(cutOffMap.values())
 
 def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode('utf-8')
 
 
@@ -161,7 +160,7 @@ def createPaginering(key, colstoUse, N):
 
     # Get start and end indices of the next page of the dataframe
     start_idx = st.session_state[key] * N 
-    end_idx = (1 + st.session_state[key]) * N
+    end_idx = (1 + st.session_state[key]) * N 
 
     # Index into the sub dataframe
     return colstoUse[start_idx:end_idx]

@@ -12,8 +12,8 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 from src.frontend.Handler.IHandler import IHandler
 from streamlit_pandas_profiling import st_profile_report
 from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
-from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage
-from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage
+from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
+from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage, DeDupeClusterRedirectPage
 
 
 class Router:
@@ -102,5 +102,14 @@ class Router:
         if st.session_state["currentState"] == "LabelRecords":
             DeDupeLabelPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "LabelClusters":
+        if st.session_state["currentState"] == "LabelRecords_get_record_pair":
+            DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_get_record_pair()
+
+        if st.session_state["currentState"] == "LabelRecords_mark_record_pair":
+            DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_mark_record_pair()
+
+        if st.session_state["currentState"] == "ViewClusters_get_clusters":
+            DeDupeClusterRedirectPage(canvas=canvas, handler=self.handler).redirect_get_clusters()
+
+        if st.session_state["currentState"] == "ViewClusters":
             DeDupeClusterPage(canvas=canvas, handler=self.handler).show()

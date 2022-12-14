@@ -20,8 +20,8 @@ class DeDupeInitPage:
         self.canvas = canvas
         self.handler = handler
 
-    def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
-        return [{'field':k, 'type':v} for k,v in dict_of_types.items()]
+    # def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
+    #     return [{'field':k, 'type':v} for k,v in dict_of_types.items()]
 
 
     def show(self): 
@@ -41,11 +41,15 @@ class DeDupeInitPage:
             st.markdown(f"<h4>Ingeladen Dataset: </h4>", unsafe_allow_html=True)
 
             # Toon de dataframe -> NIET EDITEERBAAR
+            MIN_HEIGHT = 50
+            MAX_HEIGHT = 500
+            ROW_HEIGHT = 60
+
             gb = GridOptionsBuilder.from_dataframe(st.session_state["dataframe"])
             gb.configure_side_bar()
             gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
             gridOptions = gb.build()
-            grid_response = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True)
+            grid_response = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True, height=min(MIN_HEIGHT + len(st.session_state["dataframe"]) * ROW_HEIGHT, MAX_HEIGHT))
 
             st.subheader("Selecteer kolommen om te gebruiken in deduplicatie-proces")
 
@@ -77,8 +81,8 @@ class DeDupeInitPage:
                 if len(st.session_state['dedupe_type_dict'].values()) > 0:
                     start_training_btn = st.button("Start training")
                     if start_training_btn:
-                        st.session_state["currentState"] = "LabelRecords"     
-                        st.session_state["dataframe"] = st.session_state["dataframe"].astype(str)                       
+                        self.handler.create_deduper_object(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
+                        st.session_state["currentState"] = "LabelRecords_get_record_pair" 
                         st.experimental_rerun()
 
             st.write("Actieve selectie:")

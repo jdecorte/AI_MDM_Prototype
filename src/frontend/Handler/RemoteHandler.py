@@ -3,6 +3,7 @@ import json
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 from typing import List
 import requests
+import streamlit as st
 
 class RemoteHandler(IHandler):
 
@@ -48,16 +49,27 @@ class RemoteHandler(IHandler):
         return requests.post(f"{self.connection_string}/recalculate_column_rules", data=json.dumps(data)).json()
 
     # DEDUPE
-    def create_deduper_object(self, dedupe_type_dict) -> json:
+    def create_deduper_object(self, dedupe_type_dict, dedupe_data) -> json:
         data = {}
         data["dedupe_type_dict"] = dedupe_type_dict
-        return requests.post(f"{self.connection_string}/create_deduper_object", data=json.dumps(data)).json()
+        data["dedupe_data"] = dedupe_data
+        requests.post(f"{self.connection_string}/create_deduper_object", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
 
     def dedupe_next_pair(self) -> json:
-        return requests.get(f"{self.connection_string}/create_deduper_object").json()
+        return requests.get(f"{self.connection_string}/dedupe_next_pair", cookies={"session_flask" : st.session_state['session_flask']}).json()
     
     def dedupe_mark_pair(self, labeled_pair) -> json:
-        raise Exception("Not implemented Exception")
+        data = {}
+        data["labeled_pair"] = labeled_pair
+        temp_data = json.dumps(data)
+        requests.post(f"{self.connection_string}/dedupe_mark_pair", cookies={"session_flask" : st.session_state['session_flask']}, data=temp_data)
 
     def dedupe_get_stats(self) -> json:
-        raise Exception("Not implemented Exception")
+        return requests.get(f"{self.connection_string}/dedupe_get_stats", cookies={"session_flask" : st.session_state['session_flask']}).json()
+
+    def dedupe_train(self):
+        data = {}
+        requests.post(f"{self.connection_string}/dedupe_train", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+
+    def dedupe_get_clusters(self):
+        return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()

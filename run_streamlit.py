@@ -1,13 +1,24 @@
 import pandas as pd
 import streamlit as st
 import json
+import os
+import uuid
+import hashlib
 # KEEP NESTED LAYOUT!
 import streamlit_nested_layout
 from src.frontend.Handler.LocalHandler import LocalHandler
 from src.frontend.Handler.RemoteHandler import RemoteHandler
 from src.frontend.Router import Router
 from src.frontend.StateManager import StateManager
+from streamlit.components.v1 import html
+from streamlit_javascript import st_javascript
 
+
+def _get_from_local_storage(k):
+    v = st_javascript(
+        f"JSON.parse(localStorage.getItem('{k}'));"
+    )
+    return v or {}
 
 def main():
 
@@ -15,7 +26,9 @@ def main():
     st.set_page_config(page_title="De-duplicatie prototype", layout = "wide") 
     with open("src/frontend/Resources/css/style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
     
+    st.sidebar.write(st.session_state["session_flask"])  
 
     # StateManagement init
     StateManager.initStateManagement()
@@ -48,9 +61,6 @@ def main():
 
     if uploaded_file:
 
-        # DEBUG
-        st.sidebar.write(st.session_state["currentState"])
-
         # Check of het een nieuwe file is op basis van file naam:
         if st.session_state["dataframe_name"] != uploaded_file.name:
             # StateManager.clear_session_state()
@@ -60,6 +70,14 @@ def main():
             st.session_state["dataframe_name"] = uploaded_file.name
             print('NEW SESSION')
 
+            # Cookie Management
+            my_js = """
+                    if(localStorage.getItem('session_flask') == null){
+                        localStorage.setItem('session_flask', JSON.stringify(crypto.randomUUID()))
+                    };
+                    """   
+            html(f'<script>{my_js}</script>')
+            st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(df.encode('utf-8')).hexdigest()}"
 
         # LOAD IN SESSION_MAP
         st.session_state['session_map'] = handler.get_session_map(dataframe_in_json=st.session_state["dataframe"].to_json())

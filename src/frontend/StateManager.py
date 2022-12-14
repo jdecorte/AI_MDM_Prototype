@@ -50,13 +50,24 @@ class StateManager:
 
     @staticmethod
     def go_back_to_previous_in_flow(current_state: str) -> None:
-        if current_state == "BekijkRules" or current_state == "LabelRecords":
+        # RULE LEARNER
+        if current_state == "BekijkRules":
             st.session_state["currentState"] = None
             return
         if current_state == "BekijkSuggesties":
             st.session_state["currentState"] = "BekijkRules"
             return
-    
+
+        # DEDUPE
+        if current_state == "LabelRecords":
+            st.session_state["currentState"] = None
+            return
+        if current_state == "ViewClusters":
+            st.session_state["currentState"] = "LabelRecords_get_record_pair"
+            return
+        if current_state == "ViewClusters":
+            st.session_state["currentState"] = "LabelRecords_get_record_pair"
+            return   
             
 
     @staticmethod

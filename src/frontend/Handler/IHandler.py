@@ -31,7 +31,7 @@ class IHandler(ABC):
 
     # DEDUPE
     @abstractmethod
-    def create_deduper_object(self, dedupe_type_dict) -> json:
+    def create_deduper_object(self, dedupe_type_dict, dedupe_data) -> json:
         raise Exception("Not implemented Exception")
 
     @abstractmethod
@@ -44,4 +44,12 @@ class IHandler(ABC):
 
     @abstractmethod
     def dedupe_get_stats(self) -> json:
+        raise Exception("Not implemented Exception")
+
+    @abstractmethod
+    def dedupe_train(self) -> json:
+        raise Exception("Not implemented Exception")
+
+    @abstractmethod
+    def dedupe_get_clusters(self) -> json:
         raise Exception("Not implemented Exception")

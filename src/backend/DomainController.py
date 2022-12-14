@@ -6,6 +6,9 @@ import glob
 import os
 import redis
 import dedupe
+import sys
+import config
+import datetime
 from src.backend.HelperFunctions import HelperFunctions
 from datetime import datetime
 
@@ -15,58 +18,102 @@ from src.backend.DataPreperation.DataPrepper import DataPrepper
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.shared.Enums.BinningEnum import BinningEnum
 from src.backend.Deduplication.DeDupeIO import DeDupeIO
+from src.backend.Deduplication.DeduperSessionManager import DeduperSessionManager
 from typing import Dict
 from flask import Flask, json, session, request
 from flask_classful import FlaskView, route
 from flask_session import Session
 
-app = Flask(__name__)
-
-app.secret_key = 'TETRA2022'
-
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
-
-server_session = Session(app)
-
 class DomainController(FlaskView):
     
-    def __init__(self) -> None:
+    def __init__(self, session_dict={}, app=None) -> None:
+        self.session_dict = session_dict
         self.app = app
         self.data_prepper = DataPrepper()
         self.rule_mediator = None
         self.suggestion_finder = None
-        self.deduper = None
+        self.deduper_session_manager = DeduperSessionManager()
 
     # DEDUPE METHODS
-    @route('/create_dedupe_object', methods=['GET','POST'])
-    def create_deduper_object(self, dedupe_type_dict) -> json:
-        if dedupe_type_dict == "":
+    @route('/create_deduper_object', methods=['GET','POST'])
+    def create_deduper_object(self, dedupe_type_dict="", dedupe_data="") -> json:   
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             dedupe_type_dict = data_to_use["dedupe_type_dict"]
-            session['deduper'] = DeDupeIO(dedupe.Dedupe(dedupe_type_dict))
-        else:
-            self.deduper = DeDupeIO(dedupe.Dedupe(dedupe_type_dict))
+            dedupe_data = data_to_use["dedupe_data"]
+        finally:
+            self.deduper_session_manager.create_member(unique_storage_id = unique_storage_id , dedupe_type_dict = dedupe_type_dict, dedupe_data = dedupe_data)
+            # return json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"][1].next_pair())
 
-    @route('/dedupe_next_pair', methods=['GET','POST'])
-    def deduper_next_pair(self) -> json:
-        return json.dumps(session['deduper'].next_pair())
+        # unique_storage_id = "Local"  
+        # try:          
+        #     if dedupe_type_dict == "" and dedupe_data =="" :
+        #         data_to_use = json.loads(request.data)
+        #         dedupe_type_dict = data_to_use["dedupe_type_dict"]
+        #         dedupe_data = data_to_use["dedupe_data"]
+        #         unique_storage_id = request.remote_addr
+
+        #     session["dedupe_object"] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), DeDupeIO(dedupe_type_dict, dedupe_data))
+        #     print("temp")
+        #         # self.session_dict[unique_storage_id] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session["dedupe_object"])
+        #         # self.session_dict[unique_storage_id] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), DeDupeIO(dedupe_type_dict, dedupe_data))
+        # except Exception as e:
+        #     print(e)
+        #     print(e.__traceback__)
+        # tmp = session.sid
+        # return json.dumps(tmp)
+        
+
+    @route('/dedupe_next_pair', methods=['GET'])
+    def dedupe_next_pair(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            return json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].next_pair())
     
-    @route('/deduper_mark_pair', methods=['GET','POST'])
-    def deduper_mark_pair(self, labeled_pair) -> json:
-        if labeled_pair == "":
+    @route('/dedupe_mark_pair', methods=['GET','POST'])
+    def dedupe_mark_pair(self, labeled_pair="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             labeled_pair = data_to_use["labeled_pair"]
-        session['deduper'].mark_pair(labeled_pair)
-        return json.dumps(session['deduper'].next_pair())
+        finally:
+            self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].mark_pair(labeled_pair=labeled_pair)
 
-    @route('/deduper_get_stats', methods=['GET','POST'])
-    def deduper_get_stats(self) -> json:
-        return json.dumps(session['deduper'].get_stats())
+    @route('/dedupe_get_stats', methods=['GET','POST'])
+    def dedupe_get_stats(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            return json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].get_stats())
 
 
+    @route('/dedupe_train', methods=['GET','POST'])
+    def dedupe_train(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].train()
+
+    @route('/dedupe_get_clusters', methods=['GET','POST'])
+    def dedupe_get_clusters(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            tmp = json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].get_clusters())
+
+        except Exception as e:
+            print(e)
+        finally:
+            return tmp
+
+    
     # FETCHING OF FILES FOR GUI STATE:
     @route('/fetch_file_from_filepath', methods=['GET','POST'])
     def fetch_file_from_filepath(self, filepath:str=""):
@@ -294,6 +341,6 @@ class DomainController(FlaskView):
         return json.dumps(result)
 
     def run_flask(self):
-        self.app.run()
+        self.app.run(debug=True)
 
-DomainController.register(app, route_base="/")
+# DomainController.register(app, route_base="/")
