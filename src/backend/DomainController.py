@@ -45,27 +45,7 @@ class DomainController(FlaskView):
             dedupe_data = data_to_use["dedupe_data"]
         finally:
             self.deduper_session_manager.create_member(unique_storage_id = unique_storage_id , dedupe_type_dict = dedupe_type_dict, dedupe_data = dedupe_data)
-            # return json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"][1].next_pair())
-
-        # unique_storage_id = "Local"  
-        # try:          
-        #     if dedupe_type_dict == "" and dedupe_data =="" :
-        #         data_to_use = json.loads(request.data)
-        #         dedupe_type_dict = data_to_use["dedupe_type_dict"]
-        #         dedupe_data = data_to_use["dedupe_data"]
-        #         unique_storage_id = request.remote_addr
-
-        #     session["dedupe_object"] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), DeDupeIO(dedupe_type_dict, dedupe_data))
-        #     print("temp")
-        #         # self.session_dict[unique_storage_id] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session["dedupe_object"])
-        #         # self.session_dict[unique_storage_id] = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), DeDupeIO(dedupe_type_dict, dedupe_data))
-        # except Exception as e:
-        #     print(e)
-        #     print(e.__traceback__)
-        # tmp = session.sid
-        # return json.dumps(tmp)
         
-
     @route('/dedupe_next_pair', methods=['GET'])
     def dedupe_next_pair(self) -> json:
         unique_storage_id = "Local"
@@ -91,7 +71,6 @@ class DomainController(FlaskView):
             unique_storage_id = request.cookies.get("session_flask")
         finally:
             return json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].get_stats())
-
 
     @route('/dedupe_train', methods=['GET','POST'])
     def dedupe_train(self) -> json:
@@ -339,6 +318,22 @@ class DomainController(FlaskView):
 
         # RETURN RESULTS
         return json.dumps(result)
+
+
+
+    # RUNNING AND SHUTDOWN
+    @route('/shutdown_gracefully', methods=['GET'])
+    def gracefull_flask_shutdown(self):
+        self.deduper_session_manager.save_all_members()
+        print("Banaan")
+        os._exit(0)
+        # func = request.environ.get('werkzeug.server.shutdown')
+        # if func is None:
+        #     raise RuntimeError('Not running with the Werkzeug Server')
+
+        # # Save state of dedupe objects
+        # self.deduper_session_manager.save_all_members()
+        # func()
 
     def run_flask(self):
         self.app.run(debug=True)

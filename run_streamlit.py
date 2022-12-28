@@ -18,7 +18,7 @@ def _get_from_local_storage(k):
     v = st_javascript(
         f"JSON.parse(localStorage.getItem('{k}'));"
     )
-    return v or {}
+    return v
 
 def main():
 
@@ -27,11 +27,19 @@ def main():
     with open("src/frontend/Resources/css/style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-    
-    st.sidebar.write(st.session_state["session_flask"])  
-
     # StateManagement init
     StateManager.initStateManagement()
+
+    # Cookie Management
+    if st.session_state["dataframe"] is not None:
+        my_js = """
+                if(localStorage.getItem('session_flask') == null){
+                    localStorage.setItem('session_flask', JSON.stringify(crypto.randomUUID()))
+                };
+                """   
+        html(f'<script>{my_js}</script>')
+        st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
+
 
     if st.session_state["currentState"] != None:
         st.sidebar.button("Ga terug naar vorige fase", on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state["currentState"],))
@@ -70,14 +78,7 @@ def main():
             st.session_state["dataframe_name"] = uploaded_file.name
             print('NEW SESSION')
 
-            # Cookie Management
-            my_js = """
-                    if(localStorage.getItem('session_flask') == null){
-                        localStorage.setItem('session_flask', JSON.stringify(crypto.randomUUID()))
-                    };
-                    """   
-            html(f'<script>{my_js}</script>')
-            st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(df.encode('utf-8')).hexdigest()}"
+            # st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(df.to_json().encode('utf-8')).hexdigest()}"
 
         # LOAD IN SESSION_MAP
         st.session_state['session_map'] = handler.get_session_map(dataframe_in_json=st.session_state["dataframe"].to_json())
@@ -118,12 +119,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-        
-    
-
-

@@ -1,6 +1,7 @@
 import glob
 import datetime
 import pickle
+import os
 
 from src.backend.Deduplication.DeDupeIO import DeDupeIO
 
@@ -42,13 +43,23 @@ class DeduperSessionManager():
         self.update_member(unique_storage_id)
         return self.session_dict[unique_storage_id]
 
-
     def update_member(self, unique_storage_id):
         self.session_dict[unique_storage_id]["time_stamp"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-
     def delete_member(self,unique_storage_id):
         with open("storage/{unique_storage_id}/Deduper/deduper_object.bin", "wb") as bin_file:
-            pickle.dump(self.session_dict[unique_storage_id]["deduper"],bin_file)
+            pickle.dump(self.session_dict[unique_storage_id]["dedupe_object"],bin_file)
 
         del self.session_dict[unique_storage_id]
+
+    def save_all_members(self):
+        for k,v in self.session_dict.items():
+            path = f"storage/{k}/Deduper"
+            path_with_file = f"{path}/deduper_object.bin"
+            try:
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(path_with_file, "wb") as bin_file:
+                    pickle.dump(v["dedupe_object"],bin_file)
+            except Exception as e:
+                print(e)

@@ -72,6 +72,12 @@ class StateManager:
 
     @staticmethod
     def initStateManagement():
+
+        # SESSION
+        if 'session_flask' not in st.session_state:
+            st.session_state['session_flask'] = None
+
+
         if 'profile_report' not in st.session_state:
             st.session_state['profile_report'] = None
             
