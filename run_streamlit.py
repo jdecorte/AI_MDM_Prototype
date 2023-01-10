@@ -4,6 +4,7 @@ import json
 import os
 import uuid
 import hashlib
+import uuid
 # KEEP NESTED LAYOUT!
 import streamlit_nested_layout
 from src.frontend.Handler.LocalHandler import LocalHandler
@@ -12,11 +13,13 @@ from src.frontend.Router import Router
 from src.frontend.StateManager import StateManager
 from streamlit.components.v1 import html
 from streamlit_javascript import st_javascript
+from streamlit_ws_localstorage import injectWebsocketCode, getOrCreateUID
 
 
 def _get_from_local_storage(k):
+    # f"JSON.parse(localStorage.getItem('{k}'));"
     v = st_javascript(
-        f"JSON.parse(localStorage.getItem('{k}'));"
+        f"JSON.parse(localStorage.getItem('session_flask'));"
     )
     return v
 
@@ -32,14 +35,17 @@ def main():
 
     # Cookie Management
     if st.session_state["dataframe"] is not None:
-        my_js = """
-                if(localStorage.getItem('session_flask') == null){
-                    localStorage.setItem('session_flask', JSON.stringify(crypto.randomUUID()))
-                };
-                """   
-        html(f'<script>{my_js}</script>')
-        st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
+        if "session_flask_local_id" not in st.session_state:
+            conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
+            ret = conn.getLocalStorageVal(key='session_flask')
+            if ret == "":
+                temp_id = uuid.uuid4()
+                _ = conn.setLocalStorageVal(key='session_flask', val=uuid.uuid4())
+                st.session_state["session_flask_local_id"] = temp_id
+            else:
+                st.session_state["session_flask_local_id"] = eval(ret)
 
+        st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
     if st.session_state["currentState"] != None:
         st.sidebar.button("Ga terug naar vorige fase", on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state["currentState"],))
