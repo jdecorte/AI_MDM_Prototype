@@ -1,17 +1,7 @@
 import streamlit as st
 import pandas as pd
-import os
-import csv
-import re
-import logging
-import optparse
-
-
-import dedupe
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
-from src.frontend.Handler.IHandler import IHandler
 from src.frontend.DeDuper.DeDupeTypesEnum import DeDupeTypesEnum
 
 

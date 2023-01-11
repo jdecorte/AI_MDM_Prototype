@@ -1,7 +1,5 @@
 from src.backend.DomainController import DomainController
-from flask import Flask, redirect, url_for, render_template, request, session
-from datetime import timedelta
-from flask_classful import FlaskView, route
+from flask import Flask
 
 def main():
     app = Flask(__name__)

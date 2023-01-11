@@ -1,5 +1,4 @@
 import dedupe
-import json
 import pandas as pd
 from dedupe._typing import (
     Data,

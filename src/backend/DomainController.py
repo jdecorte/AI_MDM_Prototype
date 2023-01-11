@@ -4,10 +4,6 @@ import json
 import hashlib
 import glob
 import os
-import redis
-import dedupe
-import sys
-import config
 import datetime
 from src.backend.HelperFunctions import HelperFunctions
 from datetime import datetime
@@ -16,13 +12,10 @@ from src.backend.RuleFinding.RuleMediator import RuleMediator
 from src.backend.Suggestions.SuggestionFinder import SuggestionFinder
 from src.backend.DataPreperation.DataPrepper import DataPrepper
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
-from src.shared.Enums.BinningEnum import BinningEnum
-from src.backend.Deduplication.DeDupeIO import DeDupeIO
 from src.backend.Deduplication.DeduperSessionManager import DeduperSessionManager
 from typing import Dict
 from flask import Flask, json, session, request
 from flask_classful import FlaskView, route
-from flask_session import Session
 
 class DomainController(FlaskView):
     
@@ -80,13 +73,14 @@ class DomainController(FlaskView):
         finally:
             self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].train()
 
+
     @route('/dedupe_get_clusters', methods=['GET','POST'])
     def dedupe_get_clusters(self) -> json:
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             tmp = json.dumps(self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].get_clusters())
-
+            self.deduper_session_manager.delete_member(unique_storage_id)
         except Exception as e:
             print(e)
         finally:

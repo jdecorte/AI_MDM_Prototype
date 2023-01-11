@@ -86,31 +86,40 @@ class DeDupeClusterPage:
             ('Aantal records in cluster', 'Cluster confidence score'))
             if sort_clusters == 'Cluster confidence score':
                 st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: x.cluster_confidence, reverse=True)
+            if sort_clusters == 'Aantal records in cluster':
+                st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: len(x.records_df), reverse=True)
+
+            for cv in st.session_state["list_of_cluster_view"]:
+                if f'merge_{cv.cluster_id}' not in st.session_state:
+                    st.session_state[f'merge_{cv.cluster_id}'] = True
 
             # Als test toon de eerste 5 elementen
             sub_rowstoUse = self. _createPaginering("page_number_Dedupe", st.session_state["list_of_cluster_view"], 5)
             for idx, cv in enumerate(sub_rowstoUse):
                 self._create_cluster_card(idx, cv)
-                st.sidebar.write(cv.new_row)
 
             if st.button("Bevestig clusters"):
-                self._merge_clusters()
+                self._merge_clusters(st.session_state["list_of_cluster_view"])
+                
 
 
-    def _merge_clusters(self, list_of_cluster_view,):
+    def _merge_clusters(self, list_of_cluster_view):
         # Itereer over alle clusterview
-        
-        df_to_use  = st.session_state["dataframe"]
+        # df_to_use  = st.session_state["dataframe"]
+        merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
         for cv in list_of_cluster_view:
             if st.session_state[f'merge_{cv.cluster_id}']:
-                list_of_cluster_view.records_df
-                df_to_use.iloc[[]]
-
+                merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
+                # merged_df.append(cv.new_row, ignore_index=True)
+                # merged_df.loc[len(merged_df)] = cv.new_row
             else:
-                pass
+                for _, row in cv.records_df.iterrows():
+                    merged_df = pd.concat([merged_df, row], ignore_index=True)
+                    # merged_df.append(row, ignore_index=True)
 
-
-        st.session_state["current_state"] = None
+        st.session_state["currentState"] = None
+        st.session_state["dataframe"] = merged_df
+        st.experimental_rerun()
 
     def _create_cluster_card(self, idx, cv):
         MIN_HEIGHT = 50

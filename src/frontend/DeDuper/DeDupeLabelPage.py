@@ -1,24 +1,8 @@
 import streamlit as st
 import pandas as pd
-import os
-import csv
-import re
-import logging
-import optparse
-import io
-import json
-import pickle
-import traceback
-
-import dedupe
-import dedupe.blocking as blocking
-import dedupe.datamodel as datamodel
-import dedupe.labeler as labeler
 import dedupe.predicates
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
-from src.frontend.Handler.IHandler import IHandler
 
 class DeDupeRedirectLabelPage:
     def __init__(self, canvas, handler) -> None:

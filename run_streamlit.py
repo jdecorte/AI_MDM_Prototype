@@ -1,7 +1,5 @@
 import pandas as pd
 import streamlit as st
-import json
-import os
 import uuid
 import hashlib
 import uuid
@@ -14,14 +12,6 @@ from src.frontend.StateManager import StateManager
 from streamlit.components.v1 import html
 from streamlit_javascript import st_javascript
 from streamlit_ws_localstorage import injectWebsocketCode, getOrCreateUID
-
-
-def _get_from_local_storage(k):
-    # f"JSON.parse(localStorage.getItem('{k}'));"
-    v = st_javascript(
-        f"JSON.parse(localStorage.getItem('session_flask'));"
-    )
-    return v
 
 def main():
 
