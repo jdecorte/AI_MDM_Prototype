@@ -183,7 +183,11 @@ class DomainController(FlaskView):
         # COMPUTE RESULTS
         rfc = RuleFindingConfig.create_from_json(rule_finding_config_in_json)
         df = pd.read_json(dataframe_in_json)
-        df_to_use = df.astype(str)
+
+        # DROPPING AND BINNING
+        df_after_drop_and_bin = self.data_prepper.clean_data_frame(df, rule_finding_config_in_json)
+
+        df_to_use = df_after_drop_and_bin.astype(str)
         df_OHE = self.data_prepper.transform_data_frame_to_OHE(df_to_use, drop_nan=False)
         self.rule_mediator = RuleMediator(original_df=df_to_use, df_OHE=df_OHE)
         self.rule_mediator.create_column_rules_from_clean_dataframe(rfc.min_support, rfc.rule_length, rfc.lift, rfc.confidence, filterer_string=rfc.filtering_string)

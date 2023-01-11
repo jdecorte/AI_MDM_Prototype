@@ -12,21 +12,27 @@ class DataPrepper:
 
     def clean_data_frame(self, dirty_df: pd.DataFrame, cleaning_json_string: str) -> pd.DataFrame:
 
-        clusters_ = self._find_duplicate_columns(dirty_df)
-        deduped_df = self._dedupe_dataframe_columns(clusters_, dirty_df)
+        try:
+            clusters_ = self._find_duplicate_columns(dirty_df)
+            deduped_df = self._dedupe_dataframe_columns(clusters_, dirty_df)
+        except Exception as e:
+            print(e)
 
         dataframe_with_commands = self.data_prepper_command_factory.parse_cleaning_options_from_JSONstring(cleaning_json_string, deduped_df)
 
-        # EXECUTE CLEANING COMMANDS FROM JSON
-        [x.execute() for x in dataframe_with_commands["cleaning_command"].values()]
+        # # EXECUTE CLEANING COMMANDS FROM JSON
+        # [x.execute() for x in dataframe_with_commands["cleaning_command"].values()]
 
         # EXECUTE BINNING COMMANDS FROM JSON
         [x.execute() for x in dataframe_with_commands["binning_command"].values()]
 
-        # EXECUTE DROPPING COMMANDS FROM JSON
+        # EXECUTE DROPPING COMMANDS FROM JSON THAT REQUIRE ENTIRE DATAFRAME
+
+
+        # EXECUTE DROPPING COMMANDS FROM JSON PER COLUMN
         list_of_remaining_series_with_none = [x.execute() for x in dataframe_with_commands["list_of_dropping_commands"].values()]
         list_of_remaining_series = [x for x in list_of_remaining_series_with_none if x != None]
-        debinned_dropped_df = pd.concat(list_of_remaining_series, axis=1).reset_index()
+        debinned_dropped_df = pd.concat(list_of_remaining_series, axis=1, join="inner").reset_index()
 
         return debinned_dropped_df
         
@@ -47,16 +53,16 @@ class DataPrepper:
         return df_dummy
 
 
-    def _dedupe_dataframe_columns(clusters_,df):
+    def _dedupe_dataframe_columns(self, clusters_,df):
         cols_to_remove = []
         for cluster in clusters_:
             # Drop all but the first column from the columns we have to use
             cols_to_remove.extend(list(sorted(cluster))[1:])
-        cols_to_use = list( set(cols_to_use) - set(cols_to_remove))
+        cols_to_use = list( set(df.columns) - set(cols_to_remove))
 
         return df[cols_to_use]
 
-    def _find_duplicate_columns(df: pd.DataFrame) -> List[Set[str]]:
+    def _find_duplicate_columns(self, df: pd.DataFrame) -> List[Set[str]]:
         """ Find identical columns in the dataframe.
 
             df: the DataFrame to be examined. Should NOT be in one-hot-encoded form.
@@ -64,6 +70,7 @@ class DataPrepper:
             returns: List of Set of str, where each set represents a group of identical 
             columns.
         """
+        # df = df.astype(str)
         duplicates : Dict[str, Set[str]] = {}
         dup_cache = set() # Cache of all columns that are duplicate
         for i in range(df.shape[1] - 1):

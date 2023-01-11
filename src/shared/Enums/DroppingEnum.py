@@ -8,4 +8,3 @@ class DroppingEnum(str, enum.Enum):
     DROP_WITH_UPPER_BOUND= "drop_with_upper_bound"
 
     DROP_NAN = "drop_nan"
-    DROP_SINGLE = "drop_single"

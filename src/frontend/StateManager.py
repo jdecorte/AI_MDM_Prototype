@@ -53,6 +53,12 @@ class StateManager:
         # RULE LEARNER
         if current_state == "BekijkRules":
             st.session_state["currentState"] = None
+
+            # Verschillende knoppen vanop de pagina terug False maken
+            st.session_state["validate_own_rule_btn"] = False
+            st.session_state["calculate_entropy_btn"] = False
+            st.session_state["add_own_rule_btn"]  = False
+            
             return
         if current_state == "BekijkSuggesties":
             st.session_state["currentState"] = "BekijkRules"

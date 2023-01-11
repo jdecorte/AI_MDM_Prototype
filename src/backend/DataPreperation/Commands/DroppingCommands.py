@@ -9,6 +9,19 @@ class DroppingCommand(ABC):
         raise Exception("Not implemented Exception")
 
 
+class DroppingCommand_DropNan(DroppingCommand):
+
+    def __init__(self, series: pd.Series, boolean_in_string: str) -> None:
+        self.series = series
+        self.boolean_in_string = bool(boolean_in_string)
+
+    def execute(self) -> pd.Series:
+        if self.boolean_in_string:
+            return self.series.dropna()
+        else:
+            return self.series
+
+
 class DroppingCommand_UniquenessBound(DroppingCommand):
 
     def __init__(self, series: pd.Series, uniqueness_bound: float) -> None:

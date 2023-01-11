@@ -30,10 +30,10 @@ def main():
             ret = conn.getLocalStorageVal(key='session_flask')
             if ret == "":
                 temp_id = uuid.uuid4()
-                _ = conn.setLocalStorageVal(key='session_flask', val=uuid.uuid4())
+                _ = conn.setLocalStorageVal(key='session_flask', val=str(uuid.uuid4()))
                 st.session_state["session_flask_local_id"] = temp_id
             else:
-                st.session_state["session_flask_local_id"] = eval(ret)
+                st.session_state["session_flask_local_id"] = ret
 
         st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
 

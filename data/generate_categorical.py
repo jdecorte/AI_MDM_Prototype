@@ -195,7 +195,7 @@ def conf7(rng=None):
     return df
 
 def conf8(rng=None):
-    SIZE = 1000
+    SIZE = 500
     NUM_CHOICES = 10
     a = independent_column(SIZE, NUM_CHOICES, rng=rng)
     b = independent_column(SIZE, 2, probs=[0.95,0.05], rng=rng)
@@ -262,11 +262,17 @@ if __name__ == "__main__":
     #df.to_csv("./data/abcde.1000.dirty1percent.candd.csv", index=False)
 
     df = conf8(rng)
-    df['f'] = independent_column(1000, 10, rng=rng)
-    df['g'] = independent_column(1000, 10, rng=rng)
-    df['h'] = independent_column(1000, 10, rng=rng)
+    df['f'] = independent_column(500, 10, rng=rng)
+    df['g'] = independent_column(500, 10, rng=rng)
+    df['h'] = independent_column(500, 10, rng=rng)
 
-    df.to_csv("./data/abcde.1000.dirty1percent_cd.almostatic_b.3randomcolumns.csv", index=False)
+    # Kolom met enkel nan values
+    df['i'] = pd.Series([float('nan')] * len(df))
+
+    # Kolom met 25% nan values
+    df['j'] = np.random.choice([np.nan, np.random.randint(1,10)], size=len(df), p=[0.25, 0.75])
+
+    df.to_csv("./data/abcde.500.dirty1percent_cd.almostatic_b.3randomcolumns_100nan_i_25percentnan_j.csv", index=False)
 
 
 
