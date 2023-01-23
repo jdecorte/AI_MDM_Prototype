@@ -1,62 +1,64 @@
 from abc import ABC, abstractmethod
 import pandas as pd
+# pd.set_option('mode.chained_assignment', None)
 
 
 class DroppingCommand(ABC):
 
     @abstractmethod
-    def execute(self, df: pd.Series, relevant_column: str) -> pd.DataFrame():
+    def execute(self) -> pd.DataFrame():
         raise Exception("Not implemented Exception")
 
 
 class DroppingCommand_DropNan(DroppingCommand):
 
-    def __init__(self, series: pd.Series, boolean_in_string: str) -> None:
-        self.series = series
-        self.boolean_in_string = bool(boolean_in_string)
+    def __init__(self, dataframe: pd.DataFrame, col:str, boolean_in_string: str) -> None:
+        self.dataframe = dataframe
+        self.boolean_in_string = eval(boolean_in_string)
+        self.col = col
 
-    def execute(self) -> pd.Series:
+    def execute(self) -> None:
         if self.boolean_in_string:
-            return self.series.dropna()
+            self.dataframe.loc[:, self.col] =  self.dataframe.loc[:, self.col].dropna()
         else:
-            return self.series
+            pass
+        print('Beep')
 
 
 class DroppingCommand_UniquenessBound(DroppingCommand):
 
-    def __init__(self, series: pd.Series, uniqueness_bound: float) -> None:
-        self.series = series
+    def __init__(self, dataframe: pd.DataFrame, col:str, uniqueness_bound: float) -> None:
+        self.dataframe = dataframe
         self.uniqueness_bound = uniqueness_bound
+        self.col = col
 
-    def execute(self) -> pd.Series:
-        if (self.series.value_counts(normalize=True).max()
+    def execute(self) -> None:
+        if (self.dataframe[self.col].value_counts(normalize=True).max()
            > self.uniqueness_bound):
-            return None
-        else:
-            return self.series
+            self.dataframe[self.col] = None
 
 
 class DroppingCommand_LowerBound(DroppingCommand):
 
-    def __init__(self, series: pd.Series, lower_bound: int) -> None:
-        self.series = series
+    def __init__(self, dataframe: pd.DataFrame, col:str, lower_bound: int) -> None:
+        self.dataframe = dataframe
         self.lower_bound = lower_bound
+        self.col = col
 
-    def execute(self) -> pd.Series:
-        if self.series.nunique() < self.lower_bound:
-            return None
-        else:
-            return self.series
+    def execute(self) -> None:
+        if self.dataframe[self.col].nunique() < self.lower_bound:
+            self.dataframe[self.col] = None
 
 
 class DroppingCommand_UpperBound(DroppingCommand):
 
-    def __init__(self, series: pd.Series, upper_bound: int) -> None:
-        self.series = series
+    def __init__(self, dataframe: pd.DataFrame, col:str, upper_bound: int) -> None:
+        self.dataframe = dataframe
         self.upper_bound = upper_bound
+        self.col = col
 
-    def execute(self) -> pd.Series:
-        if self.series.nunique() > self.upper_bound:
-            return None
+    def execute(self) -> None:
+        if self.dataframe[self.col].nunique() > self.upper_bound:
+            self.dataframe[self.col] = None
         else:
-            return self.series
+            pass

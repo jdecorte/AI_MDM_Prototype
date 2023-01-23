@@ -17,14 +17,35 @@ class DeDupeInitPage:
     def show(self): 
 
         # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
-        st.session_state['dedupe_type_dict'] = {
+        st.session_state['dedupe_type_dict'] = {k:"String" for k in st.session_state["dataframe"].columns}
             # "id" : "String",
-            "name":"String",
-            "addr":"String",
-            "city":"String",
-            "type":"String",
-            "class": "String"
-        }
+            # "name":"String",
+            # "addr":"String",
+            # "city":"String",
+            # "type":"String",
+            # "class": "String"
+
+            # "id" : "String",
+            # "artist" : "String",
+            # "title" : "String",
+            # "category" : "String",
+            # "genre" : "String",
+            # "year" : "String",
+            # "track01" : "String",
+            # "track02" : "String",
+            # "track03" : "String",
+            # "track04" : "String",
+            # "track05" : "String",
+            # "track06" : "String",
+            # "track07" : "String",
+            # "track08" : "String",
+            # "track09" : "String",
+            # "track10" : "String",
+            # "track09" : "String",
+            # "track09" : "String",
+            # "track09" : "String",
+            # "track09" : "String",
+        
 
         with self.canvas.container(): 
             st.title("DeDupe")
@@ -52,17 +73,19 @@ class DeDupeInitPage:
 
             with colC:
                 if selected_type:
+                    st.write("")
+                    st.write("")
                     st.write(eval(f"DeDupeTypesEnum.{selected_type}"))
 
 
             col_1, col_2, col_3,_ = st.columns([1,1,1,6])
             with col_1:
-                add_btn = st.button("Add")
+                add_btn = st.button("Voeg toe")
                 if add_btn:
                     st.session_state["dedupe_type_dict"][selected_col] = selected_type
                     
             with col_2:
-                remove_btn = st.button("Remove")
+                remove_btn = st.button("Verwijder")
                 if remove_btn:
                     if selected_col in st.session_state["dedupe_type_dict"]:
                         del st.session_state["dedupe_type_dict"][selected_col]
@@ -75,7 +98,7 @@ class DeDupeInitPage:
                         st.session_state["currentState"] = "LabelRecords_get_record_pair" 
                         st.experimental_rerun()
 
-            st.write("Actieve selectie:")
+            st.markdown("**Geselecteerd:**")
             if st.session_state['dedupe_type_dict'] == {}:
                 st.write("U heeft nog geen kolommen gekozen")
             else:

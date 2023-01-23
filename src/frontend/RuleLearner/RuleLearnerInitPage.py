@@ -30,25 +30,25 @@ class RuleLearnerInitPage:
     def _create_default_dropping_dict(_self, d):
         return d
 
-    def show(self): 
-        with self.canvas.container(): 
-
+    def _show_ag_grid(self):
             # Toon de dataframe -> NIET EDITEERBAAR
             MIN_HEIGHT = 50
             MAX_HEIGHT = 500
             ROW_HEIGHT = 60
 
-
-            st.title("Rule Learning")
             st.markdown(f"<h4>Ingeladen Dataset: </h4>", unsafe_allow_html=True)
-
-            # Toon de dataframe -> NIET EDITEERBAAR
             gb = GridOptionsBuilder.from_dataframe(st.session_state["dataframe"])
             gb.configure_side_bar()
             gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
             gridOptions = gb.build()
             grid_response = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True, height=min(MIN_HEIGHT + len(st.session_state["dataframe"]) * ROW_HEIGHT, MAX_HEIGHT))
 
+    def show(self): 
+        with self.canvas.container(): 
+
+            st.title("Rule Learning")
+            self._show_ag_grid()
+            
             r = RuleLearnerOptionsSubPage()
             r.show()
                         

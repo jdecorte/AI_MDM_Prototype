@@ -24,7 +24,7 @@ def main():
     StateManager.initStateManagement()
 
     # Cookie Management
-    if st.session_state["dataframe"] is not None:
+    if st.session_state["dataframe"] is not None and (st.session_state["session_flask"] is not None):
         if "session_flask_local_id" not in st.session_state:
             conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
             ret = conn.getLocalStorageVal(key='session_flask')
@@ -43,12 +43,12 @@ def main():
     # Sidebar vullen met functionaliteit-mogelijkheden
     functionality_selectbox = st.sidebar.selectbox(
         "Functionaliteit:",
-        ("Data Profiling","Data Cleaning", "De-duplicatie", "Rule-learning"), index=3
+        ("Data Profiling","Data Extractie","Data Cleaning", "De-duplicatie", "Rule-learning"), index=3
     )
     st.session_state["current_functionality"] = functionality_selectbox
 
     # Sidebar vullen met file-upload knop
-    st.sidebar.markdown(f"<h3>Remote handling van een dataset</h3>", unsafe_allow_html=True)
+    # st.sidebar.markdown(f"<h3>Remote handling van een dataset</h3>", unsafe_allow_html=True)
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
 
     # Sidebar vullen met Remote of local functionaliteit
@@ -62,6 +62,7 @@ def main():
         handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
     else:
         handler = LocalHandler()
+    # handler = RemoteHandler(f"http://127.0.0.1:5000")
 
     if uploaded_file:
 

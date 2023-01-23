@@ -46,7 +46,7 @@ class RuleLearnerSuggestionsPage:
                 enable_enterprise_modules = False
             )
 
-            colb0, colb1, colb2, colb3 = st.columns([1,1,1,4])
+            colb0, colb1, colb2, colb3 = st.columns([2,2,1,4])
         
             with colb0:
                 apply_suggestions = st.button("Pas geselecteerde suggesties toe", key="apply_suggestions")

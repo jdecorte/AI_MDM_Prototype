@@ -12,6 +12,7 @@ class DataPrepper:
 
     def clean_data_frame(self, dirty_df: pd.DataFrame, cleaning_json_string: str) -> pd.DataFrame:
 
+        
         try:
             clusters_ = self._find_duplicate_columns(dirty_df)
             deduped_df = self._dedupe_dataframe_columns(clusters_, dirty_df)
@@ -19,22 +20,25 @@ class DataPrepper:
             print(e)
 
         dataframe_with_commands = self.data_prepper_command_factory.parse_cleaning_options_from_JSONstring(cleaning_json_string, deduped_df)
-
+        print(f"length of original dataframe: {len(deduped_df)} ; Amount of columns of original dataframe: {len(deduped_df.columns)}")
         # # EXECUTE CLEANING COMMANDS FROM JSON
         # [x.execute() for x in dataframe_with_commands["cleaning_command"].values()]
 
         # EXECUTE BINNING COMMANDS FROM JSON
-        [x.execute() for x in dataframe_with_commands["binning_command"].values()]
+        [x.execute() for x in dataframe_with_commands["binning_command"].values if x is not None]
+    
 
-        # EXECUTE DROPPING COMMANDS FROM JSON THAT REQUIRE ENTIRE DATAFRAME
+        # EXECUTE DROPPING COMMANDS FROM JSON
+        try:
+            # list_of_remaining_series_with_none = [[y.execute() for y in x if y is not None] for x in dataframe_with_commands["list_of_dropping_commands"].values if x is not None]
+            list_of_remaining_series_with_none = [[y.execute() for y in x if y is not None] for x in dataframe_with_commands["list_of_dropping_commands"].values if x is not None]
+            # list_of_remaining_series = [x for x in list_of_remaining_series_with_none if len(x) != 0]
+            # debinned_dropped_df = pd.concat(list_of_remaining_series, axis=1, join="inner").reset_index()
+        except Exception as e:
+            print(e)
 
-
-        # EXECUTE DROPPING COMMANDS FROM JSON PER COLUMN
-        list_of_remaining_series_with_none = [x.execute() for x in dataframe_with_commands["list_of_dropping_commands"].values()]
-        list_of_remaining_series = [x for x in list_of_remaining_series_with_none if x != None]
-        debinned_dropped_df = pd.concat(list_of_remaining_series, axis=1, join="inner").reset_index()
-
-        return debinned_dropped_df
+        print(f"length of new dataframe: {len(deduped_df)} ; cols of new dataframe: {len(deduped_df.columns)}")
+        return deduped_df
         
 
     def transform_data_frame_to_OHE(self, non_OHE_df: pd.DataFrame, drop_nan:bool) -> pd.DataFrame:

@@ -63,8 +63,9 @@ class RuleLearnerOptionsSubPage:
         tab1, tab2, tab3 = st.tabs(["Algoritme", "Dropping", "Binning"])
         # Algoritme
         with tab1:
+
             st.session_state["rule_length"] = st.number_input('Rule length:', value=default_rule_length, format="%d")
-            st.session_state["min_support"]  = st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support)
+            st.session_state["min_support"]  = st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support, )
             st.session_state["lift"] = st.slider('Minimum lift', 0.0, 10.0, default_lift)
             st.session_state["confidence"] = st.slider('Minimum confidence', 0.0, 1.0, default_confidence)
             st.session_state["filtering_string"] = st.selectbox('Filtering Type:', [e.value for e in FiltererEnum] , index=[e.value for e in FiltererEnum].index(default_filtering_string))

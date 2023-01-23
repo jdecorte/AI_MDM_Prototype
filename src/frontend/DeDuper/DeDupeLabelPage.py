@@ -27,7 +27,7 @@ class DeDupeLabelPage:
         self.handler = handler
 
     def streamlit_label(self, ) -> None:  # pragma: no cover
-        colBB, colCC, colDD, colEE  = st.columns([1,1,1,1])
+        colBB, colCC, colDD, _, colEE  = st.columns([1,1,1,7,1])
         with colBB:
             duplicate_btn = st.button('Duplicaat')
             if duplicate_btn:
@@ -50,7 +50,7 @@ class DeDupeLabelPage:
                 st.experimental_rerun()
 
         with colEE:
-            finish_label_btn = st.button('Finish')
+            finish_label_btn = st.button('Ga verder naar clustering')
             if finish_label_btn:
                 self.handler.dedupe_train()         
                 st.session_state["currentState"] = "ViewClusters_get_clusters" 
@@ -64,7 +64,7 @@ class DeDupeLabelPage:
                 st.write(pd.DataFrame.from_dict(self.handler.dedupe_get_stats(), orient='index'))      
                 
             with colB:
-                st.write("Below are two records that look similar and might be duplicate records. Label at least 10 records as ‘duplicates’ and 10 records as ‘non-duplicates’")
+                st.markdown("**Hieronder staan ​​twee records die op elkaar lijken en mogelijks duplicaten zijn. Label minimaal 10 records als 'duplicaten' en 10 records als 'niet-duplicaten'**")
                 # st.write('See a lot of records that don’t match? You may get better results if select different columns or compare existing columns differently:')
                 # st.button('Verander fields')
 
