@@ -69,6 +69,7 @@ class DomainController(FlaskView):
             labeled_pair = data_to_use["labeled_pair"]
         finally:
             self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].mark_pair(labeled_pair=labeled_pair)
+            return ""
 
     @route('/dedupe_get_stats', methods=['GET'])
     def dedupe_get_stats(self) -> json:
@@ -85,6 +86,7 @@ class DomainController(FlaskView):
             unique_storage_id = request.cookies.get("session_flask")
         finally:
             self.deduper_session_manager.read_member(unique_storage_id)["dedupe_object"].train()
+            return ""
 
     @route('/dedupe_get_clusters', methods=['GET'])
     def dedupe_get_clusters(self) -> json:
