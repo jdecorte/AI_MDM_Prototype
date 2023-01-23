@@ -1,3 +1,4 @@
+import config as cfg
 import dedupe
 import pandas as pd
 from dedupe._typing import (
@@ -13,10 +14,13 @@ from dedupe._typing import (
 class DeDupeIO():
     
     def __init__(self, dedupe_type_dict, dedupe_data) -> None:
+        cfg.logger.debug("Calling DeDupeIO ..... ")
         self.number_of_unsure_labels = 0
         self.dedupe_data = pd.read_json(dedupe_data).astype(str).to_dict(orient="index")
         self.deduper_object = dedupe.Dedupe(self._transform_type_dict_to_correct_format_for_dedupe(dedupe_type_dict))
+        cfg.logger.debug("About to call prepare_training on deduper object")
         self.deduper_object.prepare_training(self.dedupe_data)
+        cfg.logger.debug("prepare_training done")
         
     def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
         return [{"field":k, "type":v} for k,v in dict_of_types.items()]   

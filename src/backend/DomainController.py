@@ -5,6 +5,9 @@ import hashlib
 import glob
 import os
 import datetime
+import config as cfg
+
+
 from src.backend.HelperFunctions import HelperFunctions
 from datetime import datetime
 
@@ -30,17 +33,27 @@ class DomainController(FlaskView):
     # DEDUPE METHODS
     @route('/create_deduper_object', methods=['POST'])
     def create_deduper_object(self, dedupe_type_dict="", dedupe_data="") -> json:   
+        cfg.logger.debug(f"dedupe_type_dict={dedupe_type_dict}")
+        cfg.logger.debug(f"dedupe data has size={dedupe_data}")
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             dedupe_type_dict = data_to_use["dedupe_type_dict"]
             dedupe_data = data_to_use["dedupe_data"]
+            cfg.logger.debug("From the data in the request")
+            cfg.logger.debug(f"dedupe_type_dict={dedupe_type_dict}")
+            cfg.logger.debug(f"len(dedupe data)={len(dedupe_data)}")
         finally:
             self.deduper_session_manager.create_member(unique_storage_id = unique_storage_id , dedupe_type_dict = dedupe_type_dict, dedupe_data = dedupe_data)
+            # Add a return statement to fix this error
+            # TypeError: The view function for 'DomainController:create_deduper_object' did not return a valid response. 
+            # The function either returned None or ended without a return statement.
+            return ""
         
     @route('/dedupe_next_pair', methods=['GET'])
     def dedupe_next_pair(self) -> json:
+        cfg.logger.debug("Calling dedupe_next_pair")
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
@@ -114,6 +127,7 @@ class DomainController(FlaskView):
     # METHODS FOR SESSION_MAP
     @route('/get_session_map', methods=['GET','POST'])
     def get_session_map(self,dataframe_in_json=""):
+        cfg.logger.debug("Calling get_session_map")
         unique_storage_id = "Local"
         if dataframe_in_json == "":
             data_to_use = json.loads(request.data)
