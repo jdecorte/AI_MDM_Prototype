@@ -43,7 +43,7 @@ gunicorn -w 3 run_flask:app
 ```
 Dit commando moet je uitvoeren in de directory die het bestand `run_flask.py` bevat.
 Hierna zal de backend beschikbaar zijn op poort 8000 (maar enkel 
-vanaf je eigen computer!)
+vanaf de server die gunicorn draait!)
 
 ### Frontend starten op je eigen computer
 
@@ -57,6 +57,53 @@ streamlit run run_streamlit.py
 Dit start de streamlit app op en opent een browser.
 
 ### Reverse proxy instellen voor `gunicorn`
+
+Zorg dat `nginx` geïnstalleerd is op de server, bv. op Alma Linux
+```
+sudo dnf install nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+
+Voeg het volgende blok toe onder `http` in de `nginx` configuratie file
+bv. op `/etc/nginx/nginx.conf`.
+
+```
+ server {
+        listen 80;
+        server_name 127.0.0.1; # vervang dit door de server naam
+
+        location / {
+           proxy_pass http://127.0.0.1:8000; #  gebruik dezelfde poort als voorheen
+        }
+    }
+
+```
+
+### Frontend op de server
+
+Zorg dat de virtuele omgeving is geactiveerd. Start de streamlit app als volgt op:
+```
+streamlit run run_streamlit.py --server.port 8501 --server.baseUrlPath /aimdmtool/ --server.enableCORS true --server.enableXsrfProtection true --server.headless=true
+```
+
+In `/etc/nginx/nginx.conf` voeg de volgende configuratie toe die `/aimdmtool` 
+zal forwarden naar de streamlit applicatie:
+```
+location /aimdmtool {
+          proxy_pass http://127.0.0.1:8501;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header Host $http_host;
+          proxy_redirect off;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+```
+Voeg dit toe net voor de `location` die de forwarding doet naar `gunicorn`.
+
+
+
 
 
 
