@@ -1,6 +1,7 @@
 import datetime
 import pickle
 import os
+import config as cfg
 
 from src.backend.Deduplication.DeDupeIO import DeDupeIO
 
@@ -11,16 +12,17 @@ class DeduperSessionManager():
         self.max_number_of_sessions = max_number_of_sessions
     
     def create_member(self, unique_storage_id, dedupe_type_dict, dedupe_data):
-
+        cfg.logger.debug(f"unique_storage_id = {unique_storage_id}")
         try:
             # Check of member reeds aanwezig is, ander roep update aan
             if unique_storage_id in self.session_dict:
+                cfg.logger.debug(f"unique_storage_id = {unique_storage_id} is already present")
                 self.update_member(unique_storage_id)
                 return
 
             # Check of member reeds aanwezig is als pickled file in file storage, maak anders nieuw object aan
             deduper_object =  self._create_new_or_return_persisted(unique_storage_id, dedupe_type_dict, dedupe_data)
-
+            cfg.logger.debug("deduper object aangemaakt")
             # Check of er nog plaats is
             if len(self.session_dict) < self.max_number_of_sessions:
                 self.session_dict[unique_storage_id] = {"time_stamp":datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),"dedupe_object":deduper_object}
@@ -34,6 +36,8 @@ class DeduperSessionManager():
             print(e)
 
     def read_member(self, unique_storage_id):
+        cfg.logger.debug(f"Calling read_member met {unique_storage_id}")
+        cfg.logger.debug(f"Huidige keys in session_dict {self.session_dict.keys()}")
         self.update_member(unique_storage_id)
         return self.session_dict[unique_storage_id]
 
@@ -60,11 +64,14 @@ class DeduperSessionManager():
      
     def _create_new_or_return_persisted(self, unique_storage_id, dedupe_type_dict, dedupe_data):
         # Check of member reeds aanwezig is als pickled file in file storage
+        cfg.logger.debug(f"unique_storage_id = {unique_storage_id}")
         if os.path.exists(f"./storage/{unique_storage_id}/Deduper/deduper_object.bin"):
             # restore deduper_object
             with open(f"./storage/{unique_storage_id}/Deduper/deduper_object.bin", "rb") as bin_file:
                     deduper_object = pickle.load(bin_file)
             self.session_dict[unique_storage_id] = {"time_stamp":datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),"dedupe_object": deduper_object}
             return deduper_object
-        else: return DeDupeIO(dedupe_type_dict, dedupe_data)
+        else: 
+            cfg.logger.debug(f"Creating a new deduper object for {unique_storage_id}")
+            return DeDupeIO(dedupe_type_dict, dedupe_data)
     

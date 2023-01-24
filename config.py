@@ -6,8 +6,8 @@ import os
 PATH = "./rule_finder.log"
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.WARN)
+logger = logging.getLogger("aimdm")
+logger.setLevel(logging.DEBUG)
 
 
 

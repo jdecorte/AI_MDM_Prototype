@@ -1,30 +1,29 @@
+import config as cfg
 import dedupe
 import pandas as pd
-from dedupe._typing import (
-    Data,
-    Literal,
-    RecordDict,
-    RecordDictPair,
-    RecordID,
-    TrainingData,
-    Tuple, 
-)
+from dedupe._typing import TrainingData
 
-class DeDupeIO():
-    
+
+class DeDupeIO:
+
     def __init__(self, dedupe_type_dict, dedupe_data) -> None:
+        cfg.logger.debug("Calling DeDupeIO ..... ")
         self.number_of_unsure_labels = 0
         self.dedupe_data = pd.read_json(dedupe_data).astype(str).to_dict(orient="index")
-        self.deduper_object = dedupe.Dedupe(self._transform_type_dict_to_correct_format_for_dedupe(dedupe_type_dict))
+        self.deduper_object = dedupe.Dedupe(
+            self._transform_type_dict_to_correct_format_for_dedupe(dedupe_type_dict)
+        )
+        cfg.logger.debug("About to call prepare_training on deduper object")
         self.deduper_object.prepare_training(self.dedupe_data)
-        
+        cfg.logger.debug("prepare_training done")
+
     def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
-        return [{"field":k, "type":v} for k,v in dict_of_types.items()]   
+        return [{"field": k, "type": v} for k, v in dict_of_types.items()]
 
     def next_pair(self):
-        return self.deduper_object.uncertain_pairs().pop() 
+        return self.deduper_object.uncertain_pairs().pop()
 
-    def mark_pair(self,labeled_pair):
+    def mark_pair(self, labeled_pair):
         record_pair, label = labeled_pair
         examples: TrainingData = {"distinct": [], "match": []}
         if label == "unsure":
@@ -38,10 +37,20 @@ class DeDupeIO():
         self.deduper_object.mark_pairs(examples)
 
     def get_stats(self):
-        n_match = len(self.deduper_object.training_pairs["match"]) - self.number_of_unsure_labels
-        n_distinct = len(self.deduper_object.training_pairs["distinct"]) - self.number_of_unsure_labels
+        n_match = (
+            len(self.deduper_object.training_pairs["match"])
+            - self.number_of_unsure_labels
+        )
+        n_distinct = (
+            len(self.deduper_object.training_pairs["distinct"])
+            - self.number_of_unsure_labels
+        )
         n_unsure = self.number_of_unsure_labels
-        return {"Yes":f"{n_match}/10", "No":f"{n_distinct}/10", "Unsure":f"{n_unsure}"}
+        return {
+            "Yes": f"{n_match}/10",
+            "No": f"{n_distinct}/10",
+            "Unsure": f"{n_unsure}",
+        }
 
     def train(self):
         try:
@@ -49,24 +58,26 @@ class DeDupeIO():
         except Exception as e:
             print(e)
             print(e.__traceback__)
-    
+
     def get_clusters(self):
         try:
             threshold = 0.5
             pairs = self.deduper_object.pairs(self.dedupe_data)
             pair_scores = self.deduper_object.score(pairs)
             clusters = self.deduper_object.cluster(pair_scores, threshold)
-            clusters = self.deduper_object._add_singletons(self.dedupe_data.keys(), clusters)
-            clusters = list(clusters) 
+            clusters = self.deduper_object._add_singletons(
+                self.dedupe_data.keys(), clusters
+            )
+            clusters = list(clusters)
             cluster_membership = {}
             for cluster_id, (records, scores) in enumerate(clusters):
                 for record_id, score in zip(records, scores):
                     cluster_membership[str(record_id)] = {
                         "Cluster ID": str(cluster_id),
-                        "confidence_score": str(score)
+                        "confidence_score": str(score),
                     }
-            return cluster_membership   
+            return cluster_membership
         except Exception as e:
-            print(e) 
-            print(e.with_traceback) 
+            print(e)
+            print(e.with_traceback)
             return {}
