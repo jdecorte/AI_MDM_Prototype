@@ -24,7 +24,7 @@ def main():
     StateManager.initStateManagement()
 
     # Cookie Management
-    if st.session_state["dataframe"] is not None and (st.session_state["session_flask"] is not None):
+    if st.session_state["dataframe"] is not None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
             conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
             ret = conn.getLocalStorageVal(key='session_flask')
