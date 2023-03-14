@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import config as cfg
+import math
 import pprint
 import json
-from typing import Dict, Sequence
+from typing import Dict, Sequence, List
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 
 
@@ -13,7 +14,15 @@ class ColumnRule:
       rule_string: str,
       original_df=None,
       value_mapping=None,
-      confidence=None):
+      confidence=None,):
+        """
+        rule_string: string of the form "A,B => C" (or "/ => C")
+        original_df: dataframe containing the original data (not one-hot encoded),
+            but all values should be strings
+        value_mapping: dictionary mapping antecedents with value to consequents, e.g.
+            {frozenset(["A_a1"]): "B_b1", frozenset(["A_a2"]): "B_b2"}
+        confidence: confidence of the rule, if None then the confidence is calculated
+        """
         self.value_mapping = value_mapping
         # Test of het wel stringified is
         self.original_df = original_df
@@ -29,6 +38,7 @@ class ColumnRule:
             self.df_to_correct = self._create_dataframe_to_be_corrected()
             self.mapping_df = self._create_mapping_df()
 
+        # Note: if value_mapping is None and confidence is None, then this code will crash
         if confidence is None:
             self.confidence = 1.0 - self.df_to_correct.shape[0]/original_df.shape[0]
         else:
@@ -41,10 +51,15 @@ class ColumnRule:
                 + str(self.value_mapping)
                 )
 
-    def _create_dataframe_to_be_corrected(self):
-
+    def _create_dataframe_to_be_corrected(self) -> pd.DataFrame:
+        """
+        Create a dataframe containing all rows that need to be corrected.
+        """
         temp_value_mapping = {}
         df_to_be_corrected = pd.DataFrame()
+
+        # Create dataframe with all rows that need to be corrected.
+        # To this step by step, because the query string can become too long.
         counter = 0
         for k, v in self.value_mapping.items():
             counter += 1
@@ -92,7 +107,7 @@ class ColumnRule:
     def _create_df_query(mapping_dict: Dict[Sequence[str], str]) -> str:
         """
         Create a query string that can be used to retrieve all the rows in
-        the one-hot-encoded dataframe that do not satisty the mapping specified
+        the one-hot-encoded dataframe that do not satisfy the mapping specified
         in the dictionary.
 
         Each item in the mapping dictionary maps a FrozenSet of str to str.
@@ -216,3 +231,141 @@ class ColumnRule:
             idx_to_correct=json.dumps(self.df_to_correct.index.tolist()),
             confidence=self.confidence,
             value_mapping=self.mapping_df.to_json())
+
+    def compute_c_measure(self) -> float:
+        """
+        Compute the c-metric for this rule, this is a float in the range [1,5].
+        This is based on the flow chart on page 39 of 
+        https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
+        """
+        if not hasattr(self, "fi_measure_"):
+            self.compute_fi_measure()
+        if not hasattr(self, "g3_measure_"):
+            self.compute_g3_measure()
+        c_measure = 2.5*(self.fi_measure_ + self.g3_measure_)
+
+        # TODO: make cutoffs configurable
+        if self.g3_measure_ >= 0.75 and self.fi_measure_ < 0.75:
+            if self.has_predominant_rhs():
+                c_measure -= 1
+            else:
+                c_measure += 1
+        elif self.g3_measure_ < 0.75 and self.fi_measure_ >= 0.75:
+            if self.compute_rfi_measure() < 0.75:
+                c_measure -= 1
+            else:
+                c_measure += 1
+        elif self.g3_measure_ >= 0.75 and self.fi_measure_ >= 0.75:
+            if self.has_predominant_rhs() and self.compute_rfi_measure() < 0.75:
+                c_measure -= 2
+        else:
+            raise ValueError("C-measure computed when both g3 and fi are < 0.75")
+
+        # Stage 4 and 5 not yet implemented
+
+        return c_measure
+
+    def has_predominant_rhs(self, threshold=0.85) -> bool:
+        """ Returns true is the RHS contains a value that is present in
+            at least threshold rows.
+        """
+        return self.original_df[list(self.consequent_set)[0]].value_counts(
+            normalize=True).max() >= threshold
+
+    def compute_fi_measure(self) -> float:
+        """ Computes the fraction of information measure for this rule.
+            Note: this does NOT take into account the value mapping.
+            This measure is computed only on the basis of the values in the
+            original dataframe and the columns in the antecedent and consequent
+            set.
+
+            The result is cached in self.fi_measure_.
+        """
+        self.fi_measure_ = fi_measure(self.original_df,
+                                      list(self.antecedent_set),
+                                      list(self.consequent_set)[0],)
+        return self.fi_measure_
+
+    def compute_rfi_measure(self) -> float:
+        self.rfi_measure_ = rfi_measure(self.original_df,
+                                        list(self.antecedent_set),
+                                        list(self.consequent_set)[0],)
+        return self.rfi_measure_
+
+    def compute_g3_measure(self) -> float:
+        self.g3_measure_ = g3_measure(self.original_df,
+                                      list(self.antecedent_set),
+                                      list(self.consequent_set)[0],)
+        return self.g3_measure_
+
+
+def fi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
+    """ Fraction of information measure. See section 3.2.3 in https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
+
+    """
+    y = df[rhs_col].value_counts(normalize=True).values
+    if len(y) == 1:  # Return zero is right hand side is constant
+        return 0
+
+    entropy_y = - (y * np.log2(y)).sum()  # Entropy of y
+
+    # Compute conditional entropy
+    values = df.value_counts(subset=lhs_cols + [rhs_col], normalize=True, sort=False)
+    lhs_values = df.value_counts(subset=lhs_cols, normalize=True, sort=False)
+
+    conditional_entropy = 0
+    for x in lhs_values.index:
+        y_for_this_x = values.loc[x].values
+        px = lhs_values.loc[x]
+
+        conditional_entropy += (y_for_this_x * np.log2(y_for_this_x / px)).sum()
+
+    conditional_entropy = - conditional_entropy
+
+    return (entropy_y - conditional_entropy) / entropy_y
+
+
+def rfi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
+    # Compute RFI measure as described on page 44 and page 28
+    lhs_values = df.value_counts(subset=lhs_cols, sort=False)
+    rhs_values = df.value_counts(subset=[rhs_col], sort=False)
+
+    n = df.shape[0]  # number of tuples in the relation
+
+    # Naive implementation. Can be sped up.
+    m_zero = 0.0
+    for x in lhs_values.index:
+        cx = lhs_values.loc[x]
+        for y in rhs_values.index:
+            cy = rhs_values.loc[y]
+            # Start from 1, k = 0 yields zero
+            for k in range(max(1, cx+cy - n), min(cx, cy) + 1):  
+                p0 = math.comb(cy, k) * math.comb(n - cy, cx - k) / math.comb(n, cx)
+                m_zero += p0 * k * np.log2(k * n / (cx * cy))
+
+    m_zero /= n  # Division by n is independent of the loop
+
+    y = df[rhs_col].value_counts(normalize=True).values
+    entropy_y = - (y * np.log2(y)).sum()  # Entropy of y
+    b_zero = m_zero / entropy_y
+
+    return fi_measure(df, lhs_cols, rhs_col) - b_zero
+
+
+def g3_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
+    """ g3 measure as described in https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
+        See section 3.2.1, page 18.
+    """
+    num_tuples = df.shape[0]  # number of tuples in the relation
+    values = df.value_counts(subset=lhs_cols + [rhs_col])
+
+    lhs_values = df.value_counts(subset=lhs_cols)
+
+    s = 0
+    for x in lhs_values.index:
+        # This may cause a performance warning because the index isn't sorted.
+        # However, because the index isn't sorted, we know that the most frequent
+        # value is the first one. So we can just take the first value.
+        s += values.loc[x].iloc[0]
+
+    return 1 - (num_tuples - s)/(num_tuples - lhs_values.shape[0])
