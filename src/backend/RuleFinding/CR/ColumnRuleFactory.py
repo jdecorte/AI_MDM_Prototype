@@ -1,10 +1,10 @@
 import pandas as pd
-import numpy as np
 import math
 import config as cfg
 from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
 from typing import Sequence, List, Dict, FrozenSet
 from src.backend.RuleFinding.AR.AssociationRuleFinder import AssociationRuleFinder
+
 
 class ColumnRuleFactory:
 
@@ -28,7 +28,6 @@ class ColumnRuleFactory:
 
         return self.transform_list_of_column_rules_to_dict_of_column_rules(rule_list)   
 
-
     def transform_list_of_column_rules_to_dict_of_column_rules(self, column_rules : Sequence[ColumnRule]) -> Dict[str, Sequence[ColumnRule]]:
         """
         Get all the 'definitions' from the column_rules. These are rules of the form A => B and B => A that
@@ -41,7 +40,6 @@ class ColumnRuleFactory:
 
         cfg.logger.info(f"get_definitions received {len(column_rules)} column rules")
         cfg.logger.debug(f"The column rules are {';'.join(str(cr) for cr in column_rules)}")
-
 
         result = {
             "Definitions" : {},
@@ -101,13 +99,16 @@ class ColumnRuleFactory:
 
         return dict_of_columnrules_with_empty_antecedent
 
+    def expand_single_column_rule(self, rule_string: str) -> ColumnRule:
+        return ColumnRule(rule_string=rule_string,
+                          original_df=self.original_df,
+                          value_mapping=True)
 
-
-    def expand_single_column_rule(self,rule_string: str) -> ColumnRule:
+    def expand_single_column_rule_old(self, rule_string: str) -> ColumnRule:
         """
             rule_string: a rule string of the form "A_a,B_b => C_c"
             df_dummy: the one-hot-encoded DataFrame
-            df: the orginal DataFrame (with all string data types)
+            df: the original DataFrame (with all string data types)
         """
         cfg.logger.debug(f"Expanding  single column rule for '{rule_string}'")
 

@@ -7,15 +7,12 @@ from backend.RuleFinding.CR.ColumnRule import ColumnRule, fi_measure, g3_measure
 def test_column_rule_creation():
     rule_string = "A => B"
 
-    value_mapping = {
-        frozenset(["A_a1"]): "B_b1",
-        frozenset(["A_a2"]): "B_b2",
-    }
+    value_mapping = True
 
     df = pd.DataFrame(
-        {'A': ["a1", "a1", "a2"],
-         'B': ["x", "y", "z"],
-         'C': ["c", "c", "c"]}
+        {'A': ["a1"] * 10 + ["a2"] * 10 + ["a1", "a1", "a2"],
+         'B': ["b1"] * 10 + ["b2"] * 10 + ["x", "y", "z"],
+         'C': ["cc"] * 20 + ["c", "c", "c"]}
     )
 
     cr = ColumnRule(rule_string=rule_string,
@@ -29,21 +26,22 @@ def test_column_rule_creation():
     assert "FOUND_CON" in df_to_be_corrected.columns
     assert "RULESTRING" in df_to_be_corrected.columns
 
-    assert df_to_be_corrected['FOUND_CON'].equals(pd.Series(["x", "y", "z"]))
-    assert df_to_be_corrected['SUGGEST_CON'].equals(
-        pd.Series(["b1", "b1", "b2"]))
-    assert df_to_be_corrected['RULESTRING'].equals(
-        pd.Series([rule_string, rule_string, rule_string]))
+    assert (df_to_be_corrected['FOUND_CON'].reset_index(drop=True)
+            .equals(pd.Series(["x", "y", "z"])))
+    assert (df_to_be_corrected['SUGGEST_CON'].reset_index(drop=True)
+            .equals(pd.Series(["b1", "b1", "b2"])))
+    assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True)
+            .equals(pd.Series([rule_string, rule_string, rule_string])))
 
     # Check confidence
-    assert cr.confidence == 0.0
+    assert math.isclose(cr.confidence, 20/23)
 
     # Check mapping df
     mapping_df = cr.mapping_df
-    assert mapping_df.shape == (2, 2)
-    assert "A" in mapping_df.columns
+    assert mapping_df.shape == (2, 1)
+    assert "A" == mapping_df.index.name
     assert "B" in mapping_df.columns
-    assert mapping_df['A'].reset_index(drop=True).equals(pd.Series(["a1", "a2"]))
+    assert mapping_df.index.equals(pd.Index(["a1", "a2"]))
     assert mapping_df['B'].reset_index(drop=True).equals(pd.Series(["b1", "b2"]))
 
 
@@ -51,15 +49,12 @@ def test_column_rule_creation_bis():
     # Test that correct rows do not appear in the dataframe to correct
     rule_string = "A => B"
 
-    value_mapping = {
-        frozenset(["A_a1"]): "B_b1",
-        frozenset(["A_a2"]): "B_b2",
-    }
+    value_mapping = True
 
     df = pd.DataFrame(
-        {'A': ["a1", "a1", "a1", "a1", "a1", "a2", "a2"],
-         'B': ["b1", "b1", "b1", "x", "y", "z", "b2"],
-         'C': ["c", "c", "c", "c", "c", "c", "c"]}
+        {'A': ["a1", "a1", "a1", "a1", "a1", "a2", "a2", "a2"],
+         'B': ["b1", "b1", "b1", "x", "y", "z", "b2", "b2"],
+         'C': ["c", "c", "c", "c", "c", "c", "c", "c"]}
     )
 
     cr = ColumnRule(rule_string=rule_string,
@@ -77,18 +72,83 @@ def test_column_rule_creation_bis():
             equals(pd.Series([rule_string, rule_string, rule_string])))
 
 
+def test_column_rule_creation_multiple_antecedents():
+    rule_string = "A,B => C"
+    value_mapping = True
+
+    # C is the sum of A and B
+    # Put the columns in a "random order"
+    # Put the three errors somewhere in the middle
+    # Add another column
+    df = pd.DataFrame(
+        {'A': ["a1"] * 10 + ["a1", "a1", "a2"] + ["a2"] * 10,
+         'C': ["c2"] * 10 + ["c3", "c4", "c5"] + ["c4"] * 10,
+         'B': ["b1"] * 10 + ["b1", "b1", "b2"] + ["b2"] * 10,
+         'D': ["d"] * 23
+         }
+    )
+
+    cr = ColumnRule(rule_string=rule_string,
+                    original_df=df,
+                    value_mapping=value_mapping)
+
+    # Check the mapping dataframe
+    mapping_df = cr.mapping_df
+    assert mapping_df.shape == (2, 1)
+    expected_mapping = pd.DataFrame(
+        data={'C': ["c2", "c4"]},
+        index=pd.Index([("a1", "b1"), ("a2", "b2")])
+    )
+    assert expected_mapping.equals(mapping_df)
+
+    # Check the dataframe to correct
+    df_to_be_corrected = cr.df_to_correct
+
+    assert df_to_be_corrected.shape == (3, 7)
+
+    assert (df_to_be_corrected['FOUND_CON'].reset_index(drop=True).
+            equals(pd.Series(["c3", "c4", "c5"])))
+    assert (df_to_be_corrected['SUGGEST_CON'].reset_index(drop=True).
+            equals(pd.Series(["c2", "c2", "c4"])))
+    assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True).
+            equals(pd.Series([rule_string, rule_string, rule_string])))
+
+
+def test_empty_antecedent():
+    rule_string = "/ => A"
+
+    value_mapping = True
+
+    df = pd.DataFrame(
+        {'A': ["a1", "a1", "a1", "a1", "a1", "a2", "a2", "a2"],
+         'B': ["b1", "b1", "b1", "x", "y", "z", "b2", "b2"],
+         'C': ["c", "c", "c", "c", "c", "c", "c", "c"]}
+    )
+
+    cr = ColumnRule(rule_string=rule_string,
+                    original_df=df,
+                    value_mapping=value_mapping)
+
+    df_to_be_corrected = cr.df_to_correct
+
+    assert df_to_be_corrected.shape == (3, 6)
+    assert (df_to_be_corrected['FOUND_CON'].reset_index(drop=True).
+            equals(pd.Series(["a2", "a2", "a2"])))
+    assert (df_to_be_corrected['SUGGEST_CON'].reset_index(drop=True).
+            equals(pd.Series(["a1", "a1", "a1"])))
+    assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True).
+            equals(pd.Series([rule_string, rule_string, rule_string])))
+
+
 def test_predict():
     rule_string = "A => B"
 
-    value_mapping = {
-        frozenset(["A_a1"]): "B_b1",
-        frozenset(["A_a2"]): "B_b2",
-    }
+    value_mapping = True
 
     df = pd.DataFrame(
-        {'A': ["a1", "a1", "a2"],
-         'B': ["x", "y", "z"],
-         'C': ["c", "c", "c"]}
+        {'A': ["a1"] * 10 + ["a2"] * 10 + ["a1", "a1", "a2"],
+         'B': ["b1"] * 10 + ["b2"] * 10 + ["x", "y", "z"],
+         'C': ["cc"] * 20 + ["c", "c", "c"]}
     )
 
     cr = ColumnRule(rule_string=rule_string,
@@ -98,24 +158,22 @@ def test_predict():
     predicted_values = cr.predict(df)
 
     assert predicted_values.shape == (df.shape[0], 2)
+    print(f"predicted values = {predicted_values}")
     assert (predicted_values['A'].reset_index(drop=True).
-            equals(pd.Series(["a1", "a1", "a2"])))
+            equals(pd.Series(["a1"] * 10 + ["a2"] * 10 + ["a1", "a1", "a2"])))
     assert (predicted_values['B'].reset_index(drop=True).
-            equals(pd.Series(["b1", "b1", "b2"])))
+            equals(pd.Series(["b1"] * 10 + ["b2"] * 10 + ["b1", "b1", "b2"])))
 
 
 def test_status():
     rule_string = "A => B"
 
-    value_mapping = {
-        frozenset(["A_a1"]): "B_b1",
-        frozenset(["A_a2"]): "B_b2",
-    }
+    value_mapping = True
 
     df = pd.DataFrame(
-        {'A': ["a1", "a1", "a2"],
-         'B': ["x", "y", "z"],
-         'C': ["c", "c", "c"]}
+        {'A': ["a1"] * 10 + ["a2"] * 10 + ["a1", "a1", "a2"],
+         'B': ["b1"] * 10 + ["b2"] * 10 + ["x", "y", "z"],
+         'C': ["CC"] * 20 + ["c", "c", "c"]}
     )
 
     cr = ColumnRule(rule_string=rule_string,
@@ -357,6 +415,7 @@ def test_rfi_measure_1():
     assert math.isclose(result, 0.211, abs_tol=0.001)
 
 
+# This test takes about 90 seconds to run
 def test_c_measure_1():
     a = []
     b = []
@@ -380,16 +439,3 @@ def test_c_measure_1():
     assert math.isclose(g3, 0.99, abs_tol=0.01)  # Using result from the thesis
     rfi = cr.compute_rfi_measure()
     assert math.isclose(rfi, 0.974, abs_tol=0.01)  # Using result from the thesis
-
-if __name__ == "__main__":
-    a = []
-    b = []
-    for i in range(1, 11):
-        a += [str(i)] * 1000
-        b += [str(i)] * 990 + [str(i+1) if i < 10 else '1'] * 10
-
-    df = pd.DataFrame({'A': a, 'B': b})
-    value_mapping = {
-        frozenset([f"A_{i}"]): f"B_{i}" for i in range(1, 11)
-    }    
-    cr = ColumnRule("A => B", df, value_mapping)

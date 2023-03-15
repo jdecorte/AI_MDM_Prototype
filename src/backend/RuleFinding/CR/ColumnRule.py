@@ -13,14 +13,13 @@ class ColumnRule:
       self,
       rule_string: str,
       original_df=None,
-      value_mapping=None,
+      value_mapping=False,
       confidence=None,):
         """
         rule_string: string of the form "A,B => C" (or "/ => C")
         original_df: dataframe containing the original data (not one-hot encoded),
             but all values should be strings
-        value_mapping: dictionary mapping antecedents with value to consequents, e.g.
-            {frozenset(["A_a1"]): "B_b1", frozenset(["A_a2"]): "B_b2"}
+        value_mapping: should values be mapped to the most frequent value?
         confidence: confidence of the rule, if None then the confidence is calculated
         """
         self.value_mapping = value_mapping
@@ -34,11 +33,12 @@ class ColumnRule:
             self.antecedent_set = frozenset(antecedent_string[0].split(","))
         self.consequent_set = set(rule_string.split(" => ")[1].split(","))
 
-        if value_mapping is not None:
-            self.df_to_correct = self._create_dataframe_to_be_corrected()
+        if value_mapping:
             self.mapping_df = self._create_mapping_df()
+            self.df_to_correct = self._create_dataframe_to_be_corrected()
 
-        # Note: if value_mapping is None and confidence is None, then this code will crash
+        # Note: if value_mapping is False and confidence is None,
+        # then this code will crash
         if confidence is None:
             self.confidence = 1.0 - self.df_to_correct.shape[0]/original_df.shape[0]
         else:
@@ -52,6 +52,42 @@ class ColumnRule:
                 )
 
     def _create_dataframe_to_be_corrected(self) -> pd.DataFrame:
+        """
+        Creates a dataframe containing all rows that need to be corrected.
+        Contains the following columns:
+        - all columns of the original dataframe
+        - a column with the rule string (RULESTRING)
+        - a column with the value that was found (FOUND_CON)
+        - a column with the value that was predicted (SUGGEST_CON)      
+        """
+        lhs_cols = sorted(list(self.antecedent_set))
+        rhs_col = list(self.consequent_set)[0]
+        if len(lhs_cols) > 0:
+            df_tmp = self.original_df.merge(
+                self.mapping_df,
+                left_on=lhs_cols,
+                right_on=lhs_cols,
+                left_index=False,
+                right_index=True,
+                suffixes=["", "_predicted"]
+                )
+        else:
+            # If there are no antecedents, then always predict the most frequent value
+            df_tmp = self.original_df.copy()
+            df_tmp[rhs_col + "_predicted"] = self.mapping_df[rhs_col].iloc[0]
+
+        df_errors = df_tmp[
+                df_tmp[rhs_col] != df_tmp[rhs_col + "_predicted"]].copy()
+        # Add three columns to the dataframe, one with the rule string, one
+        # with the value that was found and one with the value that was predicted.
+        df_errors["RULESTRING"] = self.rule_string
+        df_errors["FOUND_CON"] = df_errors[rhs_col]
+        df_errors["SUGGEST_CON"] = df_errors[rhs_col + "_predicted"]
+        df_errors = df_errors.drop(columns=[rhs_col + "_predicted"])
+
+        return df_errors
+        
+    def _create_dataframe_to_be_corrected_old(self) -> pd.DataFrame:
         """
         Create a dataframe containing all rows that need to be corrected.
         """
@@ -104,7 +140,7 @@ class ColumnRule:
         return df_to_be_corrected
 
     @staticmethod
-    def _create_df_query(mapping_dict: Dict[Sequence[str], str]) -> str:
+    def _create_df_query_old(mapping_dict: Dict[Sequence[str], str]) -> str:
         """
         Create a query string that can be used to retrieve all the rows in
         the one-hot-encoded dataframe that do not satisfy the mapping specified
@@ -119,7 +155,7 @@ class ColumnRule:
              for a, c in mapping_dict.items()])
 
     @staticmethod
-    def _create_single_query_string(
+    def _create_single_query_string_old(
       antecedents: Sequence[str],
       consequent: str) -> str:
         """
@@ -145,7 +181,7 @@ class ColumnRule:
     def show_value_mapping(self) -> None:
         pprint.pprint(self.value_mapping)
 
-    def _create_mapping_df(self) -> pd.DataFrame:
+    def _create_mapping_df_old(self) -> pd.DataFrame:
         """
         Create DataFrame of the mapping stored in self.mappingDict.
         """
@@ -162,7 +198,28 @@ class ColumnRule:
             column, value = v.split('_')
             columnnames_2_values[column].append(value)
 
-        return pd.DataFrame(columnnames_2_values)
+        mapping_df = pd.DataFrame(columnnames_2_values)
+        mapping_df.set_index(keys=sorted(list(self.antecedent_set)), inplace=True)
+        return mapping_df
+
+    def _create_mapping_df(self) -> pd.DataFrame:
+        """ Create a mapping dataframe based on the original dataframe.
+            We map each combination of antecedents to the most frequent
+            consequent.
+        """
+        lhs_cols = sorted(list(self.antecedent_set))
+        rhs_col = list(self.consequent_set)[0]
+
+        if len(lhs_cols) == 0:  # rule with empty antecedent
+            most_common_value = self.original_df[rhs_col].mode()[0]
+            return pd.DataFrame({rhs_col: [most_common_value]})
+
+        df_counts = self.original_df.value_counts(subset=lhs_cols+[rhs_col], sort=False)
+        level = tuple(i for i in range(len(lhs_cols)))
+        tmp = df_counts.groupby(level=level).idxmax()
+        tmp = pd.DataFrame.from_records(tmp, columns=lhs_cols+[rhs_col])
+        tmp.set_index(keys=lhs_cols, inplace=True)
+        return tmp
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -230,7 +287,7 @@ class ColumnRule:
             rule_string=self.rule_string,
             idx_to_correct=json.dumps(self.df_to_correct.index.tolist()),
             confidence=self.confidence,
-            value_mapping=self.mapping_df.to_json())
+            value_mapping=self.mapping_df.reset_index().to_json())
 
     def compute_c_measure(self) -> float:
         """
