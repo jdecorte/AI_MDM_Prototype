@@ -7,14 +7,15 @@ def test_value_rule():
     rl2 = vre.ValueRuleElement("B", "b")
 
     rl3 = vre.ValueRuleElement("C", "c")
-    
+
     value_rule = vr.ValueRule([rl1, rl2], rl3, 0.2, 2.5, 0.99)
 
     assert str(value_rule) == "A=a,B=b || C=c || 0.2 || 2.5 || 0.99"
 
     value_rule = vr.ValueRule([rl2, rl1], rl3, 0.2, 2.5, 0.99)
+    # String is always sorted
+    assert str(value_rule) == "A=a,B=b || C=c || 0.2 || 2.5 || 0.99"
 
-    assert str(value_rule) == "B=b,A=a || C=c || 0.2 || 2.5 || 0.99"
 
 def test_get_column_rule_string():
     rl1 = vre.ValueRuleElement("A", "a")
@@ -40,19 +41,16 @@ def test_rule_element_str():
 
 
 def test_rule_element_eq():
-    rl1 = vre.ValueRuleElement("column", "value")    
+    rl1 = vre.ValueRuleElement("column", "value")
     rl2 = vre.ValueRuleElement("column", "value2")
     rl3 = vre.ValueRuleElement("column", "value")
     rl4 = vre.ValueRuleElement("column2", "value")
 
-
     assert rl1 != rl2
-
     assert rl1 == rl1
-
     assert rl1 == rl3
-
     assert rl4 != rl1
+    assert hash(rl1) == hash(rl3)
 
 
 

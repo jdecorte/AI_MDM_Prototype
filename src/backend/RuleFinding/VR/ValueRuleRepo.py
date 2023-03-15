@@ -1,16 +1,16 @@
-import pandas as pd
 import numpy as np
 import config as cfg
 
-from typing import Dict, Set, List, FrozenSet, Sequence
+from typing import Dict, Set, List, FrozenSet
 
 from src.backend.RuleFinding.VR.ValueRule import ValueRule
 from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
 from src.backend.HelperFunctions import HelperFunctions
 
+
 class ValueRuleRepo:
 
-    def __init__(self, value_rules_dict:Dict[str, Set[ValueRule]]) -> None:
+    def __init__(self, value_rules_dict: Dict[str, Set[ValueRule]]):
         self.value_rules_dict = value_rules_dict
 
     def filter_out_column_rule_strings_from_dict_of_value_rules(self, min_support:float) -> List[str]:
@@ -20,9 +20,8 @@ class ValueRuleRepo:
         self.value_rules_dict = self._filter_low_support_rules(min_support)
 
         potential_conf_dict = self._create_potential_conf_dict_from_value_rules()
-        print('potential_conf_dict')
-        print(potential_conf_dict)
-
+        cfg.logger.debug('potential_conf_dict' + str(potential_conf_dict))
+        
         dict_of_antecedents_to_list_of_column_rules = self._create_dict_of_column_rules_with_potential_confidence_from_value_rules(potential_conf_dict)
 
         list_of_kept_rules_after_potential_conf_filter = self._filter_on_potential_conf_of_rules(potential_conf_dict,dict_of_antecedents_to_list_of_column_rules,self.value_rules_dict)
@@ -63,9 +62,10 @@ class ValueRuleRepo:
 
         return dict_of_kept_rules_to_be_filtered.keys()
 
-
     def _create_potential_conf_dict_from_value_rules(self):
-        potential_conf_dict : Dict[str, float] = { rs : self._calculate_max_confidence(vrs) for rs, vrs in self.value_rules_dict.items()}
+        potential_conf_dict: Dict[str, float] = \
+            {rs: self._calculate_max_confidence(vrs)
+                for rs, vrs in self.value_rules_dict.items()}
         return potential_conf_dict
 
     def _create_dict_of_column_rules_with_potential_confidence_from_value_rules(self, potential_conf_dict):
@@ -82,10 +82,10 @@ class ValueRuleRepo:
         
 
     def _filter_low_support_rules(self, min_support) -> Dict[str, Set[ValueRule]]:
-        """ Remove all entries from the dictionary `rs_2_vr` whose total 
+        """ Remove all entries from the dictionary `self.value_rules_dict` whose total 
             support is currently not greater or equal than `min_support`.
 
-            rs_2_vr: dictionary mapping rule strings, i.e. strings of the form (A,B => C,D)
+            self.value_rules_dict: dictionary mapping rule strings, i.e. strings of the form (A,B => C,D)
             to a set of value rules involving those columns.
             min_support: a float (0.0 <= min_support <= 1.0) 
 
@@ -108,18 +108,20 @@ class ValueRuleRepo:
 
         return kept_rs
 
-
     def _calculate_max_confidence(self, value_rules: Set[ValueRule]) -> float:
         """
-            Calculate the maximum confidence that a column rule might obtain based on the 
-            confidences and supports of the current value rules for that potential column rule.
-            Do this by assuming that all values that are currently not mapped are correct.
+        Calculate the maximum confidence that a column rule might obtain based
+        on the confidences and supports of the current value rules for that potential
+        column rule.
+        Do this by assuming that all values that are currently not mapped are correct.
 
-            value_rules: a set of value rules. These should all pertain to the same columns
+        value_rules: a set of value rules. These should all pertain to the same columns
 
-            returns: a float that represents the maximum confidence level that this rule can ever achieve
+        returns: a float that represents the maximum confidence level that
+        this rule can ever achieve
         """
-        cfg.logger.debug(f"Calculating max confidence for {';'.join(str(_) for _ in value_rules)}")
+        cfg.logger.debug(
+            f"Calculating max confidence for {';'.join(str(_) for _ in value_rules)}")
         support = np.sum([vr.support for vr in value_rules])
         cfg.logger.debug(f"The value rules together have support {support}")
 
@@ -127,4 +129,4 @@ class ValueRuleRepo:
 
         cfg.logger.debug(f"Weighted confidence: {weighted_confidence}")
 
-        return  weighted_confidence + (1 - support) * 1.0
+        return weighted_confidence + (1 - support) * 1.0
