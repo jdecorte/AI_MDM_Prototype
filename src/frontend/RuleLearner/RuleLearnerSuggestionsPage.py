@@ -4,7 +4,7 @@ import rlcompleter
 import numpy as np
 import pandas as pd
 import streamlit as st
-from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+from st_aggrid import GridOptionsBuilder, AgGrid
 from streamlit.components.v1 import html
 from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
 from src.frontend.StateManager import StateManager

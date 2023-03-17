@@ -47,6 +47,14 @@ def main():
     )
     st.session_state["current_functionality"] = functionality_selectbox
 
+    # Extra opties voor data profiling
+    if functionality_selectbox == "Data Profiling":
+        profiling_radio = st.sidebar.radio(
+            "Data Profiling:",
+            ("Pandas Profiling", "Dataprep Profiling"), index=0, horizontal=True
+        )
+        st.session_state["current_profiling"] = profiling_radio
+
     # Sidebar vullen met file-upload knop
     # st.sidebar.markdown(f"<h3>Remote handling van een dataset</h3>", unsafe_allow_html=True)
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
@@ -105,14 +113,18 @@ def main():
         # Aanmaken van Router object:
         router = Router(handler=handler)
 
-        # if functionality_selectbox == "Data Profiling":
-        #     router.routeDataProfiling()
-        # if functionality_selectbox == "Data Cleaning":
-        #     router.routeDataCleaning()
+        if functionality_selectbox == "Data Profiling":
+            if profiling_radio == "Pandas Profiling":
+                router.route_pandas_data_profiling()
+            if profiling_radio == "Dataprep Profiling":
+                router.route_dataprep_data_profiling()
+        if functionality_selectbox == "Data Cleaning":
+            router.route_data_cleaning()
         if functionality_selectbox == "De-duplicatie":
             router.route_dedupe()
         if functionality_selectbox == "Rule-learning":
             router.route_rule_learning()
 
 if __name__ == "__main__":
-    main()
+        print("Starting Streamlit")
+        main()

@@ -89,7 +89,6 @@ class RuleLearnerSummaryRulesPage:
             with col_t2:
                 st.subheader("Meer info over regel:")
                 more_info = st.selectbox('Regel:', st.session_state["gevonden_rules_dict"].keys())
-
                 if more_info:
                     st.write("Gevonden Mapping:")
                     cr = st.session_state["gevonden_rules_dict"][more_info]
@@ -106,7 +105,6 @@ class RuleLearnerSummaryRulesPage:
                         enable_enterprise_modules = False,
                         columns_auto_size_mode=ColumnsAutoSizeMode.NO_AUTOSIZE
                     )
-
 
                     st.markdown("**Rijen die NIET voldoen aan mapping:**")
                     gb3 = GridOptionsBuilder.from_dataframe(st.session_state['dataframe'].iloc[cr.idx_to_correct])

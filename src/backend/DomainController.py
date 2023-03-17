@@ -7,18 +7,20 @@ import os
 import datetime
 import config as cfg
 
-
 from src.backend.HelperFunctions import HelperFunctions
 from datetime import datetime
 
 from src.backend.RuleFinding.RuleMediator import RuleMediator
 from src.backend.Suggestions.SuggestionFinder import SuggestionFinder
 from src.backend.DataPreperation.DataPrepper import DataPrepper
+from src.backend.DataCleaning.DataFrameCleaner import DataFrameCleaner
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.backend.Deduplication.DeduperSessionManager import DeduperSessionManager
 from typing import Dict
 from flask import Flask, json, session, request
 from flask_classful import FlaskView, route
+from src.backend.DataCleaning.FuzzyMatcher import FuzzyMatcher
+from src.backend.DataCleaning.StructureDetector import StructureDetector
 
 class DomainController(FlaskView):
     
@@ -167,11 +169,54 @@ class DomainController(FlaskView):
             json_file.write(json.dumps(content))
         
             
-    # DATA CLEANING
+    # DATA PERPARATION
     @route('/clean_dataframe', methods=['GET','POST'])
     def clean_dataframe(self,df, json_string):
         return self.data_prepper.clean_data_frame(df, json_string)
 
+    # DATACLEANING      
+    # TODO REPLACE
+    @route('/clean_dataframe_dataprep', methods=['POST'])
+    def clean_dataframe_dataprep(self,dataframe_in_json="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            dataframe_in_json = data_to_use["dataframe_in_json"]
+        finally:
+            return json.dumps(self.dataframe_cleaner.clean(dataframe_in_json, clean_headers, data_type_detection, std_missing_values, downcast_memory))
+        
+    @route('/fuzzy_match_dataprep', methods=['POST'])
+    def fuzzy_match_dataprep(self,dataframe_in_json="", col="", cluster_method="", df_name="", ngram="", radius="", block_size="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            dataframe_in_json = data_to_use["dataframe_in_json"]
+            col= data_to_use["col"]
+            cluster_method= data_to_use["cluster_method"]
+            df_name= data_to_use["df_name"]
+            ngram= data_to_use["ngram"]
+            radius = data_to_use["radius"]
+            block_size = data_to_use["block_size"]
+        finally:
+            fuzzy_matcher = FuzzyMatcher(pd.read_json(dataframe_in_json), col=col, df_name=df_name, ngram=ngram, radius=radius, block_size=block_size)
+            fuzzy_matcher.cluster(cluster_method=cluster_method)
+            return fuzzy_matcher.clusters.to_json()
+        
+    @route('/structure_detection', methods=['POST'])
+    def structure_detection(self,series_in_json="", exception_chars="", compress="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            series_in_json = data_to_use["series_in_json"]
+            exception_chars= data_to_use["exception_chars"]
+            compress= data_to_use["compress"]
+        finally:
+            fuzzy_matcher = StructureDetector(pd.read_json(series_in_json,typ='series', orient='records'), exception_chars=exception_chars, compress=compress).find_structure()
+            return fuzzy_matcher.to_json()
+        
     # RULE LEARNING
     @route('/get_all_column_rules_from_df_and_config', methods=['GET','POST'])
     def get_all_column_rules_from_df_and_config(self,dataframe_in_json="", rule_finding_config_in_json="", seq="") -> json:

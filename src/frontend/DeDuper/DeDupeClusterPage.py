@@ -38,7 +38,6 @@ class DeDupeClusterRedirectPage:
         st.experimental_rerun()
 
 
-
 class DeDupeClusterPage:
 
     def __init__(self, canvas, handler) -> None:
@@ -152,7 +151,6 @@ class DeDupeClusterPage:
             # checkbox om te mergen, default actief
             _ = st.checkbox('Voeg samen',value=True, key=f'merge_{cv.cluster_id}')
                     
-
 
 class ClusterView:
     def __init__(self, cluster_id, cluster_confidence, records_df, new_row) -> None:

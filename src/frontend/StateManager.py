@@ -113,7 +113,7 @@ class StateManager:
 
         if "dataframe" not in st.session_state:
             # Clearen van caches
-            st.experimental_singleton.clear()
+            st.cache_resource.clear()
             st.session_state["dataframe"] = None
 
         if "dataframe_name" not in st.session_state:

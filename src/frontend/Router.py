@@ -10,11 +10,12 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 # from src.frontend import Helper
 # from src.frontend import Cleaner
 from src.frontend.Handler.IHandler import IHandler
+from src.frontend.Cleaner.CleanerInitPage import CleanerInitPage
 from streamlit_pandas_profiling import st_profile_report
 from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
 from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
 from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage, DeDupeClusterRedirectPage
-
+from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 
 class Router:
     def __init__(self, handler:IHandler) -> None:
@@ -38,48 +39,24 @@ class Router:
     #             pr = st.session_state.profile_report['pr']
     #             st_profile_report(pr)
 
-    # def routeDataCleaning():
-    #     st.sidebar.markdown(f"<h3>Data Profiling op één dataset</h3>", unsafe_allow_html=True)
-    #     key = "inputOneDataSet"
-    #     uploaded_file2 = st.sidebar.file_uploader("Kies een .csv bestand", key=key)
-    #     # minimal = st.sidebar.checkbox('Minimal report', value=True)
-    #     if uploaded_file2 is not None:
-    #         canvas = st.empty()
-            
-    #         dataframe = Helper.createDataFrameFromDataset(uploaded_file2)
-    #         Cleaner.initCleaner(dataframe)
-
-
-    # def routeDeduplication():
-    #     st.sidebar.markdown(f"<h3>De-duplicatie van één dataset</h3>", unsafe_allow_html=True)
+    def route_dataprep_data_profiling(self):
+        canvas = st.empty()
         
-    #     uploaded_file2 = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
-    #     if uploaded_file2 is not None:
-    #         canvas = st.empty()
-    #         dataframe = Helper.createDataFrameFromDataset(uploaded_file2)
+        if st.session_state["currentState"] == None:
+            ProfilerInitPage(canvas=canvas, handler=self.handler).show_dataprep_profiling()
 
-            
+    def route_pandas_data_profiling(self):
+        canvas = st.empty()
 
-    #         # Afhankelijk van de state, worden we naar een andere pagina geleid
-    #         if st.session_state["currentState"] == None:
-    #             Deduper.initOneDedup(canvas, dataframe)
+        if st.session_state["currentState"] == None:
+            ProfilerInitPage(canvas=canvas, handler=self.handler).show_pandas_profiling()
 
-            
-            
-    #         if st.session_state["currentState"] == "iterateDubbels":
-    #             # Deduper.iterateDubbels(dataframe, st.session_state["dubbelsDF"],st.session_state["dubbelsCertainty"] ,canvas)
-    #             Deduper.iterateDubbels(dataframe, st.session_state["dubbelsDF"],0.9 ,canvas)
-            
 
-    #     st.sidebar.markdown(f"<h3>Vergelijking, de-duplicatie & samenvoeging van twee datasets</h3>", unsafe_allow_html=True)
-    #     uploaded_file3 = st.sidebar.file_uploader("Kies een eerste .csv bestand", key="inputTwoDataSets1")
-    #     if uploaded_file3 is not None:
-    #         st.write("Beep")
+    def route_data_cleaning(self):
+        canvas = st.empty()
 
-    #     uploaded_file3 = st.sidebar.file_uploader("Kies een tweede .csv bestand", key="inputTwoDataSets2")
-    #     if uploaded_file3 is not None:
-    #         st.write("Beep")
-
+        if st.session_state["currentState"] == None:
+            CleanerInitPage(canvas=canvas, handler=self.handler).show()
 
     def route_rule_learning(self):
         canvas = st.empty()

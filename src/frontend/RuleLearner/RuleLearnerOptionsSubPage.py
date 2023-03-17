@@ -13,17 +13,15 @@ class RuleLearnerOptionsSubPage:
     def __init__(self) -> None:
         pass
 
-    # @st.experimental_singleton()
     def _create_total_binning_dict(_self, dict_to_show):
         st.session_state["binning_option"] = dict_to_show
         return st.session_state["binning_option"]
 
-    # @st.experimental_singleton()
     def _create_total_dropping_dict(_self, dict_to_show):
         st.session_state["dropping_options"] = dict_to_show
         return st.session_state["dropping_options"]
 
-    @st.experimental_singleton()
+    @st.cache_resource
     def _create_default_dropping_dict(_self, d):
         return d
 
