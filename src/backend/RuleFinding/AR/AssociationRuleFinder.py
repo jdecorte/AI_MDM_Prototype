@@ -4,17 +4,21 @@ import numpy as np
 import config as cfg
 from mlxtend.frequent_patterns import fpgrowth
 
+
 class AssociationRuleFinder:
 
-    def __init__(self, df_dummy, min_support : float, max_len : int, 
-                          min_lift : float, min_confidence : float) -> None:
+    def __init__(self,
+                 df_dummy,
+                 min_support: float,
+                 max_len: int,
+                 min_lift: float,
+                 min_confidence: float):
 
         self.df_dummy = df_dummy
         self.min_support = min_support
         self.max_len = max_len
         self.min_lift = min_lift
         self.min_confidence = min_confidence
-
 
     def get_association_rules(self) -> pd.DataFrame:
         """
@@ -23,14 +27,14 @@ class AssociationRuleFinder:
             max_len    : maximum length of item sets found by FP-growth
 
             returns: pandas DataFrame with columns "antecedents" and "consequents" that
-            store itemsets, plus the scoring metric columns: "antecedent support", 
-            "consequent support", "support", "confidence", "lift", "leverage", 
+            store itemsets, plus the scoring metric columns: "antecedent support",
+            "consequent support", "support", "confidence", "lift", "leverage",
             "conviction" of all rules for which 
             lift(rule) >= min_lift and  confidence(rule) >= min_confidence.
         """
         cfg.logger.debug(f"Shape of df in get_association_rules: {self.df_dummy.shape}")
-        frequent_itemsets = fpgrowth(self.df_dummy, min_support=self.min_support, 
-                                    use_colnames=True, max_len=self.max_len)
+        frequent_itemsets = fpgrowth(self.df_dummy, min_support=self.min_support,
+                                     use_colnames=True, max_len=self.max_len)
         cfg.logger.debug(f"Shape of frequent_itemsets: {frequent_itemsets.shape}")
         cfg.logger.debug(f"{str(frequent_itemsets)}")
 
@@ -40,8 +44,8 @@ class AssociationRuleFinder:
         return ar[ar['confidence'] > min_confidence]
         """
 
-        # Remove association rules with multiple consequents. 
-        # First use confidence, later filter on lift. 
+        # Remove association rules with multiple consequents.
+        # First use confidence, later filter on lift.
         # Reason to use confidence is that when a => b, c is present then also
         # a => b and a => c will be present
         ar = self.association_rules(frequent_itemsets, 'confidence', self.min_confidence)
@@ -49,10 +53,14 @@ class AssociationRuleFinder:
         cfg.logger.debug("Association rules before pruning")
         cfg.logger.debug(f"{str(ar)}")
 
-        return ar[ar['lift'] > self.min_lift] 
+        return ar[ar['lift'] > self.min_lift]
 
-    # Code origineel van mlxtend
-    def association_rules(self,df, metric="confidence", min_threshold=0.8, support_only=False) -> pd.DataFrame:
+    # Code originally from mlxtend
+    def association_rules(self,
+                          df,
+                          metric="confidence",
+                          min_threshold=0.8,
+                          support_only=False) -> pd.DataFrame:
         """Generates a DataFrame of association rules including the
         metrics 'score', 'confidence', and 'lift'
 
@@ -125,7 +133,7 @@ class AssociationRuleFinder:
                 "Dataframe needs to contain the\
                             columns 'support' and 'itemsets'"
             )
-        
+
         # metrics for association rules
         metric_dict = {
             "antecedent support": lambda _, sA, __: sA,
@@ -158,7 +166,7 @@ class AssociationRuleFinder:
         keys = df["itemsets"].values
         values = df["support"].values
         frozenset_vect = np.vectorize(lambda x: frozenset(x))
-        frequent_items_dict = dict(zip(frozenset_vect(keys), values)) # + { () : 1.0}
+        frequent_items_dict = dict(zip(frozenset_vect(keys), values))
 
         # prepare buckets to collect frequent rules
         rule_antecedents = []
@@ -167,8 +175,8 @@ class AssociationRuleFinder:
 
         # iterate over all frequent itemsets
         for k in frequent_items_dict.keys():
-            if len(k) == 1:
-                continue
+            # if len(k) == 1: # do not allow rules with empty antecedent
+            #    continue
             sAC = frequent_items_dict[k]
             for c in k:
                 consequent = frozenset([c])
@@ -182,7 +190,9 @@ class AssociationRuleFinder:
 
                 else:
                     try:
-                        sA = frequent_items_dict[antecedent]
+                        # support of empty antecedent is 1.0
+                        sA = 1.0 if len(antecedent) == 0 \
+                                 else frequent_items_dict[antecedent]
                         sC = frequent_items_dict[consequent]
                     except KeyError as e:
                         s = (
@@ -194,22 +204,17 @@ class AssociationRuleFinder:
                             " `support_only=True` option"
                         )
                         raise KeyError(s)
-                    # check for the threshold
 
+                # check for the threshold
                 score = metric_dict[metric](sAC, sA, sC)
                 if score >= min_threshold:
                     rule_antecedents.append(antecedent)
                     rule_consequents.append(consequent)
                     rule_supports.append([sAC, sA, sC])
-                #else: # zelf bijgevoegd
-                #    cfg.logger.debug(f"Not adding {antecedent} => {consequent} because {score} is less than {min_threshold}")
-
-                    
 
         # check if frequent rule was generated
         if not rule_supports:
             return pd.DataFrame(columns=["antecedents", "consequents"] + columns_ordered)
-
         else:
             # generate metrics
             rule_supports = np.array(rule_supports).T.astype(float)
