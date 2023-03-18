@@ -44,3 +44,13 @@ class LocalHandler(IHandler):
 
     def dedupe_get_clusters(self):
         return self.dc.dedupe_get_clusters()
+    
+    # DATA CLEANING
+    def clean_dataframe_dataprep(self,dataframe_in_json) -> json:
+        return self.dc.clean_dataframe_dataprep(dataframe_in_json=dataframe_in_json)
+        
+    def fuzzy_match_dataprep(self,dataframe_in_json, col, cluster_method, df_name, ngram, radius, block_size) -> json:
+        return self.dc.fuzzy_match_dataprep(dataframe_in_json=dataframe_in_json, col=col, df_name=df_name, ngram=ngram, radius=radius, block_size=block_size)
+        
+    def structure_detection(self,series_in_json, exception_chars, compress) -> json:
+        return self.dc.structure_detection(series_in_json=series_in_json, exception_chars=exception_chars, compress=compress)

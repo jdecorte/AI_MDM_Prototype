@@ -73,3 +73,27 @@ class RemoteHandler(IHandler):
 
     def dedupe_get_clusters(self):
         return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
+    
+    # DATA CLEANING
+    def clean_dataframe_dataprep(self,dataframe_in_json) -> json:
+        data = {}
+        data["dataframe_in_json"] = dataframe_in_json
+        return requests.post(f"{self.connection_string}/clean_dataframe_dataprep", data=json.dumps(data)).json()
+        
+    def fuzzy_match_dataprep(self,dataframe_in_json, col, cluster_method, df_name, ngram, radius, block_size) -> json:
+        data = {}
+        data["dataframe_in_json"] = dataframe_in_json
+        data["col"] = col
+        data["cluster_method"] = cluster_method
+        data["df_name"] = df_name
+        data["ngram"] = ngram
+        data["radius"] = radius
+        data["block_size"] = block_size
+        return requests.post(f"{self.connection_string}/fuzzy_match_dataprep", data=json.dumps(data)).json()
+        
+    def structure_detection(self,series_in_json, exception_chars, compress) -> json:
+        data = {}
+        data["series_in_json"] = series_in_json
+        data["exception_chars"] = exception_chars
+        data["compress"] = compress
+        return requests.post(f"{self.connection_string}/structure_detection", data=json.dumps(data)).json()

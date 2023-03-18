@@ -195,10 +195,10 @@ def conf7(rng=None):
     return df
 
 def conf8(rng=None):
-    SIZE = 500
+    SIZE = 2000
     NUM_CHOICES = 10
     a = independent_column(SIZE, NUM_CHOICES, rng=rng)
-    b = independent_column(SIZE, 2, probs=[0.95,0.05], rng=rng)
+    b = independent_column(SIZE, 2, probs=[0.90,0.10], rng=rng)
     c = add_columns([a, b])
     d = add_columns([a, b], mod=2)
     e = invert_column(c)
@@ -211,8 +211,8 @@ def conf8(rng=None):
     df['e'] = e
 
     # Add 1 percent noise to column c and d
-    df['c'] = add_noise(df['c'], error_prob=0.01)
-    df['d'] = add_noise(df['d'], error_prob=0.01)
+    # df['c'] = add_noise(df['c'], error_prob=0.01)
+    # df['d'] = add_noise(df['d'], error_prob=0.01)
 
     return df
 
@@ -262,17 +262,17 @@ if __name__ == "__main__":
     #df.to_csv("./data/abcde.1000.dirty1percent.candd.csv", index=False)
 
     df = conf8(rng)
-    df['f'] = independent_column(500, 10, rng=rng)
-    df['g'] = independent_column(500, 10, rng=rng)
-    df['h'] = independent_column(500, 10, rng=rng)
+    # df['f'] = independent_column(2000, 10, rng=rng)
+    # df['g'] = independent_column(2000, 10, rng=rng)
+    # df['h'] = independent_column(2000, 10, rng=rng)
 
-    # Kolom met enkel nan values
-    df['i'] = pd.Series([float('nan')] * len(df))
+    # # Kolom met enkel nan values
+    # df['i'] = pd.Series([float('nan')] * len(df))
 
-    # Kolom met 25% nan values
-    df['j'] = np.random.choice([np.nan, np.random.randint(1,10)], size=len(df), p=[0.25, 0.75])
+    # # Kolom met 25% nan values
+    # df['j'] = np.random.choice([np.nan, np.random.randint(1,10)], size=len(df), p=[0.25, 0.75])
 
-    df.to_csv("./data/abcde.500.dirty1percent_cd.almostatic_b.3randomcolumns_100nan_i_25percentnan_j.csv", index=False)
+    df.to_csv("./data/abcde.2500.clean.almostatic_b.csv", index=False)
 
 
 

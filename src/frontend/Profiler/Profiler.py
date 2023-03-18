@@ -4,8 +4,6 @@ from streamlit_pandas_profiling import st_profile_report
 import pandas as pd
 from src.frontend import HyFD
 
-
-
 def generate_profile_report(df, minimal):
     pr = df.profile_report(lazy=True, minimal=minimal)
     st.session_state.profile_report = {'data': df, 'pr': pr}
@@ -39,8 +37,3 @@ def file_handler(canvas, data_file):
         # else:
         #     st.info('Minimaal Rapport of Uitgebreid Rapport')
         #     st.session_state.profile_report = None
-
-
-
-def hyfd(path):
-    HyFD.main(path)

@@ -1,7 +1,7 @@
 import config as cfg
 import dedupe
 import pandas as pd
-from dedupe._typing import TrainingData
+# from dedupe._typing import TrainingData
 
 
 class DeDupeIO:
@@ -25,7 +25,7 @@ class DeDupeIO:
 
     def mark_pair(self, labeled_pair):
         record_pair, label = labeled_pair
-        examples: TrainingData = {"distinct": [], "match": []}
+        examples = {"distinct": [], "match": []}
         if label == "unsure":
             # See https://github.com/dedupeio/dedupe/issues/984 for reasoning
             examples["match"].append(record_pair)
