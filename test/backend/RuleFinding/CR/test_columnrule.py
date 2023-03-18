@@ -140,6 +140,32 @@ def test_empty_antecedent():
             equals(pd.Series([rule_string, rule_string, rule_string])))
 
 
+def test_empty_antecedent_bis():
+    rule_string = " => A"  # No antecendent and no /
+
+    value_mapping = True
+
+    df = pd.DataFrame(
+        {'A': ["a1", "a1", "a1", "a1", "a1", "a2", "a2", "a2"],
+         'B': ["b1", "b1", "b1", "x", "y", "z", "b2", "b2"],
+         'C': ["c", "c", "c", "c", "c", "c", "c", "c"]}
+    )
+
+    cr = ColumnRule(rule_string=rule_string,
+                    original_df=df,
+                    value_mapping=value_mapping)
+
+    df_to_be_corrected = cr.df_to_correct
+
+    assert df_to_be_corrected.shape == (3, 6)
+    assert (df_to_be_corrected['FOUND_CON'].reset_index(drop=True).
+            equals(pd.Series(["a2", "a2", "a2"])))
+    assert (df_to_be_corrected['SUGGEST_CON'].reset_index(drop=True).
+            equals(pd.Series(["a1", "a1", "a1"])))
+    assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True).
+            equals(pd.Series([rule_string, rule_string, rule_string])))
+
+
 def test_predict():
     rule_string = "A => B"
 
@@ -296,6 +322,95 @@ def test_g3_measure_multiple_columns_3():
     table = pd.DataFrame({'A': a, 'D': d, 'B': b, 'C': c, 'E': e})
     result = g3_measure(table, ['A', 'B'], 'C')
     assert math.isclose(result, 11/12)
+
+
+def test_g3_measure_empty_antecedent():
+    a = ['a'] * 15
+    d = ['d1'] * 5 + ['d2'] * 10
+    e = ['e' + str(i) for i in range(15)]
+
+    table = pd.DataFrame({'A': a, 'D': d, 'E': e})
+
+    # When the mapping is perfect, G3 measure should be 1
+    result = g3_measure(table, [], 'A')
+    assert math.isclose(result, 1)
+
+    # When the mapping is all different, then G3 measure should be 0
+    result = g3_measure(table, [], 'E')
+    assert math.isclose(result, 0.0)
+
+    # For D, we should change 5 values, so G3 measure should be 1 - 5/14 = 9/14
+    result = g3_measure(table, [], 'D')
+    assert math.isclose(result, 9/14)
+
+
+def test_g3_measure_empty_antecedent_on_cr():
+    a = ['a'] * 15
+    d = ['d1'] * 5 + ['d2'] * 10
+    e = ['e' + str(i) for i in range(15)]
+
+    table = pd.DataFrame({'A': a, 'D': d, 'E': e})
+    cr1 = ColumnRule(rule_string="/ => A",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr1.compute_g3_measure()
+    assert math.isclose(result, 1)
+
+    cr2 = ColumnRule(rule_string="/ => E",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr2.compute_g3_measure()
+    assert math.isclose(result, 0)
+
+    cr3 = ColumnRule(rule_string="/ => D",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr3.compute_g3_measure()
+    assert math.isclose(result, 9/14)
+
+
+def test_fi_measure_empty_antecedent():
+    # When the antecedent is empty, FI measure is always equal to zero
+    a = ['a'] * 15
+    d = ['d1'] * 5 + ['d2'] * 10
+    e = ['e' + str(i) for i in range(15)]
+
+    table = pd.DataFrame({'A': a, 'D': d, 'E': e})
+
+    result = fi_measure(table, [], 'A')
+    assert math.isclose(result, 0.0)
+
+    result = fi_measure(table, [], 'E')
+    assert math.isclose(result, 0.0)
+
+    result = fi_measure(table, [], 'D')
+    assert math.isclose(result, 0.0)
+
+
+def test_fi_measure_empty_antecedent_on_cr():
+    # When the antecedent is empty, FI measure is always equal to zero
+    a = ['a'] * 15
+    d = ['d1'] * 5 + ['d2'] * 10
+    e = ['e' + str(i) for i in range(15)]
+
+    table = pd.DataFrame({'A': a, 'D': d, 'E': e})
+    cr1 = ColumnRule(rule_string="/ => A",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr1.compute_fi_measure()
+    assert math.isclose(result, 0.0)
+
+    cr2 = ColumnRule(rule_string="/ => E",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr2.compute_fi_measure()
+    assert math.isclose(result, 0.0)
+
+    cr3 = ColumnRule(rule_string="/ => D",
+                     original_df=table,
+                     value_mapping=True)
+    result = cr3.compute_fi_measure()
+    assert math.isclose(result, 0.0)
 
 
 def test_fi_measure_multiple_columns():

@@ -16,7 +16,7 @@ class ColumnRule:
       value_mapping=False,
       confidence=None,):
         """
-        rule_string: string of the form "A,B => C" (or "/ => C")
+        rule_string: string of the form "A,B => C" (or "/ => C" or " => C")
         original_df: dataframe containing the original data (not one-hot encoded),
             but all values should be strings
         value_mapping: should values be mapped to the most frequent value?
@@ -27,7 +27,7 @@ class ColumnRule:
         self.original_df = original_df
         self.rule_string = rule_string
         antecedent_string = rule_string.split(" => ")
-        if antecedent_string[0] == "/":
+        if antecedent_string[0] == "/" or antecedent_string[0] == "":
             self.antecedent_set = frozenset()
         else:
             self.antecedent_set = frozenset(antecedent_string[0].split(","))
@@ -361,7 +361,14 @@ def fi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
 
     """
     y = df[rhs_col].value_counts(normalize=True).values
-    if len(y) == 1:  # Return zero is right hand side is constant
+    if len(y) == 1:  # Return zero if right hand side is constant
+        return 0
+
+    # Return 1 if left hand side is empty.
+    # This is a special case, because the conditional entropy is
+    # the same as the original entropy, so the fraction of information
+    # is 0.
+    if len(lhs_cols) == 0:
         return 0
 
     entropy_y = - (y * np.log2(y)).sum()  # Entropy of y
@@ -415,6 +422,9 @@ def g3_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
     """
     num_tuples = df.shape[0]  # number of tuples in the relation
     values = df.value_counts(subset=lhs_cols + [rhs_col])
+
+    if len(lhs_cols) == 0:  # Special case: empty antecedent
+        return 1 - (num_tuples - values.iloc[0]) / (num_tuples - 1)
 
     lhs_values = df.value_counts(subset=lhs_cols)
 
