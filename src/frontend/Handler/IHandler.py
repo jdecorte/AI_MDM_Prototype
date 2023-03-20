@@ -56,7 +56,7 @@ class IHandler(ABC):
     
     # DATA CLEANING
     @abstractmethod
-    def clean_dataframe_dataprep(self,dataframe_in_json) -> json:
+    def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline) -> json:
         raise Exception("Not implemented Exception")
         
     @abstractmethod

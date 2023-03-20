@@ -75,9 +75,10 @@ class RemoteHandler(IHandler):
         return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
     
     # DATA CLEANING
-    def clean_dataframe_dataprep(self,dataframe_in_json) -> json:
+    def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline) -> json:
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
+        data["custom_pipeline"] = custom_pipeline
         return requests.post(f"{self.connection_string}/clean_dataframe_dataprep", data=json.dumps(data)).json()
         
     def fuzzy_match_dataprep(self,dataframe_in_json, col, cluster_method, df_name, ngram, radius, block_size) -> json:

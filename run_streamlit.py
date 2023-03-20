@@ -81,7 +81,6 @@ def main():
             df = pd.read_csv(uploaded_file, delimiter=',')
             st.session_state["dataframe"] = df
             st.session_state["dataframe_name"] = uploaded_file.name
-            print('NEW SESSION')
 
             # st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(df.to_json().encode('utf-8')).hexdigest()}"
 

@@ -177,14 +177,28 @@ class DomainController(FlaskView):
     # DATACLEANING      
     # TODO REPLACE
     @route('/clean_dataframe_dataprep', methods=['POST'])
-    def clean_dataframe_dataprep(self,dataframe_in_json="") -> json:
+    def clean_dataframe_dataprep(self,dataframe_in_json="", custom_pipeline="" ) -> json:
+        # custom_pipeline = [
+        # {"text": [
+        #         "operator": "<operator_name>",
+        #         "parameters": {"<parameter_name>": "<parameter_value>"},
+        #     ]
+        # ]
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             dataframe_in_json = data_to_use["dataframe_in_json"]
+            custom_pipeline = data_to_use["custom_pipeline"]
         finally:
-            return json.dumps(self.dataframe_cleaner.clean(dataframe_in_json, clean_headers, data_type_detection, std_missing_values, downcast_memory))
+            # iterate over custom_pipeline:
+            dfc = DataFrameCleaner()
+            for (k,v) in custom_pipeline.items():
+                if(k == "text"):
+                    df = pd.read_json(dataframe_in_json)
+                    df = dfc.clean_text(df=df, column=df.columns[0], pipeline=v)
+                    return df.to_json()
+            return {}
         
     @route('/fuzzy_match_dataprep', methods=['POST'])
     def fuzzy_match_dataprep(self,dataframe_in_json="", col="", cluster_method="", df_name="", ngram="", radius="", block_size="") -> json:
@@ -217,6 +231,12 @@ class DomainController(FlaskView):
             fuzzy_matcher = StructureDetector(pd.read_json(series_in_json,typ='series', orient='records'), exception_chars=exception_chars, compress=compress).find_structure()
             return fuzzy_matcher.to_json()
         
+
+
+
+
+
+
     # RULE LEARNING
     @route('/get_all_column_rules_from_df_and_config', methods=['GET','POST'])
     def get_all_column_rules_from_df_and_config(self,dataframe_in_json="", rule_finding_config_in_json="", seq="") -> json:
@@ -331,7 +351,6 @@ class DomainController(FlaskView):
                                         ,json_string=save_dump, file_name=file_name)
         self._write_to_session_map(unique_storage_id,md5_of_new_dataframe,"rules","1",file_path, False)
         
-
     # SUGGESTIONS
     @route('/get_suggestions_given_dataframe_and_column_rules', methods=['POST'])
     def get_suggestions_given_dataframe_and_column_rules(self, dataframe_in_json="", list_of_rule_string_in_json="", seq="") -> json:
@@ -380,6 +399,9 @@ class DomainController(FlaskView):
 
         # RETURN RESULTS
         return json.dumps(result)
+
+
+
 
 
 

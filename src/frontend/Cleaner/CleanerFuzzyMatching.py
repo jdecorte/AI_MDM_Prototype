@@ -43,7 +43,6 @@ class FuzzyClusterView:
         # check how many values in column_as_series are in list_of_values
         # transform list_of_values to dataframe with index as separate column
         self.distinct_values_in_cluster = column_as_series[column_as_series.isin(list_of_values)].value_counts().reset_index(name='count').rename(columns={'index':'values'})
-        self.cluster_size = self.distinct_values_in_cluster.sum()
         self.merge = False
         # take max value of distinct_values_in_cluster
         self.new_cell_value = self.distinct_values_in_cluster.values[0][0]

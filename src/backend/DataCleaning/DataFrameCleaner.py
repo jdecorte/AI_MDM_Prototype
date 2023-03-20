@@ -234,11 +234,13 @@ REGEX_URL = re.compile(r"(?:https?://|www\.)\S+")
 REGEX_WHITESPACE = re.compile(r"[\n\t]|[ ]{2,}")
 
 class DataFrameCleaner:
-    def __init__(self, df, column, pipeline, stopwords):
-        self.df = df
-        self.column = column
-        self.pipeline = pipeline
-        self.stopwords = stopwords
+    # def __init__(self, df, column, pipeline, stopwords):
+    def __init__(self):
+        # self.df = df
+        # self.column = column
+        # self.pipeline = pipeline
+        # self.stopwords = stopwords
+        pass
 
     def _to_dask(self, df: Union[pd.DataFrame, dd.DataFrame]) -> dd.DataFrame:
         """Convert a dataframe to a dask dataframe."""
@@ -282,16 +284,19 @@ class DataFrameCleaner:
                                                     text
         0  show amazing fresh innovative idea first aired
         """
-        df = self.to_dask(df)
+        try:
+            df = self._to_dask(df)
 
-        pipe = self._get_default_pipeline(stopwords) if not pipeline else self._get_custom_pipeline(pipeline)
+            pipe = self._get_default_pipeline(stopwords) if not pipeline else self._get_custom_pipeline(pipeline)
 
-        for func in pipe:
-            df[column] = df[column].apply(func, meta=object)
+            for func in pipe:
+                df[column] = df[column].apply(func, meta=object)
 
-        df = df.compute()
+            df = df.compute()
 
-        return df
+            return df
+        except Exception as e:
+            print(e)
 
     def default_text_pipeline(self) -> List[Dict[str, Any]]:
         """
@@ -512,3 +517,123 @@ class DataFrameCleaner:
         Remove extra spaces along with tabs and newlines.
         """
         return re.sub(REGEX_WHITESPACE, " ", str(text)).strip() if pd.notna(text) else text
+    
+    def _replace_bracketed(
+        text: Any, brackets: Union[str, Set[str]], value: str, inclusive: bool = True
+    ) -> Any:
+        """
+        Replace text between brackets with the value.
+        Parameters
+        ----------
+        brackets
+            The bracket style.
+                - "angle": <>
+                - "curly": {}
+                - "round": ()
+                - "square": []
+        value
+            The value to replace the text between the brackets.
+        inclusive
+            If True (default), replace the brackets with the new text as well.
+            Otherwise, keep the brackets.
+        """
+        if pd.isna(text):
+            return text
+
+        text = str(text)
+        value = value if inclusive else rf"\g<1>{value}\g<2>"
+        if isinstance(brackets, set):
+            for bracket in brackets:
+                text = re.sub(REGEX_BRACKETS[bracket], value, text)
+        else:
+            text = re.sub(REGEX_BRACKETS[brackets], value, text)
+
+        return text
+
+
+    def _replace_digits(self, text: Any, value: str, block: Optional[bool] = True) -> Any:
+        """
+        Replace all digits with the value. If `block` is True (default),
+        only replace blocks of digits.
+        """
+        if pd.isna(text):
+            return text
+
+        return (
+            re.sub(REGEX_DIGITS_BLOCK, value, str(text))
+            if block
+            else re.sub(REGEX_DIGITS, value, str(text))
+        )
+
+
+    def _replace_prefixed(self, text: Any, prefix: Union[str, Set[str]], value: str) -> Any:
+        """
+        Replace all substrings starting with the prefix(es) with the value.
+        """
+        if pd.isna(text):
+            return text
+
+        text = str(text)
+        if isinstance(prefix, set):
+            for pre in prefix:
+                text = re.sub(rf"{pre}\S+", value, text)
+        else:
+            text = re.sub(rf"{prefix}\S+", value, text)
+
+        return text
+
+
+    def _replace_punctuation(self, text: Any, value: str) -> Any:
+        """
+        Replace all punctuation marks with the value.
+        """
+        return re.sub(REGEX_PUNCTUATION, value, str(text)) if pd.notna(text) else text
+
+
+    def _replace_stopwords(self, text: Any, value: str, stopwords: Optional[Set[str]] = None) -> Any:
+        """
+        Replace a set of words in the text with the value.
+        If `stopwords` is None (default), use NLTK's stopwords.
+        """
+        if pd.isna(text):
+            return text
+
+        stopwords = english_stopwords if not stopwords else stopwords
+        return " ".join(word if word.lower() not in stopwords else value for word in str(text).split())
+
+
+    def _replace_text(self, text: Any, value: Dict[str, str], block: Optional[bool] = True) -> Any:
+        """
+        Replace a sequence of characters with another according to the value mapping.
+        If `block` is True (default), only replace standalone blocks of the sequence.
+        """
+        if pd.isna(text):
+            return text
+
+        text = str(text)
+        for old_value, new_value in value.items():
+            text = (
+                re.sub(rf"\b{old_value}\b", new_value, text, flags=re.IGNORECASE)
+                if block
+                else re.sub(rf"{old_value}", new_value, text, flags=re.IGNORECASE)
+            )
+
+        return text
+
+
+    def _replace_urls(self, text: Any, value: str) -> Any:
+        """
+        Replace all URLs with the value.
+        """
+        return re.sub(REGEX_URL, value, str(text)) if pd.notna(text) else text
+
+
+    def _wrapped_partial( self, 
+        func: Callable[..., Callable[..., Any]], params: Dict[str, Any]
+    ) -> Callable[..., Callable[..., Any]]:
+        """
+        Return a partial function with a name and a doc attribute.
+        """
+        partial_func = partial(func, **params)
+        update_wrapper(partial_func, func)
+        return 

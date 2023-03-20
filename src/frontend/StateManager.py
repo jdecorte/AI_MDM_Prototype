@@ -153,6 +153,14 @@ class StateManager:
         if "record_pair" not in st.session_state:
             st.session_state["record_pair"] = None
 
+        # CLEANER
+        if "pipeline" not in st.session_state:
+            st.session_state['pipeline'] = {}
+
+        if "cleaned_column_from_pipeline" not in st.session_state:
+            st.session_state['cleaned_column_from_pipeline'] = None
+        
+
 
     @staticmethod
     def reset_all_buttons():
