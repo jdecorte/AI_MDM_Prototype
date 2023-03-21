@@ -513,6 +513,27 @@ def test_fi_measure_3():
     assert math.isclose(result, result_manual)
 
 
+def test_is_more_specific_1():
+    # The actual values in the columns are irrelevant for this test
+    a = ['1'] * 5 + ['2'] * 5 + ['3'] * 5
+    b = ['3'] * 5 + ['3'] * 5 + ['1'] * 5
+    c = ['4'] * 5 + ['5'] * 5 + ['4'] * 5  # a + b = c
+
+    table = pd.DataFrame({'A': a, 'B': b, 'C': c})
+    cr1 = ColumnRule(rule_string="A,B => C", original_df=table, value_mapping=True)
+    cr2 = ColumnRule(rule_string="A => C", original_df=table, value_mapping=True)
+    cr3 = ColumnRule(rule_string="A => B", original_df=table, value_mapping=True)
+    cr4 = ColumnRule(rule_string="/ => B", original_df=table, value_mapping=True)
+
+    assert cr1.is_more_specific_than(cr2)
+    assert not cr2.is_more_specific_than(cr1)
+    assert not cr1.is_more_specific_than(cr3)
+    assert not cr3.is_more_specific_than(cr1)
+    assert not cr2.is_more_specific_than(cr3)
+    assert not cr3.is_more_specific_than(cr2)
+    assert cr3.is_more_specific_than(cr4)
+    assert not cr4.is_more_specific_than(cr3)
+
 # This test takes about 90 seconds to run
 def test_rfi_measure_1():
     # Figure 3.8

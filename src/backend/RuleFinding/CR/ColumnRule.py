@@ -355,6 +355,15 @@ class ColumnRule:
                                       list(self.consequent_set)[0],)
         return self.g3_measure_
 
+    def is_more_specific_than(self, other):
+        """ Returns true if this rule is more specific than the other rule.
+            This is the case if:
+            - this rule has a larger antecedent set
+            - the consequent sets are equal
+        """
+        return (self.consequent_set == other.consequent_set and
+                other.antecedent_set.issubset(self.antecedent_set))
+
 
 def fi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
     """ Fraction of information measure. See section 3.2.3 in https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
