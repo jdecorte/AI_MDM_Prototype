@@ -16,6 +16,7 @@ from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
 from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
 from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage, DeDupeClusterRedirectPage
 from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
+from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
 
 class Router:
     def __init__(self, handler:IHandler) -> None:
@@ -39,6 +40,12 @@ class Router:
     #             pr = st.session_state.profile_report['pr']
     #             st_profile_report(pr)
 
+    def route_data_extraction(self):
+        canvas = st.empty()
+                
+        if st.session_state["currentState"] == None:
+            DataExtractorInitPage(canvas=canvas, handler=self.handler).show()
+
     def route_dataprep_data_profiling(self):
         canvas = st.empty()
         
@@ -50,7 +57,6 @@ class Router:
 
         if st.session_state["currentState"] == None:
             ProfilerInitPage(canvas=canvas, handler=self.handler).show_pandas_profiling()
-
 
     def route_data_cleaning(self):
         canvas = st.empty()

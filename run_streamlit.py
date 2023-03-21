@@ -123,6 +123,8 @@ def main():
             router.route_dedupe()
         if functionality_selectbox == "Rule-learning":
             router.route_rule_learning()
+        if functionality_selectbox == "Data Extractie":
+            router.route_data_extraction()
 
 if __name__ == "__main__":
         print("Starting Streamlit")

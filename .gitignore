@@ -1,6 +1,7 @@
 # Ignore Directories
 storage/
 .ai_tetra/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
