@@ -163,6 +163,7 @@ stack-data==0.5.1
 statsmodels==0.13.5
 streamlit==1.19.0
 streamlit-aggrid==0.3.4.post2
+streamlit-autorefresh==0.0.1
 streamlit-javascript==0.1.5
 streamlit-nested-layout==0.1.1
 streamlit-pandas-profiling==0.1.3
