@@ -319,7 +319,7 @@ class ColumnRule:
             raise ValueError("C-measure computed when both g3 and fi are < 0.75")
 
         # Stage 4 and 5 not yet implemented
-
+        self.c_measure_ = c_measure
         return c_measure
 
     def has_predominant_rhs(self, threshold=0.85) -> bool:
@@ -373,7 +373,7 @@ def fi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
     if len(y) == 1:  # Return zero if right hand side is constant
         return 0
 
-    # Return 1 if left hand side is empty.
+    # Return 0 if left hand side is empty.
     # This is a special case, because the conditional entropy is
     # the same as the original entropy, so the fraction of information
     # is 0.

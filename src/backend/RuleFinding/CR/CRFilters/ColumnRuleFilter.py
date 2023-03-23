@@ -8,14 +8,15 @@ import math
 from typing import Sequence, Dict
 from src.backend.RuleFinding.CR.ColumnRule import ColumnRule
 
+
 class ColumnRuleFilter(ABC):
 
     @abstractmethod
-    def execute(self, rules) -> Dict[str, ColumnRule]:
+    def execute(self, rules: Dict[str, ColumnRule]) -> Dict[str, ColumnRule]:
         raise Exception("Not implemented Exception")
 
     def filter_based_on_confidence_bound(self, rules, rule_confidence_bound):
-        return {k:r for k,r in rules.items() if r.confidence >= rule_confidence_bound}
+        return {k: r for (k, r) in rules.items() if r.confidence >= rule_confidence_bound}
 
     def filter_reverse_rules_with_lower_confidence(self, rules_dict):
         list_interesting_rules = self._filter_reverse_rules_with_lower_confidence(list(rules_dict.values()))["ToKeep"]
@@ -240,3 +241,55 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
             filteredIncreases_df["RuleString"] = filteredIncreases_df["Rule"].apply(lambda x: x.rule_string)
         
         return interesting_rules
+
+
+class ColumnRuleFilterCMetric(ColumnRuleFilter):
+
+    def __init__(self, g3_threshold: float, fi_threshold: float, c_threshold: float):
+        self.g3_threshold = g3_threshold
+        self.fi_threshold = fi_threshold
+        self.c_threshold = c_threshold
+
+    def execute(self, rules: Dict[str, ColumnRule]) -> Dict[str, ColumnRule]:
+        """
+        Filter the given rules based on the C-Metric.
+        More in particular, a rule is considered interesting if
+        - no more general rule is already considered interesting and
+        - the rule has a g3 measure >= g3_threshold
+        - the rule has a fi measure >= fi_threshold
+        - the rule has a c measure >= c_threshold
+        """
+
+        cfg.logger.debug("Filtering rules based on thresholds: "
+                         + f"g3: {self.g3_threshold}, fi: {self.fi_threshold},"
+                         + f" c: {self.c_threshold}")
+        filtered_rules = {}
+        # Consider rules in order of increasing antecedent set length
+        for column_rule in sorted(rules.values(), key=lambda r: len(r.antecedent_set)):
+            more_general_rules = [r for r in filtered_rules.values()
+                                  if column_rule.is_more_specific_than(r)]
+            if len(more_general_rules) > 0:
+                cfg.logger.debug(f"Skipping rule {column_rule.rule_string} because " +
+                                 "a more general rule is already considered interesting.")
+                continue  # Skip this rule, a more general interesting rule already exists
+
+            # Check if the rule is interesting by itself
+            if ((column_rule.compute_g3_measure() >= self.g3_threshold
+                or column_rule.compute_fi_measure() >= self.fi_threshold)
+               and column_rule.compute_c_measure() >= self.c_threshold):
+                filtered_rules[column_rule.rule_string] = column_rule
+                cfg.logger.debug(f"Rule {column_rule.rule_string} is interesting. " +
+                                 f"g3: {column_rule.g3_measure_}, " +
+                                 f"fi: {column_rule.fi_measure_}, " +
+                                 f"c: {column_rule.c_measure_}")
+            else:
+                g3 = column_rule.g3_measure_ if hasattr(column_rule, 'g3_measure_') \
+                                             else 'not determined'
+                fi = column_rule.fi_measure_ if hasattr(column_rule, 'fi_measure_') \
+                                             else 'not determined'
+                c = column_rule.c_measure_ if hasattr(column_rule, 'c_measure_') \
+                                             else 'not determined'
+                cfg.logger.debug(f"Rule {column_rule.rule_string} is not interesting. " +
+                                 f"g3: {g3}, fi: {fi}, c: {c}")
+
+        return filtered_rules
