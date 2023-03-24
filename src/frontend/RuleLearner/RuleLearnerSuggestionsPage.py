@@ -6,7 +6,6 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid
 from streamlit.components.v1 import html
-from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
@@ -21,10 +20,14 @@ class RuleLearnerSuggestionsPage:
             
             st.title("Rule Learning")
             st.header("Suggesties voor de doorgegeven regels:")
-
-            
             df_with_predictions = pd.read_json(eval(st.session_state["suggesties_df"]))
             df_with_predictions = df_with_predictions[df_with_predictions.columns.drop(list(df_with_predictions.filter(regex='(__SCORE.*|__PREDICTION.*|__BEST_SCORE)')))]
+            # Pkace columns in correct order __BEST_RULE and __BEST_PREDICTION at the front
+            cols = df_with_predictions.columns.tolist()
+            cols = cols[-2:] + cols[:-2]
+            df_with_predictions = df_with_predictions[cols]
+
+            
             suggestions_rows_selected = []
             list_of_df_idx = []
             if st.session_state["select_all_suggestions_btn"] == True:

@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-from src.frontend.RuleLearner.RuleLearnerOptionsSubPage import RuleLearnerOptionsSubPage
+from src.frontend.RuleLearner.RuleLearnerOptionsComponent import RuleLearnerOptionsComponent
 from src.frontend.Handler.IHandler import IHandler
 
 from src.shared.Enums.FiltererEnum import FiltererEnum
@@ -10,6 +10,8 @@ from src.shared.Enums.DroppingEnum import DroppingEnum
 
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.shared.Views.ColumnRuleView import ColumnRuleView
+
+from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDisplayerComponent
 
 class RuleLearnerInitPage:
     def __init__(self, canvas, handler: IHandler) -> None:
@@ -45,15 +47,11 @@ class RuleLearnerInitPage:
         with self.canvas.container(): 
 
             st.title("Rule Learning")
-            self._show_ag_grid()
-            
-            r = RuleLearnerOptionsSubPage()
-            r.show()
-                        
-            submitted = st.button("Analyseer Data")
-            if submitted:
+            DatasetDisplayerComponent().show(st.session_state["dataframe"])
+            RuleLearnerOptionsComponent().show()
+
+            if st.button("Analyseer Data"):
                 rule_finding_config = RuleFindingConfig(
-                    
                     rule_length=st.session_state["rule_length"], 
                     min_support=st.session_state["min_support"],
                     lift=st.session_state["lift"], 
@@ -62,7 +60,6 @@ class RuleLearnerInitPage:
                     dropping_options=st.session_state["dropping_options"],
                     binning_option=st.session_state["binning_option"]
                     )
-
                 json_rule_finding_config = rule_finding_config.to_json()
 
                 # Set session_state attributes

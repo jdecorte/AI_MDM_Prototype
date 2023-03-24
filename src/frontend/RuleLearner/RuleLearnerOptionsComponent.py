@@ -1,4 +1,5 @@
 import streamlit as st
+import extra_streamlit_components as stx
 import pandas as pd
 from src.frontend.Handler.IHandler import IHandler
 
@@ -9,7 +10,7 @@ from src.shared.Enums.DroppingEnum import DroppingEnum
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 
-class RuleLearnerOptionsSubPage:
+class RuleLearnerOptionsComponent:
     def __init__(self) -> None:
         pass
 
@@ -21,65 +22,50 @@ class RuleLearnerOptionsSubPage:
         st.session_state["dropping_options"] = dict_to_show
         return st.session_state["dropping_options"]
 
-    @st.cache_resource
+    @st.cache_data
     def _create_default_dropping_dict(_self, d):
         return d
 
     def show(self): 
                 
-        # Default values:
-        if "rule_length" in st.session_state:
-            default_rule_length = st.session_state["rule_length"]
-        else:
-            default_rule_length = 3
-        # ////////
-        if "min_support" in st.session_state:
-            default_min_support = st.session_state["min_support"]
-        else:
-            default_min_support = 0.0001
-        # ////////
-        if "lift" in st.session_state:
-            default_lift = st.session_state["lift"]
-        else:
-            default_lift = 1.0
-        # ////////
-        if "confidence" in st.session_state:
-            default_confidence = st.session_state["confidence"]
-        else:
-            default_confidence = 0.95
-        # ////////
-        if "filtering_string" in st.session_state:
-            default_filtering_string = st.session_state["filtering_string"]
-        else:
-            default_filtering_string = FiltererEnum.Z_SCORE
-        # ////////
+        # # Default values:
+        default_rule_length = 3
+        default_min_support = 0.0001
+        default_lift = 1.0
+        default_confidence = 0.95
+        default_filtering_string = FiltererEnum.Z_SCORE
         default_binning_option = {}
         default_dropping_options = {}
-        # END DEFAULTS
 
-        st.header("Opties:")
-        tab1, tab2, tab3 = st.tabs(["Algoritme", "Dropping", "Binning"])
+        preview_default_to_show = self._create_default_dropping_dict(default_dropping_options)
+        if "dropping_options" in st.session_state:
+            preview_total_to_show = self._create_total_dropping_dict(st.session_state["dropping_options"])
+        else:
+            preview_total_to_show = self._create_total_dropping_dict({})
+        if "binning_option" in st.session_state:
+            preview_total_to_show_binning = self._create_total_binning_dict(st.session_state["binning_option"])
+        else:
+            preview_total_to_show_binning = self._create_total_binning_dict({})
+        # # END DEFAULTS
+
+        st.write("")
+        chosen_tab = stx.tab_bar(data=[
+            stx.TabBarItemData(id=1, title="Algoritme", description=""),
+            stx.TabBarItemData(id=2, title="Dropping", description=""),
+            stx.TabBarItemData(id=3, title="Binning", description=""),
+            ], default=1)
+        
         # Algoritme
-        with tab1:
-
-            st.session_state["rule_length"] = st.number_input('Rule length:', value=default_rule_length, format="%d")
-            st.session_state["min_support"]  = st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support, )
-            st.session_state["lift"] = st.slider('Minimum lift', 0.0, 10.0, default_lift)
-            st.session_state["confidence"] = st.slider('Minimum confidence', 0.0, 1.0, default_confidence)
-            st.session_state["filtering_string"] = st.selectbox('Filtering Type:', [e.value for e in FiltererEnum] , index=[e.value for e in FiltererEnum].index(default_filtering_string))
+        if chosen_tab == "1":
+            st.number_input('Rule length:', value=default_rule_length, format="%d", key="rule_length")
+            st.slider('Minimum support', min_value=0.0, max_value=1.0, step=0.0001, value=default_min_support, key="min_support" )
+            st.slider('Minimum lift', 0.0, 10.0, default_lift, key="lift")
+            st.slider('Minimum confidence', 0.0, 1.0, default_confidence, key="confidence")
+            st.selectbox('Filtering Type:', [e.value for e in FiltererEnum] , index=[e.value for e in FiltererEnum].index(default_filtering_string), key="filtering_string")
 
         # Dropping
-        with tab2:
+        if chosen_tab == "2":
             colA, colB,_, colC = st.columns([3,4,1,8])
-
-            preview_default_to_show = self._create_default_dropping_dict(default_dropping_options)
-
-            if "dropping_options" in st.session_state:
-                preview_total_to_show = self._create_total_dropping_dict(st.session_state["dropping_options"])
-            else:
-                preview_total_to_show = self._create_total_dropping_dict({})
-            
-        
             with colB:
                 v = st.selectbox('Default Voorwaarde:', [e.value for e in DroppingEnum] )
                 w = st.text_input("Waarde") 
@@ -107,7 +93,6 @@ class RuleLearnerOptionsSubPage:
                     vw_specific = st.selectbox('Voorwaarde:', [e.value for e in DroppingEnum] )
                 with col3:
                     value_specific = st.text_input("Value")
-
 
                 colC_1, colC_2,_ = st.columns([4,4,14])
                 with colC_1:
@@ -152,15 +137,9 @@ class RuleLearnerOptionsSubPage:
             st.subheader("Opties die zullen worden toegepast:")
             st.write(preview_total_to_show)
 
-        with tab3:
+        if chosen_tab == "3":
 
             colA_binning, colB_binning = st.columns(2)
-
-            if "binning_option" in st.session_state:
-                preview_total_to_show_binning = self._create_total_binning_dict(st.session_state["binning_option"])
-            else:
-                preview_total_to_show_binning = self._create_total_binning_dict({})
-
             with colA_binning:
                 st.subheader("Default Binning Option:")
                 

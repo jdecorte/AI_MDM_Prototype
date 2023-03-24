@@ -24,7 +24,7 @@ def main():
     StateManager.initStateManagement()
 
     # Cookie Management
-    if st.session_state["dataframe"] is not None and (st.session_state["session_flask"] is None):
+    if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
             conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
             ret = conn.getLocalStorageVal(key='session_flask')
@@ -34,7 +34,7 @@ def main():
                 st.session_state["session_flask_local_id"] = temp_id
             else:
                 st.session_state["session_flask_local_id"] = ret
-
+    if st.session_state["dataframe"] is not None:
         st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
     if st.session_state["currentState"] != None:
@@ -59,6 +59,11 @@ def main():
     # st.sidebar.markdown(f"<h3>Remote handling van een dataset</h3>", unsafe_allow_html=True)
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
 
+    # Sidebar vullen met optionele seperator
+    with st.sidebar.expander("Optionele seperator", expanded=False):
+        st.write("Aan te passen wanneer de seperator niet een ',' is.")
+        seperator_input = st.text_input("Seperator", value=',', key="inputSeperator")
+
     # Sidebar vullen met Remote of local functionaliteit
     type_handler_input = st.sidebar.radio(
     "Type Handler:",
@@ -78,7 +83,7 @@ def main():
         if st.session_state["dataframe_name"] != uploaded_file.name:
             # StateManager.clear_session_state()
             st.session_state["currentState"] = None
-            df = pd.read_csv(uploaded_file, delimiter=',')
+            df = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
             st.session_state["dataframe"] = df
             st.session_state["dataframe_name"] = uploaded_file.name
 
