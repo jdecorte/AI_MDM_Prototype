@@ -38,7 +38,7 @@ def test_column_rule_creation():
 
     # Check mapping df
     mapping_df = cr.mapping_df
-    assert mapping_df.shape == (2, 1)
+    assert mapping_df.shape == (2, 3)
     assert "A" == mapping_df.index.name
     assert "B" in mapping_df.columns
     assert mapping_df.index.equals(pd.Index(["a1", "a2"]))
@@ -94,9 +94,11 @@ def test_column_rule_creation_multiple_antecedents():
 
     # Check the mapping dataframe
     mapping_df = cr.mapping_df
-    assert mapping_df.shape == (2, 1)
+    assert mapping_df.shape == (2, 3)
     expected_mapping = pd.DataFrame(
-        data={'C': ["c2", "c4"]},
+        data={'C': ["c2", "c4"],
+              '__SUPPORT_LHS': [12, 11],
+              '__SUPPORT_LHS_AND_RHS': [10, 10]},
         index=pd.Index([("a1", "b1"), ("a2", "b2")])
     )
     assert expected_mapping.equals(mapping_df)
@@ -139,9 +141,19 @@ def test_empty_antecedent():
     assert (df_to_be_corrected['RULESTRING'].reset_index(drop=True).
             equals(pd.Series([rule_string, rule_string, rule_string])))
 
+    # Check the mapping dataframe
+    mapping_df = cr.mapping_df
+    assert mapping_df.shape == (1, 3)
+    expected_mapping = pd.DataFrame({
+        'A': ["a1"],
+        '__SUPPORT_LHS': [8],  # all rows have empty antecedent
+        '__SUPPORT_LHS_AND_RHS': [5]  # 5 rows have A=a1
+    })
+    assert expected_mapping.equals(mapping_df)
+
 
 def test_empty_antecedent_bis():
-    rule_string = " => A"  # No antecendent and no /
+    rule_string = " => A"  # No antecedent and no /
 
     value_mapping = True
 
@@ -534,6 +546,7 @@ def test_is_more_specific_1():
     assert cr3.is_more_specific_than(cr4)
     assert not cr4.is_more_specific_than(cr3)
 
+
 # This test takes about 90 seconds to run
 def test_rfi_measure_1():
     # Figure 3.8
@@ -559,10 +572,8 @@ def test_c_measure_1():
         a += [str(i)] * 1000
         b += [str(i)] * 990 + [str(i+1) if i < 10 else '1'] * 10
 
-    df = pd.DataFrame({'A': a, 'B': b})
-    value_mapping = {
-        frozenset([f"A_{i}"]): f"B_{i}" for i in range(1, 11)
-    }
+    df = pd.DataFrame({'A': a, 'B': b})    
+    value_mapping = True
     cr = ColumnRule(rule_string="A => B", original_df=df,
                     value_mapping=value_mapping, confidence=0.0)
 

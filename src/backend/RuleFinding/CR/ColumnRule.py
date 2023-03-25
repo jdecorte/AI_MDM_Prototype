@@ -64,7 +64,7 @@ class ColumnRule:
         rhs_col = list(self.consequent_set)[0]
         if len(lhs_cols) > 0:
             df_tmp = self.original_df.merge(
-                self.mapping_df,
+                self.mapping_df[[rhs_col]],
                 left_on=lhs_cols,
                 right_on=lhs_cols,
                 left_index=False,
@@ -206,20 +206,37 @@ class ColumnRule:
         """ Create a mapping dataframe based on the original dataframe.
             We map each combination of antecedents to the most frequent
             consequent.
+
+            We also add columns that indicate the support of the antecedent,
+            and the number of times the consequent was found for the given
+            antecedent. These columns are called '__SUPPORT_LHS' and
+            '__SUPPORT_RHS', respectively.
         """
         lhs_cols = sorted(list(self.antecedent_set))
         rhs_col = list(self.consequent_set)[0]
 
         if len(lhs_cols) == 0:  # rule with empty antecedent
-            most_common_value = self.original_df[rhs_col].mode()[0]
-            return pd.DataFrame({rhs_col: [most_common_value]})
+            value_counts = self.original_df[rhs_col].value_counts()
+            most_common_value = value_counts.index[0]
+            support = value_counts.iloc[0]
+            return pd.DataFrame({rhs_col: [most_common_value],
+                                 '__SUPPORT_LHS': [self.original_df.shape[0]],
+                                 '__SUPPORT_LHS_AND_RHS': [support]
+                                 })
 
         df_counts = self.original_df.value_counts(subset=lhs_cols+[rhs_col], sort=False)
         level = tuple(i for i in range(len(lhs_cols)))
-        tmp = df_counts.groupby(level=level).idxmax()
-        tmp = pd.DataFrame.from_records(tmp, columns=lhs_cols+[rhs_col])
-        tmp.set_index(keys=lhs_cols, inplace=True)
-        return tmp
+        tmp = df_counts.groupby(level=level).agg(
+            [np.sum, np.max, 'idxmax']
+        )
+
+        tmp2 = pd.DataFrame.from_records(tmp['idxmax'], columns=lhs_cols+[rhs_col])
+        tmp2.set_index(keys=lhs_cols, inplace=True)
+
+        tmp2['__SUPPORT_LHS'] = tmp['sum']
+        tmp2['__SUPPORT_LHS_AND_RHS'] = tmp['amax']
+
+        return tmp2
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -246,11 +263,12 @@ class ColumnRule:
         cfg.logger.debug("Second DataFrame")
         cfg.logger.debug(self.mapping_df)
 
+        rhs_col = list(self.consequent_set)[0]
         if len(self.antecedent_set) != 0:
             return df_relevant.merge(
-                self.mapping_df, how="left", on=list(self.antecedent_set))
+                self.mapping_df[[rhs_col]], how="left", on=list(self.antecedent_set))
         else:
-            df_relevant[list(self.consequent_set)[0]] = self.mapping_df.iloc[0, 0]
+            df_relevant[list(self.consequent_set)[0]] = self.mapping_df[[rhs_col]].iloc[0, 0]
             return df_relevant
 
     def status(self, df: pd.DataFrame) -> np.ndarray:
