@@ -4,7 +4,7 @@ import config as cfg
 import math
 import pprint
 import json
-from typing import Dict, Sequence, List
+from typing import List
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 
 
@@ -86,121 +86,9 @@ class ColumnRule:
         df_errors = df_errors.drop(columns=[rhs_col + "_predicted"])
 
         return df_errors
-        
-    def _create_dataframe_to_be_corrected_old(self) -> pd.DataFrame:
-        """
-        Create a dataframe containing all rows that need to be corrected.
-        """
-        temp_value_mapping = {}
-        df_to_be_corrected = pd.DataFrame()
-
-        # Create dataframe with all rows that need to be corrected.
-        # To this step by step, because the query string can become too long.
-        counter = 0
-        for k, v in self.value_mapping.items():
-            counter += 1
-            temp_value_mapping[k] = v
-            if (counter % 50 == 0) or (counter == len(self.value_mapping)):
-                temp_df = self.original_df.query(
-                    ColumnRule._create_df_query(temp_value_mapping),
-                    engine='python')
-                df_to_be_corrected = pd.concat([df_to_be_corrected, temp_df])
-                temp_value_mapping = {}
-
-        cfg.logger.debug("The df with the possible errors has shape: "
-                         + f"{df_to_be_corrected.shape}")
-
-        """
-        Adds additional columns to the DataFrame indicating which rule was
-        used, which value was found and which value was expected.
-
-        rule_string: string of the form "A,B => C"
-        value_mapping: dictionary mapping antecedents with value to consequents
-        df_to_be_corrected: dataframe containing possibly faulty rows 
-
-        """
-        found_values = []
-        suggested_values = []
-
-        for _, row in df_to_be_corrected.iterrows():
-            antecedent_set = set([])
-            for antecedent in self.antecedent_set:
-                antecedent_set.add(f"{antecedent}_{row[antecedent]}")   
-
-            suggested_values.append(
-                self.value_mapping[frozenset(antecedent_set)].split("_")[1])
-
-            #   Look up the value that was found
-            found_values.append(row[list(self.consequent_set)[0]])
-
-        df_to_be_corrected.insert(0, "SUGGEST_CON", suggested_values)
-        df_to_be_corrected.insert(0, "FOUND_CON", found_values)
-        df_to_be_corrected.insert(0, "RULESTRING", self.rule_string)
-
-        return df_to_be_corrected
-
-    @staticmethod
-    def _create_df_query_old(mapping_dict: Dict[Sequence[str], str]) -> str:
-        """
-        Create a query string that can be used to retrieve all the rows in
-        the one-hot-encoded dataframe that do not satisfy the mapping specified
-        in the dictionary.
-
-        Each item in the mapping dictionary maps a FrozenSet of str to str.
-        Each such string is of the form "A_a" where A is the column and 'a'
-        is the attribute value.
-        """
-        return " | ".join(
-            [f"{ColumnRule._create_single_query_string(a,c)}"
-             for a, c in mapping_dict.items()])
-
-    @staticmethod
-    def _create_single_query_string_old(
-      antecedents: Sequence[str],
-      consequent: str) -> str:
-        """
-        Create a string that can be used to `query` the dataframe, in order
-        to filter out the rows that do not satisfy the mapping.
-
-        antecedents: sequence of str of the form "A_a",
-        consequent: single string of the form "C_c"
-
-        We are looking for the rows that satisfy all the antecedents,
-        but not the consequent.
-        """
-        return "(" \
-            + \
-               " & ".join(
-                  [f'(`{a.split("_")[0]}` == "{a.split("_")[1]}")'
-                   for a in antecedents]
-                  +
-                  [f'(`{consequent.split("_")[0]}` \
-                       != "{consequent.split("_")[1]}")']) \
-            + ")"
 
     def show_value_mapping(self) -> None:
         pprint.pprint(self.value_mapping)
-
-    def _create_mapping_df_old(self) -> pd.DataFrame:
-        """
-        Create DataFrame of the mapping stored in self.mappingDict.
-        """
-        column_names = list(self.antecedent_set) + list(self.consequent_set)
-
-        columnnames_2_values = {c: [] for c in column_names}
-
-        for k, v in self.value_mapping.items():
-            # k and v are frozenset
-            for column_value in k:
-                column, value = column_value.split('_')
-                columnnames_2_values[column].append(value)
-
-            column, value = v.split('_')
-            columnnames_2_values[column].append(value)
-
-        mapping_df = pd.DataFrame(columnnames_2_values)
-        mapping_df.set_index(keys=sorted(list(self.antecedent_set)), inplace=True)
-        return mapping_df
 
     def _create_mapping_df(self) -> pd.DataFrame:
         """ Create a mapping dataframe based on the original dataframe.
@@ -384,8 +272,8 @@ class ColumnRule:
 
 
 def fi_measure(df: pd.DataFrame, lhs_cols: List[str], rhs_col: str) -> float:
-    """ Fraction of information measure. See section 3.2.3 in https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
-
+    """ Fraction of information measure. See section 3.2.3 in
+         https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
     """
     y = df[rhs_col].value_counts(normalize=True).values
     if len(y) == 1:  # Return zero if right hand side is constant
