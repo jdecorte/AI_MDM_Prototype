@@ -77,9 +77,15 @@ class SuggestionFinder:
 
         return df
 
-    def highest_scoring_suggestion(self, df: pd.DataFrame) -> pd.DataFrame:
+    def highest_scoring_suggestion(
+            self,
+            df: pd.DataFrame,
+            filter_rows=True) -> pd.DataFrame:
         """
         df: could be a subset of the original dataframe, NOT one-hot-encoded
+        filter_rows: if True, only rows that need correcting are returned, i.e.
+        rows for which the __BEST_PREDICTION is equal to the original value
+        are removed.
 
         Returns: DataFrame with addition columns as calculated by `give_suggestions`
         and three additional columns
@@ -106,5 +112,18 @@ class SuggestionFinder:
         df_with_suggestions['__BEST_PREDICTION'] = \
             (df_with_suggestions.reindex(cols, axis=1)
                                 .to_numpy()[np.arange(len(df_with_suggestions)), idx])
+
+        if filter_rows:
+            predictions = df_with_suggestions['__BEST_PREDICTION']
+            cfg.logger.debug(f"predictions: {predictions}")
+            rhs_col = (df_with_suggestions['__BEST_RULE']
+                       .apply(lambda x: x.split(' => ')[1].strip()))
+            cfg.logger.debug(f"rhs_col: {rhs_col}")
+            idx, cols = pd.factorize(rhs_col)
+            actual_values = \
+                (df_with_suggestions.reindex(cols, axis=1)
+                                    .to_numpy()[np.arange(len(df_with_suggestions)), idx])
+            # Remove rows for which the best prediction is equal to the original value
+            df_with_suggestions = df_with_suggestions[predictions != actual_values]
 
         return df_with_suggestions
