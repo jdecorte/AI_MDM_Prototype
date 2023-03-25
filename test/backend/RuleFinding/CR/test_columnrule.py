@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import math
-from backend.RuleFinding.CR.ColumnRule import ColumnRule, fi_measure, g3_measure, rfi_measure
+from backend.RuleFinding.CR.ColumnRule import (
+    ColumnRule, fi_measure, g3_measure, rfi_measure)
 
 
 def test_column_rule_creation():
@@ -232,7 +233,8 @@ def test_status():
 
 
 def test_g3_measure_1():
-    """ Result for Table 3.1 in https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
+    """ Result for Table 3.1 in
+    https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
     """
     a = ['a1'] * 10 + ['a2'] * 5
     b = ['b1'] * 9 + ['b2'] + ['b3'] * 4 + ['b2']
@@ -251,10 +253,9 @@ def test_g3_measure_on_cr_1():
     b = ['b1'] * 9 + ['b2'] + ['b3'] * 4 + ['b2']
 
     # Create a column rule to compute G3 from.
-    # Value mapping is not used in this test, but needed to create a ColumnRule.
     cr = ColumnRule("A => B",
                     pd.DataFrame({'A': a, 'B': b}),
-                    {frozenset(['A_a1']): 'B_b1', frozenset(['A_a2']): 'B_b2'})
+                    value_mapping=True)
 
     result = cr.compute_g3_measure()
 
@@ -333,6 +334,23 @@ def test_g3_measure_multiple_columns_3():
 
     table = pd.DataFrame({'A': a, 'D': d, 'B': b, 'C': c, 'E': e})
     result = g3_measure(table, ['A', 'B'], 'C')
+    assert math.isclose(result, 11/12)
+
+
+def test_g3_measure_multiple_columns_on_cr_3():
+    # Same test as test_g3_measure_multiple_columns_3, but using a ColumnRule
+    a = ['1'] * 5 + ['2'] * 5 + ['3'] * 5
+    b = ['3'] * 5 + ['3'] * 5 + ['1'] * 5
+    c = ['4'] * 4 + ['0'] + ['5'] * 5 + ['4'] * 5  # a + b = c, but one mistake
+    # Add some irrelevant columns
+    d = ['d'] * 15
+    e = ['e' + str(i) for i in range(15)]
+
+    table = pd.DataFrame({'A': a, 'D': d, 'B': b, 'C': c, 'E': e})
+    cr = ColumnRule("A,B => C",
+                    table,
+                    value_mapping=True)
+    result = cr.compute_g3_measure()
     assert math.isclose(result, 11/12)
 
 
@@ -572,7 +590,7 @@ def test_c_measure_1():
         a += [str(i)] * 1000
         b += [str(i)] * 990 + [str(i+1) if i < 10 else '1'] * 10
 
-    df = pd.DataFrame({'A': a, 'B': b})    
+    df = pd.DataFrame({'A': a, 'B': b})
     value_mapping = True
     cr = ColumnRule(rule_string="A => B", original_df=df,
                     value_mapping=value_mapping, confidence=0.0)

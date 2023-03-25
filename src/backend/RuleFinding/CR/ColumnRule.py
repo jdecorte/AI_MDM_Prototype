@@ -58,7 +58,7 @@ class ColumnRule:
         - all columns of the original dataframe
         - a column with the rule string (RULESTRING)
         - a column with the value that was found (FOUND_CON)
-        - a column with the value that was predicted (SUGGEST_CON)      
+        - a column with the value that was predicted (SUGGEST_CON)
         """
         lhs_cols = sorted(list(self.antecedent_set))
         rhs_col = list(self.consequent_set)[0]
@@ -98,7 +98,7 @@ class ColumnRule:
             We also add columns that indicate the support of the antecedent,
             and the number of times the consequent was found for the given
             antecedent. These columns are called '__SUPPORT_LHS' and
-            '__SUPPORT_RHS', respectively.
+            '__SUPPORT_LHS_AND_RHS', respectively.
         """
         lhs_cols = sorted(list(self.antecedent_set))
         rhs_col = list(self.consequent_set)[0]
@@ -198,7 +198,7 @@ class ColumnRule:
     def compute_c_measure(self) -> float:
         """
         Compute the c-metric for this rule, this is a float in the range [1,5].
-        This is based on the flow chart on page 39 of 
+        This is based on the flow chart on page 39 of
         https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
         """
         if not hasattr(self, "fi_measure_"):
@@ -256,9 +256,16 @@ class ColumnRule:
         return self.rfi_measure_
 
     def compute_g3_measure(self) -> float:
-        self.g3_measure_ = g3_measure(self.original_df,
-                                      list(self.antecedent_set),
-                                      list(self.consequent_set)[0],)
+        """ g3 measure as described in
+        https://documentserver.uhasselt.be/bitstream/1942/35321/1/845d31c7-7084-4c8b-a964-d10bad246e52.pdf
+        See section 3.2.1, page 18.
+
+        We compute this measure on the basis of the mapping dataframe
+        because this contains already all the required information.
+        """
+        s = self.mapping_df['__SUPPORT_LHS_AND_RHS'].sum()
+        num_tuples = self.original_df.shape[0]
+        self.g3_measure_ = 1 - (num_tuples - s)/(num_tuples - self.mapping_df.shape[0])
         return self.g3_measure_
 
     def is_more_specific_than(self, other):
