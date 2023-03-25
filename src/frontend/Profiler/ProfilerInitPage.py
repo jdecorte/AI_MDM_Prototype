@@ -1,12 +1,12 @@
 import streamlit as st
 from streamlit_pandas_profiling import st_profile_report
-from dataprep.eda import plot, create_report
+from dataprep.eda import create_report
 from src.frontend.Handler.IHandler import IHandler
-from streamlit_pandas_profiling import st_profile_report
-from pandas_profiling import ProfileReport
+from ydata_profiling import ProfileReport
+
 
 class ProfilerInitPage:
-    def __init__(self, canvas, handler:IHandler) -> None:
+    def __init__(self, canvas, handler: IHandler) -> None:
         self.canvas = canvas
         self.handler = handler
 
