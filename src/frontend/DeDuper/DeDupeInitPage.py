@@ -3,6 +3,9 @@ import pandas as pd
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 from src.frontend.DeDuper.DeDupeTypesEnum import DeDupeTypesEnum
+from src.frontend.DeDuper.ZinggTypesEnum import ZinggTypesEnum
+from src.frontend.Handler.IHandler import IHandler
+from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDisplayerComponent
 
 
 class DeDupeInitPage:
@@ -10,72 +13,28 @@ class DeDupeInitPage:
         self.canvas = canvas
         self.handler = handler
 
-    # def _transform_type_dict_to_correct_format_for_dedupe(self, dict_of_types):
-    #     return [{'field':k, 'type':v} for k,v in dict_of_types.items()]
-
-
-    def show(self): 
-
-        # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
-        st.session_state['dedupe_type_dict'] = {k:"String" for k in st.session_state["dataframe"].columns}
-            # "id" : "String",
-            # "name":"String",
-            # "addr":"String",
-            # "city":"String",
-            # "type":"String",
-            # "class": "String"
-
-            # "id" : "String",
-            # "artist" : "String",
-            # "title" : "String",
-            # "category" : "String",
-            # "genre" : "String",
-            # "year" : "String",
-            # "track01" : "String",
-            # "track02" : "String",
-            # "track03" : "String",
-            # "track04" : "String",
-            # "track05" : "String",
-            # "track06" : "String",
-            # "track07" : "String",
-            # "track08" : "String",
-            # "track09" : "String",
-            # "track10" : "String",
-            # "track09" : "String",
-            # "track09" : "String",
-            # "track09" : "String",
-            # "track09" : "String",
-        
+    def show(self):        
 
         with self.canvas.container(): 
-            st.title("DeDupe")
-            st.markdown(f"<h4>Ingeladen Dataset: </h4>", unsafe_allow_html=True)
-
-            # Toon de dataframe -> NIET EDITEERBAAR
-            MIN_HEIGHT = 50
-            MAX_HEIGHT = 500
-            ROW_HEIGHT = 60
-
-            gb = GridOptionsBuilder.from_dataframe(st.session_state["dataframe"])
-            gb.configure_side_bar()
-            gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
-            gridOptions = gb.build()
-            grid_response = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True, height=min(MIN_HEIGHT + len(st.session_state["dataframe"]) * ROW_HEIGHT, MAX_HEIGHT))
+            st.title("De-duplicatie")
+            DatasetDisplayerComponent().show(st.session_state["dataframe"])
+            
+            # Select if you want to use Zingg or Dedupe
+            st.subheader("Selecteer de methode die je wilt gebruiken")
+            st.session_state['selected_deduplication_method'] = st.selectbox('Methode:', ["Dedupe", "Zingg"])
 
             st.subheader("Selecteer kolommen om te gebruiken in deduplicatie-proces")
 
-            colA, colB, colC = st.columns([3,3,8])
-            with colA:
-                selected_col = st.selectbox('Kolom:', st.session_state["dataframe"].columns)
+            if st.session_state['selected_deduplication_method'] == "Dedupe":
+                selected_col, selected_type = self._show_format_for_dedupe()
 
-            with colB:
-                selected_type = st.selectbox('Type:', DeDupeTypesEnum._member_names_)
+            if st.session_state['selected_deduplication_method'] == "Zingg":
+                selected_col, selected_type = self._show_format_for_zingg()
 
-            with colC:
-                if selected_type:
-                    st.write("")
-                    st.write("")
-                    st.write(eval(f"DeDupeTypesEnum.{selected_type}"))
+            
+            # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
+            # if st.session_state['dedupe_type_dict'] == {}:
+            st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state["dataframe"].columns}
 
 
             col_1, col_2, col_3,_ = st.columns([1,1,1,6])
@@ -94,12 +53,50 @@ class DeDupeInitPage:
                 if len(st.session_state['dedupe_type_dict'].values()) > 0:
                     start_training_btn = st.button("Start training")
                     if start_training_btn:
-                        self.handler.create_deduper_object(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
-                        st.session_state["currentState"] = "LabelRecords_get_record_pair" 
-                        st.experimental_rerun()
+                        if st.session_state['selected_deduplication_method'] == "Dedupe":
+                            self.handler.create_deduper_object(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
+                            st.session_state["currentState"] = "LabelRecords_get_record_pair" 
+                            st.experimental_rerun()    
+                        
+                        if st.session_state['selected_deduplication_method'] == "Zingg":
+                            self.handler.run_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json(), "findTrainingData")
+                            self.handler.run_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json(), "label")
+                            st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs" 
+                            st.experimental_rerun()
 
             st.markdown("**Geselecteerd:**")
             if st.session_state['dedupe_type_dict'] == {}:
                 st.write("U heeft nog geen kolommen gekozen")
             else:
                 st.write(st.session_state["dedupe_type_dict"])
+
+    def _show_format_for_dedupe(self):
+        colA, colB, colC = st.columns([3,3,8])
+        with colA:
+            selected_col = st.selectbox('Kolom:', st.session_state["dataframe"].columns)
+
+        with colB:
+            selected_type = st.selectbox('Type:', DeDupeTypesEnum._member_names_)
+
+        with colC:
+            if selected_type:
+                st.write("")
+                st.write("")
+                st.write(eval(f"DeDupeTypesEnum.{selected_type}"))
+        return selected_col, selected_type
+    
+    def _show_format_for_zingg(self):
+        colA, colB, colC = st.columns([3,3,8])
+        with colA:
+            selected_col = st.selectbox('Kolom:', st.session_state["dataframe"].columns)
+
+        with colB:
+            selected_type = st.selectbox('Type:', ZinggTypesEnum._member_names_)
+
+        with colC:
+            if selected_type:
+                st.write("")
+                st.write("")
+                st.write(eval(f"ZinggTypesEnum.{selected_type}"))
+
+        return selected_col, selected_type

@@ -21,6 +21,7 @@ from flask import Flask, json, session, request
 from flask_classful import FlaskView, route
 from src.backend.DataCleaning.FuzzyMatcher import FuzzyMatcher
 from src.backend.DataCleaning.StructureDetector import StructureDetector
+from src.backend.Deduplication.Zingg import Zingg
 
 class DomainController(FlaskView):
     
@@ -102,6 +103,47 @@ class DomainController(FlaskView):
         finally:
             return tmp
 
+    # ZINGG METHODS
+    @route('/run_zingg', methods=['POST'])
+    def run_zingg(self, dedupe_type_dict="", dedupe_data="", phase="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            dedupe_type_dict = data_to_use["dedupe_type_dict"]
+            dedupe_data = data_to_use["dedupe_data"]
+            phase = data_to_use["phase"]
+        finally:
+            Zingg(dedupe_type_dict, dedupe_data, unique_storage_id, phase).execute_runnable_script()
+            return ""
+        
+    @route('/zingg_unmarked_pairs', methods=['GET'])
+    def zingg_unmarked_pairs(self) -> json:
+        cfg.logger.debug("Calling zingg_unmarked_pairs")
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            return Zingg.get_unmarked_pairs(unique_storage_id).to_json(orient="records")
+        
+    @route('/zingg_mark_pairs', methods=['POST'])
+    def zingg_mark_pairs(self, marked_df="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            marked_df = data_to_use["marked_df"]
+        finally:
+            Zingg.mark_pairs(unique_storage_id, pd.read_json(marked_df))
+            return ""
+        
+    @route('/zingg_get_stats', methods=['GET'])
+    def zingg_get_stats(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            return json.dumps(Zingg.get_stats(unique_storage_id))
     
     # FETCHING OF FILES FOR GUI STATE:
     @route('/fetch_file_from_filepath', methods=['POST'])

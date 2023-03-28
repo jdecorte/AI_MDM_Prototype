@@ -54,6 +54,26 @@ class IHandler(ABC):
     def dedupe_get_clusters(self) -> json:
         raise Exception("Not implemented Exception")
     
+    @abstractmethod
+    def run_zingg(self, dedupe_type_dict, dedupe_data, phase) -> json:
+        raise Exception("Not implemented Exception")
+    
+    @abstractmethod
+    def zingg_unmarked_pairs(self) -> json:
+        raise Exception("Not implemented Exception")
+    
+    @abstractmethod
+    def zingg_mark_pairs(self, marked_df) -> json:
+        raise Exception("Not implemented Exception")
+    
+    @abstractmethod
+    def zingg_get_stats(self) -> json:
+        raise Exception("Not implemented Exception")
+    
+
+    
+
+    
     # DATA CLEANING
     @abstractmethod
     def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline) -> json:

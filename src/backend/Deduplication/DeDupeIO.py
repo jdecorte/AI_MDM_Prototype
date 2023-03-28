@@ -1,10 +1,9 @@
 import config as cfg
 import dedupe
 import pandas as pd
-# from dedupe._typing import TrainingData
 
 
-class DeDupeIO:
+class DeDupeIO():
 
     def __init__(self, dedupe_type_dict, dedupe_data) -> None:
         cfg.logger.debug("Calling DeDupeIO ..... ")

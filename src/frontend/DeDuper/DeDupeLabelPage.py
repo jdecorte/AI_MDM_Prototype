@@ -71,3 +71,64 @@ class DeDupeLabelPage:
             fields = st.session_state["dedupe_type_dict"].keys()
             st.table(pd.DataFrame().assign(Field= [f for f in st.session_state['record_pair'][0].keys() if f in fields], Record_1 = [v1 for k1,v1 in st.session_state['record_pair'][0].items() if k1 in fields], Record_2 = [v2 for k2,v2 in st.session_state['record_pair'][1].items() if k2 in fields]))
             self.streamlit_label()
+
+class ZinggLabelPage:
+    def __init__(self, canvas, handler) -> None:
+        self.canvas = canvas
+        self.handler = handler
+
+    def show(self):
+        st.header('Zingg Deduplication:')
+        stats = st.container()
+        if "zingg_current_label_round" not in st.session_state:
+            st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
+        # st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
+
+        st.subheader("Pairs to mark:")
+        # group by z_cluster and create a new zingg_label_card for each cluster
+        for z_cluster_id, z_cluster_df in st.session_state["zingg_current_label_round"].groupby('z_cluster'):
+            self._create_zingg_label_card(z_cluster_df, z_cluster_id)
+            st.write("")
+            st.write("")
+
+        with stats:
+            colB_1, colB_2 = st.columns([1,1])
+            with colB_1:
+                if 'zingg_stats' not in st.session_state:
+                    st.session_state['zingg_stats'] = self.handler.zingg_get_stats()
+                sum_stats = sum(st.session_state['zingg_stats'].values())
+                st.write(f"Previous Round(s): {st.session_state['zingg_stats']['match_files']}/{sum_stats} MATCHES, {st.session_state['zingg_stats']['no_match_files']}/{sum_stats} NON-MATCHES, {st.session_state['zingg_stats']['unsure_files']}/{sum_stats} UNSURE")
+                # st.write("Previous Round(s): " + self.handler.zingg_get_stats())
+                st.write("Current labeling round: {}/{} MATCHES, {}/{} NON-MATCHES, {}/{} UNSURE".format(
+                    len(st.session_state["zingg_current_label_round"][st.session_state["zingg_current_label_round"].z_isMatch == 1])//2,
+                    len(st.session_state["zingg_current_label_round"])//2,
+                    len(st.session_state["zingg_current_label_round"][st.session_state["zingg_current_label_round"].z_isMatch == 0])//2,
+                    len(st.session_state["zingg_current_label_round"])//2,
+                    len(st.session_state["zingg_current_label_round"][st.session_state["zingg_current_label_round"].z_isMatch == 2])//2,
+                    len(st.session_state["zingg_current_label_round"])//2
+                    ))
+            with colB_2:
+                next = st.button("Go to next round")
+                finish = st.button("Finish labeling, go to clustering")
+
+        if next:
+            _ = self.handler.zingg_mark_pairs(st.session_state["zingg_current_label_round"].to_json())
+        
+
+    def _create_zingg_label_card(self, grouped_df, z_cluster_id):
+        
+        fields = st.session_state["dedupe_type_dict"].keys()
+        st.table(grouped_df[[c for c in grouped_df.columns if c in fields]])
+        colA_1, colA_2, colA_3 = st.columns([1,1,1])
+        with colA_1:
+            st.write("Prediction score:", grouped_df['z_score'].mean())
+        with colA_2:
+            st.write(f"Prediction: {'is a match' if (grouped_df['z_prediction'].mean() > 0) else 'is not a match'}")
+        with colA_3:
+            choice = st.selectbox('Choice', ['is a match', 'is not a match', 'unsure'], index=2, key="selectbox_"+z_cluster_id)
+            if choice == 'is a match':
+                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 1
+            if choice == 'is not a match':
+                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 0
+            if choice == 'unsure':
+                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 2

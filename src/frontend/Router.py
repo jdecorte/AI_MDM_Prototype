@@ -17,6 +17,7 @@ from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage, DeDupeRedirect
 from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage, DeDupeClusterRedirectPage
 from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
+from src.frontend.DeDuper.DeDupeLabelPage import ZinggLabelPage
 
 class Router:
     def __init__(self, handler:IHandler) -> None:
@@ -87,6 +88,9 @@ class Router:
 
         if st.session_state["currentState"] == "LabelRecords_get_record_pair":
             DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_get_record_pair()
+
+        if st.session_state["currentState"] == "LabelRecords_get_all_unmarked_pairs":
+            ZinggLabelPage(canvas=canvas, handler=self.handler).show()
 
         if st.session_state["currentState"] == "LabelRecords_mark_record_pair":
             DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_mark_record_pair()
