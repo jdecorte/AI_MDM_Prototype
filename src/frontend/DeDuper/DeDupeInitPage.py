@@ -59,10 +59,9 @@ class DeDupeInitPage:
                             st.experimental_rerun()    
                         
                         if st.session_state['selected_deduplication_method'] == "Zingg":
-                            self.handler.run_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json(), "findTrainingData")
-                            self.handler.run_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json(), "label")
-                            st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs" 
-                            st.experimental_rerun()
+                            self.handler.prepare_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
+                            # st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs" 
+                            # st.experimental_rerun()
 
             st.markdown("**Geselecteerd:**")
             if st.session_state['dedupe_type_dict'] == {}:

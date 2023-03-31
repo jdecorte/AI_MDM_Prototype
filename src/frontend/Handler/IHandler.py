@@ -55,7 +55,7 @@ class IHandler(ABC):
         raise Exception("Not implemented Exception")
     
     @abstractmethod
-    def run_zingg(self, dedupe_type_dict, dedupe_data, phase) -> json:
+    def prepare_zingg(self, dedupe_type_dict, dedupe_data) -> json:
         raise Exception("Not implemented Exception")
     
     @abstractmethod

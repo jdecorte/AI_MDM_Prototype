@@ -104,17 +104,16 @@ class DomainController(FlaskView):
             return tmp
 
     # ZINGG METHODS
-    @route('/run_zingg', methods=['POST'])
-    def run_zingg(self, dedupe_type_dict="", dedupe_data="", phase="") -> json:
+    @route('/prepare_zingg', methods=['POST'])
+    def prepare_zingg(self, dedupe_type_dict="", dedupe_data="") -> json:
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             dedupe_type_dict = data_to_use["dedupe_type_dict"]
             dedupe_data = data_to_use["dedupe_data"]
-            phase = data_to_use["phase"]
         finally:
-            Zingg(dedupe_type_dict, dedupe_data, unique_storage_id, phase).execute_runnable_script()
+            _ = Zingg(dedupe_type_dict, dedupe_data, unique_storage_id)
             return ""
         
     @route('/zingg_unmarked_pairs', methods=['GET'])
@@ -272,12 +271,6 @@ class DomainController(FlaskView):
         finally:
             fuzzy_matcher = StructureDetector(pd.read_json(series_in_json,typ='series', orient='records'), exception_chars=exception_chars, compress=compress).find_structure()
             return fuzzy_matcher.to_json()
-        
-
-
-
-
-
 
     # RULE LEARNING
     @route('/get_all_column_rules_from_df_and_config', methods=['GET','POST'])
@@ -441,9 +434,6 @@ class DomainController(FlaskView):
 
         # RETURN RESULTS
         return json.dumps(result)
-
-
-
 
 
 

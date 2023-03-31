@@ -75,12 +75,11 @@ class RemoteHandler(IHandler):
         return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
     
     # ZINGG
-    def run_zingg(self, dedupe_type_dict, dedupe_data, phase) -> json:
+    def prepare_zingg(self, dedupe_type_dict, dedupe_data) -> json:
         data = {}
         data["dedupe_type_dict"] = dedupe_type_dict
         data["dedupe_data"] = dedupe_data
-        data["phase"] = phase
-        requests.post(f"{self.connection_string}/run_zingg", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        requests.post(f"{self.connection_string}/prepare_zingg", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
 
     def zingg_unmarked_pairs(self) -> json:
         return requests.get(f"{self.connection_string}/zingg_unmarked_pairs", cookies={"session_flask" : st.session_state['session_flask']}).json()
