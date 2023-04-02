@@ -60,6 +60,19 @@ model
 
 ```
 
+Maak een folder 'external' aan in de root folder van dit project, met daarin een map voor zingg en een map voor spark:
+
+```
+...
+external
+-spark-3.1.2-bin-hadoop3.2
+-zingg-0.3.4
+storage
+src
+...
+
+```
+
 ### Backend installatie
 
 Als je de backend wil uitvoeren op een andere computer dan de
