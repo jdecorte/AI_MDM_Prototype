@@ -47,14 +47,18 @@ Verifieer de installatie:
 https://docs.zingg.ai/zingg/stepbystep/installation/installing-from-release/verification
 
 Algemene structuur Zingg:
+
+```
 model
 -MODELID
 --model
 --trainingData
 ---marked
-----\***\*.parquet files (Na labelingsfase)
+----\*\*.parquet files (Na labelingsfase)
 ---unmarked
-----\*\*\***.parquet files (Na findTrainingdatafase)
+----\*\*\*.parquet files (Na findTrainingdatafase)
+
+```
 
 ### Backend installatie
 
