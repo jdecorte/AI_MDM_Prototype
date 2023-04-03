@@ -198,3 +198,5 @@ ydata-profiling==4.0.0
 zipp==3.15.0
 zope.index==5.2.1
 zope.interface==5.5.2
+zingg==0.3.4
+pyspark==3.3.2
