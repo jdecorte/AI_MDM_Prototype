@@ -2,8 +2,8 @@ import pandas as pd
 import os
 from pathlib import Path
 import hashlib
-import os, shlex, subprocess
 from subprocess import Popen, PIPE, STDOUT
+import platform
 
 
 class Zingg:
@@ -14,7 +14,8 @@ class Zingg:
         self.modelID = modelID
         self.number_of_partitions = number_of_partitions
         self.label_data_sample_size = label_data_sample_size
-        self.location = f"../../../storage/{self.modelID}"
+        # self.location = f"../../../storage/{self.modelID}"
+        self.location = f"storage/{self.modelID}"
         Path(f"storage/{self.modelID}/input_dir").mkdir(parents=True, exist_ok=True)
         self.dedupe_data.to_csv(f"storage/{self.modelID}/input_dir/input.csv", index=False)
 
@@ -39,21 +40,44 @@ class Zingg:
         #              )
         # gb = fr'C:/Users/mstr845/AppData/Local/Programs/Git/git-bash.exe"'
         # arr = [gb, f"C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/external/zingg-0.3.4/scripts/zingg.sh --run C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/storage/{modelID}/scripts/{phase}/generated_zingg_script.py"]
-        gb= "C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\git-bash.exe" 
-        # arr = [gb, "-c", "touch hello.txt"]
-        # r = subprocess.Popen(arr, shell=True)
-        # # print(f"Zingg phase {phase} finished")
-        
-        cmd = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh --run C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
-        cmd1= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh"
-        cmd2= "--run"
-        cmd3= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
-        start_path = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype"
-        command_args = [gb, "-c", cmd]
-        process = Popen(command_args, stdout=PIPE, stderr=STDOUT, shell=True, cwd="C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\" )
-        output, err = process.communicate()
-        print(output)
-        print(err)
+        system = platform.system()
+        if system == "Windows":
+            gb= "C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\git-bash.exe" 
+            # arr = [gb, "-c", "touch hello.txt"]
+            # r = subprocess.Popen(arr, shell=True)
+            # # print(f"Zingg phase {phase} finished")
+            
+            cmd = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh --run C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
+            cmd1= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh"
+            cmd2= "--run"
+            cmd3= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
+            start_path = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype"
+            command_args = [gb, "-c", cmd]
+            process = Popen(command_args, stdout=PIPE, stderr=STDOUT, shell=True, cwd="C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\" )
+            output, err = process.communicate()
+            print(output)
+            print(err)
+        elif system == "Linux":
+            print("Calling zingg.sh for Linux")
+            cmd = (["/bin/bash"] + ["./external/zingg/scripts/zingg.sh"] + ["--run"] +
+                   [f"storage/{modelID}/scripts/{phase}/generated_zingg_script.py"])
+            #command_args = ["/bin/bash", "-c", cmd]
+            #process = Popen(command_args, stdout=PIPE, stderr=STDOUT)
+            env = {'SPARK_HOME': './external/spark',
+                   'SPARK_MASTER': 'local[*]',
+                   'ZINGG_HOME': './external/zingg'}
+            process = Popen(cmd, stdout=PIPE, stderr=STDOUT, env=env)
+            # cmd_shell = ("source ./envs/ai-mdm/bin/activate"
+            #              + " & /bin/bash ./external/zingg/scripts/zingg.sh "
+            #              + f"--run storage/{modelID}/scripts/{phase}/"
+            #              + "generated_zingg_script.py")
+            # process = Popen(cmd_shell, stdout=PIPE, stderr=STDOUT, shell=True, env=env)
+            output, err = process.communicate()
+            print(output)
+            print(err)
+        else:
+            raise ValueError("Unsupported OS")
+    
 
     @staticmethod
     def get_unmarked_pairs(modelID):
