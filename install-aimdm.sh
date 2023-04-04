@@ -3,7 +3,7 @@
 # This is a script that installs the AI-MDM tool on a Linux Alma server using Vagrant
 # This assumes that there is a nginx.conf file in the shared folder /vagrant
 
-sudo dnf -y install git nginx java-1.8.0-openjdk wget
+sudo dnf -y install git nginx java-1.8.0-openjdk wget pip
 
 # Download external files 
 wget https://github.com/zinggAI/zingg/releases/download/v0.3.4/zingg-0.3.4-SNAPSHOT-spark-3.1.2.tar.gz
@@ -31,6 +31,9 @@ pip install -r requirements.txt
 pip install gunicorn
 
 # Configure and start nginx
+# Note: root is set as /usr/share/nginx/html in nginx.conf
+sudo mkdir  -p /usr/share/nginx/html/reports
+sudo chmod a+rw /usr/share/nginx/html/reports
 sudo cp /vagrant/nginx.conf /etc/nginx/
 sudo systemctl enable nginx
 sudo systemctl start nginx
