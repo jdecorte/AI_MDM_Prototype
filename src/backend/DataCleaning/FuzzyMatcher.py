@@ -18,6 +18,7 @@ import dask
 from IPython.display import Javascript, display
 from metaphone import doublemetaphone
 from rapidfuzz.distance.Levenshtein import distance as LevenshteinDistance
+import config as cfg
 
 
 DECODE_FUNC = """
@@ -59,9 +60,11 @@ class FuzzyMatcher:
         npartitions = ceil(df_size / 128 / 1024 / 1024)  # 128 MB partition size
         return dd.from_pandas(df, npartitions=npartitions)
 
-    def __init__(self, df: Union[pd.DataFrame, dd.DataFrame], col: str, df_name: str, ngram, radius, block_size):
+    def __init__(self, df: Union[pd.DataFrame, dd.DataFrame],
+                 col: str, df_name: str, ngram, radius, block_size):
         self.clusters = pd.Series(dtype=object)
         self._df = self._to_dask(df)
+        cfg.logger.debug(f"FuzzyMatcher: __init__: df.head = {self._df.head()}")
         self._counts = pd.Series(dtype=object)
         self._df_name = df_name
         self._col = col

@@ -1,4 +1,5 @@
 import streamlit as st
+import config as cfg
 
 
 class CleanerFuzzyMatchingRedirectPage:
@@ -45,6 +46,9 @@ class CleanerFuzzyMatchingRedirectPage:
 class FuzzyClusterView:
 
     def __init__(self, cluster_id, list_of_values, column_as_series) -> None:
+        cfg.logger.debug(f"FuzzyClusterView: __init__: cluster_id = {cluster_id}," +
+                         f"list_of_values = {list_of_values}, " +
+                         f"column_as_series = {column_as_series}")
         self.cluster_id = cluster_id
         # check how many values in column_as_series are in list_of_values
         # transform list_of_values to dataframe with index as separate column

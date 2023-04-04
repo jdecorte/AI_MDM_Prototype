@@ -242,23 +242,37 @@ class DomainController(FlaskView):
             return {}
         
     @route('/fuzzy_match_dataprep', methods=['POST'])
-    def fuzzy_match_dataprep(self,dataframe_in_json="", col="", cluster_method="", df_name="", ngram="", radius="", block_size="") -> json:
+    def fuzzy_match_dataprep(
+            self,
+            dataframe_in_json="",
+            col="",
+            cluster_method="",
+            df_name="",
+            ngram="",
+            radius="",
+            block_size="") -> json:
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             dataframe_in_json = data_to_use["dataframe_in_json"]
-            col= data_to_use["col"]
-            cluster_method= data_to_use["cluster_method"]
-            df_name= data_to_use["df_name"]
-            ngram= data_to_use["ngram"]
+            col = data_to_use["col"]
+            cluster_method = data_to_use["cluster_method"]
+            df_name = data_to_use["df_name"]
+            ngram = data_to_use["ngram"]
             radius = data_to_use["radius"]
             block_size = data_to_use["block_size"]
         finally:
-            fuzzy_matcher = FuzzyMatcher(pd.read_json(dataframe_in_json), col=col, df_name=df_name, ngram=ngram, radius=radius, block_size=block_size)
+            fuzzy_matcher = FuzzyMatcher(
+                pd.read_json(dataframe_in_json, convert_dates=False),
+                col=col,
+                df_name=df_name,
+                ngram=ngram,
+                radius=radius,
+                block_size=block_size)
             fuzzy_matcher.cluster(cluster_method=cluster_method)
             return fuzzy_matcher.clusters.to_json()
-        
+
     @route('/structure_detection', methods=['POST'])
     def structure_detection(self,series_in_json="", exception_chars="", compress="") -> json:
         unique_storage_id = "Local"
