@@ -1,61 +1,68 @@
-from ast import arg
-from cgitb import handler
-import rlcompleter
-import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid
-from streamlit.components.v1 import html
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 
+
 class RuleLearnerSuggestionsPage:
+
     def __init__(self, canvas, handler: IHandler) -> None:
         self.canvas = canvas
         self.handler = handler
 
-    def show(self): 
-         with self.canvas.container():
-            
+    def show(self):
+        with self.canvas.container():
             st.title("Rule Learning")
             st.header("Suggesties voor de doorgegeven regels:")
             df_with_predictions = pd.read_json(eval(st.session_state["suggesties_df"]))
-            df_with_predictions = df_with_predictions[df_with_predictions.columns.drop(list(df_with_predictions.filter(regex='(__SCORE.*|__PREDICTION.*|__BEST_SCORE)')))]
-            # Pkace columns in correct order __BEST_RULE and __BEST_PREDICTION at the front
+            df_with_predictions = df_with_predictions[
+                df_with_predictions.columns.drop(
+                    list(df_with_predictions.filter(
+                        regex='(__SCORE.*|__PREDICTION.*|__BEST_SCORE)')))]
+
+            # Order columns: __BEST_RULE and __BEST_PREDICTION at the front
+            # TODO: this seems brittle, relies on the order of the columns in dataframe
             cols = df_with_predictions.columns.tolist()
             cols = cols[-2:] + cols[:-2]
             df_with_predictions = df_with_predictions[cols]
 
-            
             suggestions_rows_selected = []
             list_of_df_idx = []
-            if st.session_state["select_all_suggestions_btn"] == True:
-                pre_selected = [*range(0,len(df_with_predictions))]
+            if st.session_state["select_all_suggestions_btn"]:
+                pre_selected = [*range(0, len(df_with_predictions))]
             else:
                 pre_selected = []
-                
+
             gb1 = GridOptionsBuilder.from_dataframe(df_with_predictions)
             gb1.configure_grid_options(fit_columns_on_grid_load=True)
-            gb1.configure_selection('multiple', pre_selected_rows=pre_selected, use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+            gb1.configure_selection(
+                'multiple',
+                pre_selected_rows=pre_selected,
+                use_checkbox=True,
+                groupSelectsChildren=True,
+                groupSelectsFiltered=True)
             response_selection_suggestion_finder = AgGrid(
                 df_with_predictions,
-                height= 150,
+                height=150,
                 editable=False,
                 gridOptions=gb1.build(),
                 data_return_mode="filtered_and_sorted",
                 update_mode="selection_changed",
                 theme="streamlit",
-                enable_enterprise_modules = False
+                enable_enterprise_modules=False
             )
 
-            colb0, colb1, colb2, colb3 = st.columns([2,2,1,4])
-        
+            colb0, colb1, colb2, colb3 = st.columns([2, 2, 1, 4])
+
             with colb0:
-                apply_suggestions = st.button("Pas geselecteerde suggesties toe", key="apply_suggestions")
-                # Maak tijdelijke dataframe aan, zodat wijzigingen niet meteen de sidebar gaan beginnen aanpassen
-                
-                if st.session_state["apply_suggestions"] == True:
+                apply_suggestions = st.button(
+                    "Pas geselecteerde suggesties toe", key="apply_suggestions")
+                # Maak tijdelijke dataframe aan, zodat wijzigingen niet meteen
+                # de sidebar gaan beginnen aanpassen
+
+                if st.session_state["apply_suggestions"]:
                     st.session_state['temp_dataframe'] = st.session_state['dataframe'].copy()
                     suggestions_rows_selected = response_selection_suggestion_finder['selected_rows']
                     list_of_df_idx = df_with_predictions.index
@@ -79,57 +86,73 @@ class RuleLearnerSuggestionsPage:
                 if submitted:
                     # Maak Rulefindingconfig aan:
                     rule_finding_config = RuleFindingConfig(
-                    
-                    rule_length=st.session_state["rule_length"], 
-                    min_support=st.session_state["min_support"],
-                    lift=st.session_state["lift"], 
-                    confidence=st.session_state["confidence"],
-                    filtering_string=st.session_state["filtering_string"],
-                    dropping_options=st.session_state["dropping_options"],
-                    binning_option=st.session_state["binning_option"]
+                        rule_length=st.session_state["rule_length"],
+                        min_support=st.session_state["min_support"],
+                        lift=st.session_state["lift"],
+                        confidence=st.session_state["confidence"],
+                        filtering_string=st.session_state["filtering_string"],
+                        dropping_options=st.session_state["dropping_options"],
+                        binning_option=st.session_state["binning_option"]
                     )
 
                     json_rule_finding_config = rule_finding_config.to_json()
                     # Roep handler.recalculate()
 
-                    self.handler.recalculate_column_rules(new_dataframe_in_json=st.session_state["temp_dataframe"].to_json(), affected_columns=st.session_state["columns_affected_by_suggestion_application"], old_dataframe_in_json=st.session_state["dataframe"].to_json(),rule_finding_config_in_json=json_rule_finding_config)
+                    self.handler.recalculate_column_rules(
+                        new_dataframe_in_json=st.session_state["temp_dataframe"].to_json(),
+                        affected_columns=st.session_state["columns_affected_by_suggestion_application"],
+                        old_dataframe_in_json=st.session_state["dataframe"].to_json(),
+                        rule_finding_config_in_json=json_rule_finding_config)
                     # Reset columns_affected_by_suggestion_application
                     del st.session_state["columns_affected_by_suggestion_application"]
+
                     # Nieuwe dataframe, betekent sowieso dat current_session gelijk zal zijn aan 1:
                     st.session_state['dataframe'] = st.session_state['temp_dataframe'].copy()
                     st.session_state["current_seq"] = 1
 
-
                     # Restore state van de aangemaakte file in de session_map
-                    st.session_state["session_map"] = self.handler.get_session_map(st.session_state['dataframe'].to_json())
-                    StateManager.restore_state(**{"handler" : self.handler, "file_path": st.session_state["session_map"]["1"]["rules"], "chosen_seq": "1"})
-                    st.experimental_rerun()                        
-                    
+                    st.session_state["session_map"] = self.handler.get_session_map(
+                        st.session_state['dataframe'].to_json())
+                    StateManager.restore_state(**{"handler": self.handler,
+                                                  "file_path": st.session_state["session_map"]["1"]["rules"],
+                                                  "chosen_seq": "1"})
+                    st.experimental_rerun()
+
             with colb2:
                 # Download de temp_dataframe
                 if "columns_affected_by_suggestion_application" in st.session_state:
                     st.download_button(
-                    label="Download aangepaste dataset",
-                    data=st.session_state["temp_dataframe"].to_csv(index=False).encode('utf-8'),
-                    file_name= f'new_{st.session_state["dataframe_name"]}',
-                    mime='text/csv',
+                        label="Download aangepaste dataset",
+                        data=st.session_state["temp_dataframe"].to_csv(index=False).encode('utf-8'),
+                        file_name=f'new_{st.session_state["dataframe_name"]}',
+                        mime='text/csv',
                     )
 
             with colb3:
                 # Select all button
-                select_all_rules_btn =  st.button('Selecteer Alle', on_click=StateManager.turn_state_button_true, args=("select_all_suggestions_btn",))
+                select_all_rules_btn = st.button(
+                    'Selecteer Alle',
+                    on_click=StateManager.turn_state_button_true,
+                    args=("select_all_suggestions_btn",))
 
-
-            if st.session_state["apply_suggestions"] == True:
+            if st.session_state["apply_suggestions"]:
                 st.header("Aangepaste dataset:")
-                rows_selected=[]
-                
+                rows_selected = []
+
                 for idx, row in enumerate(suggestions_rows_selected):
                     rows_selected.append(int(list_of_df_idx[idx]))
 
                 gb = GridOptionsBuilder.from_dataframe(st.session_state["temp_dataframe"])
                 gb.configure_side_bar()
-                gb.configure_selection('multiple', pre_selected_rows= rows_selected)
-                gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
+                gb.configure_selection('multiple', pre_selected_rows=rows_selected)
+                gb.configure_default_column(
+                    groupable=True,
+                    value=True,
+                    enableRowGroup=True,
+                    aggFunc="sum",
+                    editable=False)
                 gridOptions = gb.build()
-                _ = AgGrid(st.session_state["temp_dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True)
+                _ = AgGrid(
+                        st.session_state["temp_dataframe"],
+                        gridOptions=gridOptions,
+                        enable_enterprise_modules=True)
