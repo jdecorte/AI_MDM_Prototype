@@ -274,16 +274,24 @@ class DomainController(FlaskView):
             return fuzzy_matcher.clusters.to_json()
 
     @route('/structure_detection', methods=['POST'])
-    def structure_detection(self,series_in_json="", exception_chars="", compress="") -> json:
+    def structure_detection(
+            self,
+            series_in_json="",
+            exception_chars="",
+            compress="") -> json:
         unique_storage_id = "Local"
         try:
             unique_storage_id = request.cookies.get("session_flask")
             data_to_use = json.loads(request.data)
             series_in_json = data_to_use["series_in_json"]
-            exception_chars= data_to_use["exception_chars"]
-            compress= data_to_use["compress"]
+            exception_chars = data_to_use["exception_chars"]
+            compress = data_to_use["compress"]
         finally:
-            fuzzy_matcher = StructureDetector(pd.read_json(series_in_json,typ='series', orient='records'), exception_chars=exception_chars, compress=compress).find_structure()
+            fuzzy_matcher = StructureDetector(
+                pd.read_json(series_in_json, typ='series',
+                             orient='records', convert_dates=False),
+                exception_chars=exception_chars,
+                compress=compress).find_structure()
             return fuzzy_matcher.to_json()
 
     # RULE LEARNING
