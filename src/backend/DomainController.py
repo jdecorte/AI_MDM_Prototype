@@ -218,7 +218,7 @@ class DomainController(FlaskView):
     # DATACLEANING      
     # TODO REPLACE
     @route('/clean_dataframe_dataprep', methods=['POST'])
-    def clean_dataframe_dataprep(self,dataframe_in_json="", custom_pipeline="" ) -> json:
+    def clean_dataframe_dataprep(self, dataframe_in_json="", custom_pipeline="") -> json:
         # custom_pipeline = [
         # {"text": [
         #         "operator": "<operator_name>",
@@ -234,13 +234,15 @@ class DomainController(FlaskView):
         finally:
             # iterate over custom_pipeline:
             dfc = DataFrameCleaner()
-            for (k,v) in custom_pipeline.items():
-                if(k == "text"):
+            for k, v in custom_pipeline.items():
+                if k == "text":
                     df = pd.read_json(dataframe_in_json)
                     df = dfc.clean_text(df=df, column=df.columns[0], pipeline=v)
                     return df.to_json()
-            return {}
-        
+            # return {}
+            # When the pipeline is empty, return the original dataframe
+            return dataframe_in_json
+
     @route('/fuzzy_match_dataprep', methods=['POST'])
     def fuzzy_match_dataprep(
             self,

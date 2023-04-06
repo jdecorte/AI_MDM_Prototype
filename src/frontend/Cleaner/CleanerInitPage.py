@@ -41,6 +41,7 @@ class CleanerInitPage:
 
         return unique_characters_df
 
+    # TODO: check that the next two methods can be removed? They are not used anymore.
     def _transform_to_simple_representation(self, series, extra_exceptions="", compress=False):
         #  transform the values to values which follow the regex pattern [a-zA-Z0-9]
         series = series.astype(str)
@@ -200,46 +201,61 @@ class CleanerInitPage:
         if chosen_tab == "4":
             st.header('Cleaning Operations:')
 
-        
-            colG_1, colG_2, colG_3= st.columns([1,1,1])
-                
+            colG_1, colG_2, colG_3 = st.columns([1, 1, 1])
+
             with colG_2:
-                
-                cleaning_method = st.selectbox("Select the cleaning method", ["fillna", "lowercase", "uppercase", "remove_digits", "remove_html", "remove_urls", "remove_punctuation", "remove_accents", "remove_stopwords", "remove_whitespace", "remove_bracketed", "remove_prefixed"])
-                if cleaning_method in ["remove_stopwords", "remove_bracketed", "remove_prefixed"]:
-                    colH_1, _= st.columns([1,1])
+                cleaning_methods_list = ["fillna", "lowercase", "uppercase",
+                                         "remove_digits", "remove_html",
+                                         "remove_urls", "remove_punctuation",
+                                         "remove_accents", "remove_stopwords",
+                                         "remove_whitespace", "remove_bracketed",
+                                         "remove_prefixed"]
+                special_methods = ["remove_stopwords", "remove_bracketed",
+                                   "remove_prefixed"]
+
+                cleaning_method = st.selectbox(
+                    "Select the cleaning method", cleaning_methods_list)
+                if cleaning_method in special_methods:
+                    colH_1, _ = st.columns([1, 1])
                     with colH_1:
-                        value = st.text_input("Enter addiotional parameters to replace with", "")
+                        value = st.text_input(
+                            "Enter additional parameters to replace with", "")
 
             with colG_3:
                 st.write("")
                 st.write("")
-                colG_3_1, colG_3_2, _ =st.columns([1,1,1])
+                colG_3_1, colG_3_2, _ = st.columns([1, 1, 1])
                 with colG_3_1:
                     if st.button("Add to pipeline"):
                         # check if the pipeline is empty
                         if st.session_state['pipeline'] == {}:
-                            st.session_state['pipeline']['text'] = [{'operator':cleaning_method} if cleaning_method not in ["remove_stopwords", "remove_bracketed", "remove_prefixed"] else {'operator':cleaning_method, 'value':value}]
-                        else:
-                            st.session_state['pipeline']['text'].append({'operator':cleaning_method} if cleaning_method not in ["remove_stopwords", "remove_bracketed", "remove_prefixed"] else {'operator':cleaning_method, 'value':value})
+                            st.session_state['pipeline']['text'] = []
+
+                        st.session_state['pipeline']['text'].append(
+                            {'operator': cleaning_method}
+                            if cleaning_method not in special_methods
+                            else {'operator': cleaning_method, 'value': value})
                 with colG_3_2:
                     if st.button("Clear pipeline"):
                         st.session_state['pipeline'] = {}
-            
-            
+
             st.write("")
             st.write("")
-            colI_1, colI_3, _= st.columns([4,2,4])
+            colI_1, colI_3, _ = st.columns([4, 2, 4])
 
             with colI_1:
-                chosen_column = st.selectbox("Select the column that you want to clean:", st.session_state["dataframe"].columns) 
+                chosen_column = st.selectbox(
+                    "Select the column that you want to clean:",
+                    st.session_state["dataframe"].columns)
 
-                
             with colI_3:
                 st.write("")
                 st.write("")
                 if st.button("Apply pipeline to column"):
-                    st.session_state['cleaned_column_from_pipeline'] = pd.DataFrame(self.handler.clean_dataframe_dataprep(dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(), custom_pipeline=st.session_state['pipeline']))
+                    st.session_state['cleaned_column_from_pipeline'] = pd.DataFrame(
+                        self.handler.clean_dataframe_dataprep(
+                            dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(), 
+                            custom_pipeline=st.session_state['pipeline']))
                     # transform the index to int and sort it
                     st.session_state['cleaned_column_from_pipeline'].index = st.session_state['cleaned_column_from_pipeline'].index.astype(int)
             # check if a pandas dataframe is not empty
