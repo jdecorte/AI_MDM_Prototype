@@ -75,70 +75,7 @@ class CleanerInitPage:
             self._show_structure_detection_tab()
 
         if chosen_tab == "3":
-            st.header('Fuzzy Matching:')
-            colC_1, colC_2, _ = st.columns([1, 1, 1])
-            with colC_1:
-                chosen_column = st.selectbox(
-                    "Select the column that you want to cluster:",
-                    st.session_state["dataframe"].columns)
-            with colC_2:
-                cluster_method = st.selectbox(
-                    "Select the cluster method",
-                    ["fingerprint", "phonetic-fingerprint",
-                     "ngram-fingerprint", "levenshtein"])
-
-            colD_1, _ = st.columns([2, 1])
-
-            with colD_1:
-                n_gram = 0
-                radius = 0
-                block_size = 0
-                if cluster_method == 'ngram-fingerprint':
-                    colE_1, _ = st.columns([1, 1])
-                    with colE_1:
-                        n_gram = st.slider(
-                            'The Number of N-Grams',
-                            min_value=2, max_value=10, value=2)
-                if cluster_method == 'levenshtein':
-                    colF_1, colF_2 = st.columns([1, 1])
-                    with colF_1:
-                        radius = st.slider(
-                            'The Radius',
-                            min_value=1, max_value=10, value=2)
-                    with colF_2:
-                        block_size = st.slider(
-                            'The Block Size',
-                            min_value=1, max_value=10, value=6)
-
-            # Iterate over clusters
-            st.session_state['list_of_cluster_view'] = []
-            list_of_fuzzy_clusters = []
-
-            for cluster_id, list_of_values in self.handler.fuzzy_match_dataprep(
-                    dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(),
-                    df_name=st.session_state["dataframe_name"],
-                    col=chosen_column,
-                    cluster_method=cluster_method,
-                    ngram=n_gram,
-                    radius=radius,
-                    block_size=block_size).items():
-                if f'fuzzy_merge_{cluster_id}' not in st.session_state:
-                    st.session_state[f'fuzzy_merge_{cluster_id}'] = True
-                # Create a view for each cluster
-                list_of_fuzzy_clusters.append(FuzzyClusterView(
-                    cluster_id, list_of_values,
-                    st.session_state["dataframe"][chosen_column]))
-            st.session_state["list_of_fuzzy_cluster_view"] = list_of_fuzzy_clusters
-
-            if list_of_fuzzy_clusters != []:
-                st.header("Gevonden clusters:")
-                st.write("")
-                st.write("")
-                sub_rowstoUse = self. _create_pagination("page_number_Dedupe", st.session_state["list_of_fuzzy_cluster_view"], 5)
-                for idx, cv in enumerate(sub_rowstoUse):
-                    self._create_cluster_card(idx, cv)
-                if st.button("Bevestig clusters"):
-                    self._merge_clusters(st.session_state["list_of_cluster_view"])
+            self._show_fuzzy_matching_tab()
 
         if chosen_tab == "4":
             st.header('Cleaning Operations:')
@@ -281,6 +218,76 @@ class CleanerInitPage:
                     if st.button("Save"):
                         # Replace values in the dataframe with the (possibly) new values
                         st.session_state['dataframe'].loc[grid['data'].index] = grid['data']
+
+    def _show_fuzzy_matching_tab(self):
+        st.header('Fuzzy Matching:')
+        colC_1, colC_2, _ = st.columns([1, 1, 1])
+        with colC_1:
+            chosen_column = st.selectbox(
+                "Select the column that you want to cluster:",
+                st.session_state["dataframe"].columns)
+        with colC_2:
+            cluster_method = st.selectbox(
+                "Select the cluster method",
+                ["fingerprint", "phonetic-fingerprint",
+                    "ngram-fingerprint", "levenshtein"])
+
+        colD_1, _ = st.columns([2, 1])
+
+        with colD_1:
+            n_gram = 0
+            radius = 0
+            block_size = 0
+            if cluster_method == 'ngram-fingerprint':
+                colE_1, _ = st.columns([1, 1])
+                with colE_1:
+                    n_gram = st.slider(
+                        'The Number of N-Grams',
+                        min_value=2, max_value=10, value=2)
+            if cluster_method == 'levenshtein':
+                colF_1, colF_2 = st.columns([1, 1])
+                with colF_1:
+                    radius = st.slider(
+                        'The Radius',
+                        min_value=1, max_value=10, value=2)
+                with colF_2:
+                    block_size = st.slider(
+                        'The Block Size',
+                        min_value=1, max_value=10, value=6)
+
+        # Iterate over clusters
+        st.session_state['list_of_cluster_view'] = []
+        list_of_fuzzy_clusters = []
+
+        for cluster_id, list_of_values in self.handler.fuzzy_match_dataprep(
+                dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(),
+                df_name=st.session_state["dataframe_name"],
+                col=chosen_column,
+                cluster_method=cluster_method,
+                ngram=n_gram,
+                radius=radius,
+                block_size=block_size).items():
+            if f'fuzzy_merge_{cluster_id}' not in st.session_state:
+                st.session_state[f'fuzzy_merge_{cluster_id}'] = True
+            # Create a view for each cluster
+            list_of_fuzzy_clusters.append(FuzzyClusterView(
+                cluster_id, list_of_values,
+                st.session_state["dataframe"][chosen_column]))
+        st.session_state["list_of_fuzzy_cluster_view"] = list_of_fuzzy_clusters
+
+        if list_of_fuzzy_clusters != []:
+            st.header("Gevonden clusters:")
+            st.write("")
+            st.write("")
+            sub_rows_to_use = self. _create_pagination(
+                "page_number_Dedupe",
+                st.session_state["list_of_fuzzy_cluster_view"], 5)
+            for idx, cv in enumerate(sub_rows_to_use):
+                self._create_cluster_card(idx, cv)
+            if st.button("Bevestig clusters"):
+                self._merge_clusters(st.session_state["list_of_cluster_view"])
+        else:
+            st.markdown("**Geen clusters gevonden**")
 
     def _create_pagination(self, key, cols_to_use, N):
         # A variable to keep track of which product we are currently displaying
