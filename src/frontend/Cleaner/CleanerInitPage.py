@@ -72,65 +72,7 @@ class CleanerInitPage:
             self._show_ag_grid()
 
         if chosen_tab == "2":
-            st.header('Structure Detection:')
-            colA_1, colA_2, colA_3 = st.columns([1, 1, 1])
-            with colA_1:
-                chosen_column = st.selectbox(
-                    "Select a column to detect the structure of the values",
-                    st.session_state["dataframe"].columns)
-            with colA_2:
-                extra_exceptions = "".join(st.multiselect(
-                    "Select the characters that you want to keep in the pattern",
-                    self._show_unique_values(
-                        st.session_state["dataframe"][chosen_column])["character"].tolist()))
-            with colA_3:
-                st.write("")
-                st.write("")
-                compress = st.checkbox("Compress the found patterns")
-
-            simple_representation = pd.Series(
-                self.handler.structure_detection(
-                    st.session_state["dataframe"][chosen_column].to_json(),
-                    extra_exceptions, compress))
-
-            series_for_aggrid = simple_representation.value_counts(normalize=True).copy(deep=True)
-            series_for_aggrid = series_for_aggrid.rename_axis('pattern').reset_index(name='percentage')
-            colB_1, _, colB_3 = st.columns([2, 1, 3])
-            with colB_1:
-                st.write("The found patterns are:")
-                gb = GridOptionsBuilder.from_dataframe(series_for_aggrid)
-                gb.configure_side_bar()
-                gb.configure_default_column(
-                    groupable=True, value=True,
-                    enableRowGroup=True, aggFunc="sum", editable=False)
-                gb.configure_selection(
-                    'single', pre_selected_rows=[], use_checkbox=True,
-                    groupSelectsChildren=True, groupSelectsFiltered=True)
-                response_patterns = AgGrid(
-                    series_for_aggrid,
-                    editable=False,
-                    gridOptions=gb.build(),
-                    data_return_mode="filtered_and_sorted",
-                    update_mode="selection_changed",
-                    fit_columns_on_grid_load=True,
-                    theme="streamlit",
-                    enable_enterprise_modules=False,
-                )
-
-            with colB_3:
-                if response_patterns["selected_rows"]:
-                    # show the records that match the selected pattern
-                    selected_pattern = response_patterns["selected_rows"][0]["pattern"] if len(response_patterns["selected_rows"]) > 0 else None
-                    if selected_pattern is not None:
-                        df_for_aggrid2 = st.session_state['dataframe'][simple_representation.values == selected_pattern]
-                        # df_for_aggrid2 = st.session_state['dataframe'][simple_representation == selected_pattern]
-                        gb2 = GridOptionsBuilder.from_dataframe(df_for_aggrid2)
-                        gb2.configure_side_bar()
-                        gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
-                        gridOptions = gb2.build()
-                        grid = AgGrid(df_for_aggrid2, gridOptions=gridOptions, enable_enterprise_modules=False, height=500)
-                        if st.button("Save"):
-                            pass
+            self._show_structure_detection_tab()
 
         if chosen_tab == "3":
             st.header('Fuzzy Matching:')
@@ -271,6 +213,74 @@ class CleanerInitPage:
             with colG_1:
                 st.subheader("Current pipeline:")
                 st.write(st.session_state['pipeline'])
+
+    def _show_structure_detection_tab(self):
+        st.header('Structure Detection:')
+        colA_1, colA_2, colA_3 = st.columns([1, 1, 1])
+        with colA_1:
+            chosen_column = st.selectbox(
+                "Select a column to detect the structure of the values",
+                st.session_state["dataframe"].columns)
+        with colA_2:
+            extra_exceptions = "".join(st.multiselect(
+                "Select the characters that you want to keep in the pattern",
+                self._show_unique_values(
+                    st.session_state["dataframe"][chosen_column])["character"].tolist()))
+        with colA_3:
+            st.write("")
+            st.write("")
+            compress = st.checkbox("Compress the found patterns")
+
+        simple_repr = pd.Series(
+            self.handler.structure_detection(
+                st.session_state["dataframe"][chosen_column].to_json(),
+                extra_exceptions, compress))
+
+        series_for_aggrid = (simple_repr.value_counts(normalize=True)
+                                        .copy(deep=True))
+        series_for_aggrid = (series_for_aggrid.rename_axis('pattern')
+                                              .reset_index(name='percentage'))
+        colB_1, _, colB_3 = st.columns([2, 1, 3])
+        with colB_1:
+            st.write("The found patterns are:")
+            gb = GridOptionsBuilder.from_dataframe(series_for_aggrid)
+            gb.configure_side_bar()
+            gb.configure_default_column(
+                groupable=True, value=True,
+                enableRowGroup=True, aggFunc="sum", editable=False)
+            gb.configure_selection(
+                'single', pre_selected_rows=[], use_checkbox=True,
+                groupSelectsChildren=True, groupSelectsFiltered=True)
+            response_patterns = AgGrid(
+                series_for_aggrid,
+                editable=False,
+                gridOptions=gb.build(),
+                data_return_mode="filtered_and_sorted",
+                update_mode="selection_changed",
+                fit_columns_on_grid_load=True,
+                theme="streamlit",
+                enable_enterprise_modules=False,
+            )
+
+        with colB_3:
+            if response_patterns["selected_rows"]:
+                # show the records that match the selected pattern
+                selected_pattern = (response_patterns["selected_rows"][0]["pattern"]
+                                    if len(response_patterns["selected_rows"]) > 0
+                                    else None)
+                if selected_pattern is not None:
+                    df_for_aggrid2 = st.session_state['dataframe'][simple_repr.values == selected_pattern]
+                    gb2 = GridOptionsBuilder.from_dataframe(df_for_aggrid2)
+                    gb2.configure_side_bar()
+                    gb2.configure_default_column(
+                        groupable=False, value=True,
+                        enableRowGroup=True, aggFunc="sum", editable=True)
+                    gridOptions = gb2.build()
+                    grid = AgGrid(df_for_aggrid2, gridOptions=gridOptions,
+                                  enable_enterprise_modules=False, height=500)
+                    if st.button("Save"):
+                        # Replace values in the dataframe with the (possibly) new values
+                        st.session_state['dataframe'].loc[grid['data'].index] = grid['data']
 
     def _create_pagination(self, key, cols_to_use, N):
         # A variable to keep track of which product we are currently displaying
