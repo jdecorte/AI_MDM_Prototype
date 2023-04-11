@@ -41,22 +41,12 @@ class Zingg:
         # gb = fr'C:/Users/mstr845/AppData/Local/Programs/Git/git-bash.exe"'
         # arr = [gb, f"C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/external/zingg-0.3.4/scripts/zingg.sh --run C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/storage/{modelID}/scripts/{phase}/generated_zingg_script.py"]
         system = platform.system()
-        if system == "Windows":
-            gb= "C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\git-bash.exe" 
-            # arr = [gb, "-c", "touch hello.txt"]
-            # r = subprocess.Popen(arr, shell=True)
-            # # print(f"Zingg phase {phase} finished")
-            
-            cmd = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh --run C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
-            cmd1= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\external\\zingg-0.3.4\\scripts\\zingg.sh"
-            cmd2= "--run"
-            cmd3= "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype\\storage\\8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29\\scripts\\findTrainingData\\generated_zingg_script.py"
-            start_path = "C:\\Users\\mstr845\\Documents\\GitHub\\AI_MDM_Prototype"
-            command_args = [gb, "-c", cmd]
-            process = Popen(command_args, stdout=PIPE, stderr=STDOUT, shell=True, cwd="C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\" )
-            output, err = process.communicate()
-            print(output)
-            print(err)
+        if system == "Windows":           
+            cmd = (["C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\git-bash.exe"] + ["./external/zingg-0.3.4/scripts/zingg.sh"] + ["--run"] +
+                   [f"./storage/{modelID}/scripts/{phase}/generated_zingg_script.py"])
+            process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            _, _ = process.communicate()
+            print(f"Zingg phase {phase} finished")
         elif system == "Linux":
             print("Calling zingg.sh for Linux")
             cmd = (["/bin/bash"] + ["./external/zingg/scripts/zingg.sh"] + ["--run"] +
@@ -77,7 +67,6 @@ class Zingg:
             print(err)
         else:
             raise ValueError("Unsupported OS")
-    
 
     @staticmethod
     def get_unmarked_pairs(modelID):

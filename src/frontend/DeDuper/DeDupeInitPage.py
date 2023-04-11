@@ -21,7 +21,7 @@ class DeDupeInitPage:
             
             # Select if you want to use Zingg or Dedupe
             st.subheader("Selecteer de methode die je wilt gebruiken")
-            st.session_state['selected_deduplication_method'] = st.selectbox('Methode:', ["Dedupe", "Zingg"])
+            st.session_state['selected_deduplication_method'] = st.selectbox('Methode:', ["Dedupe", "Zingg"], index=1)
 
             st.subheader("Selecteer kolommen om te gebruiken in deduplicatie-proces")
 
