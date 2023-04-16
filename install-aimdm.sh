@@ -38,4 +38,6 @@ sudo cp /vagrant/nginx.conf /etc/nginx/
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
+# Allow forwarding in SELinux
+sudo setsebool -P httpd_can_network_connect 1
 
