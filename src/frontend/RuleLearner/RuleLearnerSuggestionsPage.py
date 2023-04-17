@@ -15,8 +15,14 @@ class RuleLearnerSuggestionsPage:
     def show(self):
         with self.canvas.container():
             st.title("Rule Learning")
-            st.header("Suggesties voor de doorgegeven regels:")
             df_with_predictions = pd.read_json(eval(st.session_state["suggesties_df"]))
+
+            # Controleer of er wel suggesties gevonden zijn
+            if df_with_predictions.shape[0] == 0:
+                st.markdown("**Er zijn geen suggesties gevonden**")
+                return
+
+            st.header("Suggesties voor de doorgegeven regels:")     
             df_with_predictions = df_with_predictions[
                 df_with_predictions.columns.drop(
                     list(df_with_predictions.filter(
