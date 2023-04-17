@@ -48,7 +48,10 @@ class AssociationRuleFinder:
         # First use confidence, later filter on lift.
         # Reason to use confidence is that when a => b, c is present then also
         # a => b and a => c will be present
-        ar = self.association_rules(frequent_itemsets, 'confidence', self.min_confidence)
+        ar = AssociationRuleFinder.association_rules(
+            frequent_itemsets,
+            'confidence',
+            self.min_confidence)
 
         cfg.logger.debug("Association rules before pruning")
         cfg.logger.debug(f"{str(ar)}")
@@ -56,8 +59,8 @@ class AssociationRuleFinder:
         return ar[ar['lift'] > self.min_lift]
 
     # Code originally from mlxtend
-    def association_rules(self,
-                          df,
+    @staticmethod
+    def association_rules(df,
                           metric="confidence",
                           min_threshold=0.8,
                           support_only=False) -> pd.DataFrame:
@@ -122,10 +125,20 @@ class AssociationRuleFinder:
         http://rasbt.github.io/mlxtend/user_guide/frequent_patterns/association_rules/
 
         """
+
+        columns_ordered = [
+            "antecedent support",
+            "consequent support",
+            "support",
+            "confidence",
+            "lift",
+            "leverage",
+        ]
+
         if not df.shape[0]:
-            raise ValueError(
-                "The input DataFrame `df` containing " "the frequent itemsets is empty."
-            )
+            cfg.logger.debug(
+                "The input DataFrame `df` containing the frequent itemsets is empty.")
+            return pd.DataFrame(columns=["antecedents", "consequents"] + columns_ordered)
 
         # check for mandatory columns
         if not all(col in df.columns for col in ["support", "itemsets"]):
@@ -143,15 +156,6 @@ class AssociationRuleFinder:
             "lift": lambda sAC, sA, sC: metric_dict["confidence"](sAC, sA, sC) / sC,
             "leverage": lambda sAC, sA, sC: metric_dict["support"](sAC, sA, sC) - sA * sC,
         }
-
-        columns_ordered = [
-            "antecedent support",
-            "consequent support",
-            "support",
-            "confidence",
-            "lift",
-            "leverage",
-        ]
 
         # check for metric compliance
         if support_only:

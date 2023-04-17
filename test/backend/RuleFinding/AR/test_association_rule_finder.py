@@ -64,3 +64,12 @@ def test_get_association_rules():
     assert ar_df[ar_df["antecedents"] == frozenset(["A_2"])].shape[0] == 1
     assert ar_df[ar_df["antecedents"] == frozenset(["B_1"])].shape[0] == 1
     assert ar_df[ar_df["antecedents"] == frozenset(["B_2"])].shape[0] == 1
+
+
+def test_association_rules_empty_df():
+    # Test the method `association_rules` with an empty dataframe.
+    df = pd.DataFrame({
+        'support': [],
+        'itemsets': []})
+    result_df = arf.AssociationRuleFinder.association_rules(df)
+    assert result_df.shape[0] == 0

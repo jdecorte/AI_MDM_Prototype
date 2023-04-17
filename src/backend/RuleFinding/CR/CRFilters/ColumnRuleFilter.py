@@ -106,6 +106,10 @@ class ColumnRuleFilter_Entropy(ColumnRuleFilter):
  
     def execute(self, rules) -> Dict[str, ColumnRule]:
 
+        # When the rules are empty, we can return immediately
+        if len(rules) == 0:
+            return rules
+
         interesting_rules: Dict[str, ColumnRule] = {}
 
         # Bvb: 1 -> ["a->b", "b->c", "X->Y"]
@@ -172,6 +176,10 @@ class ColumnRuleFilter_ZScore(ColumnRuleFilter):
         """
 
         cfg.logger.info(f"Starting with {len(rules.values())} rules")
+
+        # When the rules are empty, we can return immediately
+        if len(rules) == 0:
+            return rules
 
 
         interesting_rules: Dict[str, ColumnRule] = {}

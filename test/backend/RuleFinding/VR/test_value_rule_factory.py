@@ -38,3 +38,20 @@ def test_value_rule_factory():
             confidence=confidence[i],
             lift=lift[i])
         assert rule in value_rules_dict["A => B"]
+
+
+def test_empty_value_rules():
+    """
+    Test that an empty dataframe results in an empty dictionary of value rules.
+    """
+    df = pd.DataFrame(
+        {"antecedents": [],
+         "consequents": [],
+         "support": [],
+         "confidence": [],
+         "lift": []}
+    )
+
+    factory = vrf.ValueRuleFactory()
+    value_rules_dict = factory.transform_ar_dataframe_to_value_rules_dict(df)
+    assert len(value_rules_dict) == 0
