@@ -63,6 +63,8 @@ class RuleLearnerInitPage:
                     dropping_options=st.session_state["dropping_options"],
                     binning_option=st.session_state["binning_option"]
                     )
+                # Sla rule finding config op in de session_state
+                st.session_state["rule_finding_config"] = rule_finding_config
                 json_rule_finding_config = rule_finding_config.to_json()
 
                 # Set session_state attributes

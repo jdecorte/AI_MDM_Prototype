@@ -24,8 +24,17 @@ class LocalHandler(IHandler):
     def get_session_map(self, dataframe_in_json):
         return self.dc.get_session_map(dataframe_in_json=dataframe_in_json)
 
-    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
-        return self.dc.recalculate_column_rules(old_dataframe_in_json=old_dataframe_in_json, new_dataframe_in_json=new_dataframe_in_json, rule_finding_config_in_json=rule_finding_config_in_json, affected_columns=json.dumps(affected_columns))
+    def recalculate_column_rules(
+            self,
+            old_df_in_json,
+            new_df_in_json,
+            rule_finding_config_in_json,
+            affected_columns):
+        return self.dc.recalculate_column_rules(
+            old_df_in_json=old_df_in_json,
+            new_df_in_json=new_df_in_json,
+            rule_finding_config_in_json=rule_finding_config_in_json,
+            affected_columns=json.dumps(affected_columns))
 
     def create_deduper_object(self, dedupe_type_dict, dedupe_data) -> json:
         self.dc.create_deduper_object(dedupe_type_dict, dedupe_data)

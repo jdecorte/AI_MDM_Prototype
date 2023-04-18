@@ -3,7 +3,7 @@ import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
-from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
+import config as cfg
 
 
 class RuleLearnerSuggestionsPage:
@@ -88,29 +88,22 @@ class RuleLearnerSuggestionsPage:
                     st.session_state["columns_affected_by_suggestion_application"] = list(set_of_cols)
 
             with colb1:
-                submitted = st.button("Bereken Regels opnieuw")
+                submitted = st.button("Bereken Regels opnieuw")                
                 if submitted:
-                    # Maak Rulefindingconfig aan:
-                    rule_finding_config = RuleFindingConfig(
-                        rule_length=st.session_state["rule_length"],
-                        min_support=st.session_state["min_support"],
-                        lift=st.session_state["lift"],
-                        confidence=st.session_state["confidence"],
-                        filtering_string=st.session_state["filtering_string"],
-                        dropping_options=st.session_state["dropping_options"],
-                        binning_option=st.session_state["binning_option"]
-                    )
+                    # Get the rule_finding_config from the session_state
+                    rule_finding_config = st.session_state["rule_finding_config"]
 
                     json_rule_finding_config = rule_finding_config.to_json()
-                    # Roep handler.recalculate()
 
                     self.handler.recalculate_column_rules(
-                        new_dataframe_in_json=st.session_state["temp_dataframe"].to_json(),
-                        affected_columns=st.session_state["columns_affected_by_suggestion_application"],
-                        old_dataframe_in_json=st.session_state["dataframe"].to_json(),
-                        rule_finding_config_in_json=json_rule_finding_config)
+                        old_df_in_json=st.session_state["dataframe"].to_json(),
+                        new_df_in_json=st.session_state["temp_dataframe"].to_json(),
+                        rule_finding_config_in_json=json_rule_finding_config,
+                        affected_columns=st.session_state["columns_affected_by_suggestion_application"])                  
                     # Reset columns_affected_by_suggestion_application
                     del st.session_state["columns_affected_by_suggestion_application"]
+
+                    cfg.logger.debug("Recalculate rules done")
 
                     # Nieuwe dataframe, betekent sowieso dat current_session gelijk zal zijn aan 1:
                     st.session_state['dataframe'] = st.session_state['temp_dataframe'].copy()
@@ -119,9 +112,11 @@ class RuleLearnerSuggestionsPage:
                     # Restore state van de aangemaakte file in de session_map
                     st.session_state["session_map"] = self.handler.get_session_map(
                         st.session_state['dataframe'].to_json())
-                    StateManager.restore_state(**{"handler": self.handler,
-                                                  "file_path": st.session_state["session_map"]["1"]["rules"],
-                                                  "chosen_seq": "1"})
+                    StateManager.restore_state(
+                        **{"handler": self.handler,
+                           "file_path": st.session_state["session_map"]["1"]["rules"],
+                           "chosen_seq": "1"})
+
                     st.experimental_rerun()
 
             with colb2:

@@ -22,7 +22,8 @@ class StateManager:
 
     @staticmethod
     def restore_state(**kwargs) -> None:
-        file_string = kwargs["file_path"].split("\\")[1]
+        #file_string = kwargs["file_path"].split("\\")[1]
+        file_string = kwargs["file_path"].split("/")[-1]
         content = kwargs["handler"].fetch_file_from_filepath(filepath=kwargs["file_path"])
         past_result_content_dict = json.loads(content)
         part_to_check_functionality = file_string.split('_')[0]

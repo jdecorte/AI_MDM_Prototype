@@ -103,7 +103,11 @@ def main():
             button_container.write(seq)
             for method, file_name in method_dict.items():
                 button_container.write(method)
-                button_container.button("⏪ "+seq+ file_name.split("\\")[1], on_click=StateManager.restore_state, kwargs={"handler" : handler, "file_path": file_name, "chosen_seq": seq})
+                button_container.button("⏪ " + seq + file_name.split("/")[-1],  # file_name.split("\\")[1], 
+                                        on_click=StateManager.restore_state,
+                                        kwargs={"handler": handler,
+                                                "file_path": file_name,
+                                                "chosen_seq": seq})
         
         # Toevoegen van download knop:
         # st.sidebar.button('Download huidige dataset')

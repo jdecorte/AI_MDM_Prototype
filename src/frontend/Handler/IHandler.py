@@ -25,7 +25,7 @@ class IHandler(ABC):
         raise Exception("Not implemented Exception")
 
     @abstractmethod
-    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
+    def recalculate_column_rules(self, old_df_in_json, new_df_in_json, rule_finding_config_in_json, affected_columns):
         raise Exception("Not implemented Exception")
 
 

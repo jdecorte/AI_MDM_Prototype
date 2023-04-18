@@ -4,6 +4,7 @@ from src.shared.Views.ColumnRuleView import ColumnRuleView
 from typing import List
 import requests
 import streamlit as st
+import config as cfg
 
 class RemoteHandler(IHandler):
 
@@ -40,13 +41,22 @@ class RemoteHandler(IHandler):
         data["dataframe_in_json"] = dataframe_in_json
         return requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json()
 
-    def recalculate_column_rules(self, old_dataframe_in_json, new_dataframe_in_json, rule_finding_config_in_json, affected_columns):
+    def recalculate_column_rules(
+            self,
+            old_df_in_json,
+            new_df_in_json,
+            rule_finding_config_in_json,
+            affected_columns) -> None:
         data = {}
-        data["old_dataframe_in_json"] = old_dataframe_in_json
-        data["new_dataframe_in_json"] = new_dataframe_in_json
+        data["old_dataframe_in_json"] = old_df_in_json
+        data["new_dataframe_in_json"] = new_df_in_json
         data["rule_finding_config_in_json"] = rule_finding_config_in_json
         data["affected_columns"] = json.dumps(affected_columns)
-        return requests.post(f"{self.connection_string}/recalculate_column_rules", data=json.dumps(data)).json()
+
+        requests.post(
+            f"{self.connection_string}/recalculate_column_rules",
+            data=json.dumps(data))
+        
 
     # DEDUPE
     def create_deduper_object(self, dedupe_type_dict, dedupe_data) -> json:
