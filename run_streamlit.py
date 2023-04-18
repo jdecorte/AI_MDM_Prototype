@@ -113,7 +113,7 @@ def main():
         # st.sidebar.button('Download huidige dataset')
         st.sidebar.download_button(
                 label="Download huidige dataset",
-                data=st.session_state["dataframe"].to_csv().encode('utf-8'),
+                data=st.session_state["dataframe"].to_csv(index=False).encode('utf-8'),
                 file_name= f'new_{st.session_state["dataframe_name"]}',
                 mime='text/csv',
             )
