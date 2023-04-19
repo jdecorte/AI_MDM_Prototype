@@ -89,7 +89,15 @@ class RemoteHandler(IHandler):
         data = {}
         data["dedupe_type_dict"] = dedupe_type_dict
         data["dedupe_data"] = dedupe_data
-        requests.post(f"{self.connection_string}/prepare_zingg", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        return requests.post(f"{self.connection_string}/prepare_zingg", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+
+    def run_zingg_phase(self, phase) -> json:
+        data = {}
+        data["phase"] = phase
+        return requests.post(f"{self.connection_string}/run_zingg_phase", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+    
+    def zingg_clear(self) -> json:
+        return requests.post(f"{self.connection_string}/zingg_clear", cookies={"session_flask" : st.session_state['session_flask']})
 
     def zingg_unmarked_pairs(self) -> json:
         return requests.get(f"{self.connection_string}/zingg_unmarked_pairs", cookies={"session_flask" : st.session_state['session_flask']}).json()
@@ -97,10 +105,13 @@ class RemoteHandler(IHandler):
     def zingg_mark_pairs(self, marked_df) -> json:
         data = {}
         data["marked_df"] = marked_df
-        requests.post(f"{self.connection_string}/zingg_mark_pairs", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        return requests.post(f"{self.connection_string}/zingg_mark_pairs", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
 
     def zingg_get_stats(self) -> json:
         return requests.get(f"{self.connection_string}/zingg_get_stats", cookies={"session_flask" : st.session_state['session_flask']}).json()
+    
+    def zingg_get_clusters(self) -> json:
+        return requests.get(f"{self.connection_string}/zingg_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
     
     # DATA CLEANING
     def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline) -> json:

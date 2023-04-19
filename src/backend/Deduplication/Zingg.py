@@ -4,17 +4,17 @@ from pathlib import Path
 import hashlib
 from subprocess import Popen, PIPE, STDOUT
 import platform
+import shutil
+import pyarrow.parquet as pq
 
 
 class Zingg:
     def __init__(self, dedupe_type_dict, dedupe_data, modelID, number_of_partitions=4, label_data_sample_size=0.5, output="/output_dir") -> None:
         self.dedupe_type_dict = dedupe_type_dict
-        # create dataframe from json
         self.dedupe_data = pd.read_json(dedupe_data).astype(str)
         self.modelID = modelID
         self.number_of_partitions = number_of_partitions
         self.label_data_sample_size = label_data_sample_size
-        # self.location = f"../../../storage/{self.modelID}"
         self.location = f"storage/{self.modelID}"
         Path(f"storage/{self.modelID}/input_dir").mkdir(parents=True, exist_ok=True)
         self.dedupe_data.to_csv(f"storage/{self.modelID}/input_dir/input.csv", index=False)
@@ -22,31 +22,27 @@ class Zingg:
         different_phases = ["findTrainingData", "label", "train"]
         for phase in different_phases:
             self._create_python_files_from_phase(phase)
+        Zingg.run_zingg_phase("findTrainingData", self.modelID) 
+        
 
-        Zingg.run_zingg_phase("findTrainingData", self.modelID)    
     @staticmethod
     def run_zingg_phase(phase, modelID):
-        # run zingg phase
-        # p = subprocess.Popen(["C:/Users/mstr845/AppData/Local/Programs/Git/git-bash.exe",f"C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/external/zingg-0.3.4/scripts/zingg.sh --run C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/storage/{modelID}/scripts/{phase}/generated_zingg_script.py"], 
-        #              bufsize=-1, 
-        #              executable=None, 
-        #              stdin=None, 
-        #              stdout=None, 
-        #              stderr=None, 
-        #              preexec_fn=None, 
-        #              close_fds=True, 
-        #              shell=False, 
-        #              cwd="C:/Users/mstr845/Documents/dev", 
-        #              )
-        # gb = fr'C:/Users/mstr845/AppData/Local/Programs/Git/git-bash.exe"'
-        # arr = [gb, f"C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/external/zingg-0.3.4/scripts/zingg.sh --run C:/Users/mstr845/Documents/GitHub/AI_MDM_Prototype/storage/{modelID}/scripts/{phase}/generated_zingg_script.py"]
+        if phase == "findTrainingData":
+            # remove existing unmarked pairs and run findTrainingData phase
+            if os.path.exists(f"storage/{modelID}/models/{modelID}/trainingData/unmarked"):
+                shutil.rmtree(f"storage/{modelID}/models/{modelID}/trainingData/unmarked")
+
+        # If phase is train, clear output directory
+        if phase == "train":
+            if os.path.exists(f"storage/{modelID}/output_dir"):
+                shutil.rmtree(f"storage/{modelID}/output_dir")
+
         system = platform.system()
         if system == "Windows":           
             cmd = (["C:\\Users\\mstr845\\AppData\\Local\\Programs\\Git\\git-bash.exe"] + ["./external/zingg-0.3.4/scripts/zingg.sh"] + ["--run"] +
-                   [f"./storage/{modelID}/scripts/{phase}/generated_zingg_script.py"])
+                   [f"./storage/{modelID}/scripts/{phase}/generated_zingg_script.py"] + ['>./logginBlabla.txt 2>&1'])
             process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
             _, _ = process.communicate()
-            print(f"Zingg phase {phase} finished")
         elif system == "Linux":
             print("Calling zingg.sh for Linux")
             cmd = (["/bin/bash"] + ["./external/zingg/scripts/zingg.sh"] + ["--run"] +
@@ -67,45 +63,90 @@ class Zingg:
             print(err)
         else:
             raise ValueError("Unsupported OS")
+        
+        # Verify if model could be trained
+        if phase == "train":
+            if not os.path.exists(f"storage/{modelID}/models/{modelID}/model"):
+                return "500"
+                
+        return "200"
+    
+    @staticmethod
+    def _read_parquet_schema_df(uri: str) -> pd.DataFrame:
+        """Return a Pandas dataframe corresponding to the schema of a local URI of a parquet file.
+
+        The returned dataframe has the columns: column, pa_dtype
+        """
+        # Ref: https://stackoverflow.com/a/64288036/
+        schema = pq.read_schema(uri, memory_map=True)
+        schema = pd.DataFrame(({"column": name, "pa_dtype": str(pa_dtype)} for name, pa_dtype in zip(schema.names, schema.types)))
+        schema = schema.reindex(columns=["column", "pa_dtype"], fill_value=pd.NA)  # Ensures columns in case the parquet file has an empty dataframe.
+        return schema
 
     @staticmethod
     def get_unmarked_pairs(modelID):
         # Go to directory and read in parquet files
-        dir = f"storage/{modelID}/unmarked"
+        dir = f"storage/{modelID}/models/{modelID}/trainingData/unmarked"
         files = os.listdir(dir)
         files = [os.path.join(dir, f) for f in files if f.endswith(".parquet")]
-        df = pd.concat([pd.read_parquet(f) for f in files])
-        return df
+        return pd.concat([pd.read_parquet(f) for f in files])
+    
+    @staticmethod
+    def clear_marked_pairs(modelID):
+        # remove existing marked pairs
+        if os.path.exists(f"storage/{modelID}/models/{modelID}/trainingData/marked"):
+            shutil.rmtree(f"storage/{modelID}/models/{modelID}/trainingData/marked")
+
 
     @staticmethod
     def mark_pairs(modelID, dataframe):        
-        dir = f"storage/{modelID}/marked"
+        dir = f"storage/{modelID}/models/{modelID}/trainingData/marked"
         Path(dir).mkdir(parents=True, exist_ok=True)
 
         for z_cluster_id, z_cluster_df in dataframe.groupby('z_cluster'):
             # create md5 hash of z_cluster_id
             z_cluster_id = hashlib.md5(z_cluster_id.encode()).hexdigest()
             label = z_cluster_df['z_isMatch'].iloc[0]
-            # save to parquet file
-            z_cluster_df.to_parquet(f"{dir}/{label}_{z_cluster_id}.parquet", index=False)
-            print(f"Saved {z_cluster_id}.parquet")
 
+            # Make all String:
+            z_cluster_df = z_cluster_df.astype(str)
+
+            # Set the type of the columns to the same as in the unmarked pairs.
+            z_cluster_df["z_zid"] = z_cluster_df["z_zid"].astype("int64")
+            # z_cluster_df["z_cluster"] = z_cluster_df["z_cluster"].astype("string")
+            z_cluster_df["z_prediction"] = z_cluster_df["z_prediction"].astype("double")
+            z_cluster_df["z_score"] = z_cluster_df["z_score"].astype("double")
+            z_cluster_df["z_isMatch"] = z_cluster_df["z_isMatch"].astype("int32")
+            # z_cluster_df["z_score"] = z_cluster_df["z_score"].astype("string")           
+
+            # save to parquet file
+            z_cluster_df.to_parquet(f"{dir}/{label}µ{z_cluster_id}.parquet", index=False, )
+            tmp = Zingg._read_parquet_schema_df(f"{dir}/{label}µ{z_cluster_id}.parquet")
+            print(f"Saved {z_cluster_id}.parquet")
 
     @staticmethod
     def get_stats(modelID):
         # Go to directory and read in parquet files
-        dir = f"storage/{modelID}/marked"
+        dir = f"storage/{modelID}/models/{modelID}/trainingData/marked"
+        # check if directory exists
+        if not os.path.exists(dir):
+            return {"match_files":0, "no_match_files":0, "unsure_files":0}
         files = os.listdir(dir)
 
-        # check how many files start with 1
         match_files = len([f for f in files if f.startswith("1") & f.endswith(".parquet")])
         no_match_files = len([f for f in files if f.startswith("0") & f.endswith(".parquet")])
         unsure_files = len([f for f in files if f.startswith("2") & f.endswith(".parquet")])
         return {"match_files":match_files, "no_match_files":no_match_files, "unsure_files":unsure_files}
 
-    def get_deduplicated_dataframe(self):
-        # Go to directory and read in csv files
-        pass
+    @staticmethod
+    def get_clusters(modelID):
+        output_dir = f"storage/{modelID}/output_dir"
+        files = os.listdir(output_dir)
+        files = [os.path.join(output_dir, f) for f in files if f.endswith(".parquet")]
+        combined_df = pd.concat([pd.read_parquet(f) for f in files])
+        # Delete the row with z_cluster == 0
+        return combined_df[combined_df["z_cluster"] != 0]
+
 
     def _create_python_files_from_phase(self, phase):
         first_string_to_concat = ""
@@ -161,7 +202,8 @@ inputPipe = CsvPipe("input1", "{self.location}/input_dir/input.csv", schema)
 args.setData(inputPipe)
 
 #setting outputpipe in 'args'
-outputPipe = CsvPipe("output1", "{self.location}/output_dir")
+outputPipe = Pipe("output1", JPipe.FORMAT_PARQUET)
+outputPipe.addProperty(FilePipe.LOCATION, "{self.location}/output_dir")
 
 args.setOutput(outputPipe)
 

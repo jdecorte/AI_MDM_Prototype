@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import dedupe.predicates
+import json
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
@@ -82,7 +82,8 @@ class ZinggLabelPage:
         stats = st.container()
         if "zingg_current_label_round" not in st.session_state:
             st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
-        # st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
+        if "zingg_stats" not in st.session_state:
+            st.session_state["zingg_stats"] = self.handler.zingg_get_stats()
 
         st.subheader("Pairs to mark:")
         # group by z_cluster and create a new zingg_label_card for each cluster
@@ -94,8 +95,6 @@ class ZinggLabelPage:
         with stats:
             colB_1, colB_2 = st.columns([1,1])
             with colB_1:
-                if 'zingg_stats' not in st.session_state:
-                    st.session_state['zingg_stats'] = self.handler.zingg_get_stats()
                 sum_stats = sum(st.session_state['zingg_stats'].values())
                 st.write(f"Previous Round(s): {st.session_state['zingg_stats']['match_files']}/{sum_stats} MATCHES, {st.session_state['zingg_stats']['no_match_files']}/{sum_stats} NON-MATCHES, {st.session_state['zingg_stats']['unsure_files']}/{sum_stats} UNSURE")
                 # st.write("Previous Round(s): " + self.handler.zingg_get_stats())
@@ -108,23 +107,59 @@ class ZinggLabelPage:
                     len(st.session_state["zingg_current_label_round"])//2
                     ))
             with colB_2:
-                next = st.button("Go to next round")
-                finish = st.button("Finish labeling, go to clustering")
+                colB_2_1, colB_2_2, colB_2_3 =st.columns([1,1,1])
+                with colB_2_1:
+                    st.write("")
+                    next = st.button("Go to next round")
+                with colB_2_2:
+                    st.write("")
+                    clear = st.button("Clear all previous labels (Rerun)")
+                with colB_2_3:
+                    st.write("")
+                    finish = st.button("Finish labeling, go to clustering")
 
         if next:
             _ = self.handler.zingg_mark_pairs(st.session_state["zingg_current_label_round"].to_json())
+            _ = self.handler.run_zingg_phase("findTrainingData")
+            st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
+            st.session_state['zingg_stats'] = self.handler.zingg_get_stats()
+            st.experimental_rerun()
+
+        if clear:
+            _ = self.handler.zingg_clear()
+            _ = self.handler.run_zingg_phase("findTrainingData")
+            st.session_state["zingg_current_label_round"] = pd.DataFrame(self.handler.zingg_unmarked_pairs())
+            st.session_state['zingg_stats'] = self.handler.zingg_get_stats()
+            st.experimental_rerun()
+
+        if finish:
+            # Moet nog een nagegaan worden of model gemaakt is, of er een error is opgetreden door te weinig gelaabelde data => check op bestaan van folder 'model'
+            # _ = self.handler.zingg_mark_pairs(st.session_state["zingg_current_label_round"].to_json())
+            response = self.handler.run_zingg_phase("train").json()
+        
+            if response == "200":
+                st.session_state["currentState"] = "Zingg_ViewClusters_get_clusters"
+                st.experimental_rerun()
+            else:
+                st.info(response)
         
 
     def _create_zingg_label_card(self, grouped_df, z_cluster_id):
         
         fields = st.session_state["dedupe_type_dict"].keys()
-        st.table(grouped_df[[c for c in grouped_df.columns if c in fields]])
-        colA_1, colA_2, colA_3 = st.columns([1,1,1])
-        with colA_1:
-            st.write("Prediction score:", grouped_df['z_score'].mean())
-        with colA_2:
-            st.write(f"Prediction: {'is a match' if (grouped_df['z_prediction'].mean() > 0) else 'is not a match'}")
-        with colA_3:
+        colLeft, colRight = st.columns([3,1])
+        with colLeft:
+            st.table(grouped_df[[c for c in grouped_df.columns if c in fields]])
+        with colRight: 
+            if grouped_df['z_prediction'].mean() > 0:
+                colAA, colBB = st.columns([1,1])
+                with colAA:
+                    st.write("Prediction score:", grouped_df['z_score'].mean())
+                with colBB:
+                    st.write(f"Prediction: {'is a match' if (grouped_df['z_prediction'].mean() > 0) else 'is not a match'}")
+            else:
+                st.write('')
+
             choice = st.selectbox('Choice', ['is a match', 'is not a match', 'unsure'], index=2, key="selectbox_"+z_cluster_id)
             if choice == 'is a match':
                 st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 1

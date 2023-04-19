@@ -56,16 +56,25 @@ class LocalHandler(IHandler):
     
     # ZINGG
     def prepare_zingg(self, dedupe_type_dict, dedupe_data) -> json:
-        self.dc.create_deduper_object(dedupe_type_dict, dedupe_data)
+        return self.dc.create_deduper_object(dedupe_type_dict, dedupe_data)
+    
+    def zingg_clear(self) -> json:
+        return self.dc.zingg_clear()
+
+    def run_zingg_phase(self, phase) -> json:
+        return self.dc.run_zingg_phase(phase)
 
     def zingg_unmarked_pairs(self) -> json:
-        self.dc.zingg_unmarked_pairs()
+        return self.dc.zingg_unmarked_pairs()
 
     def zingg_mark_pairs(self, marked_df) -> json:
-        self.dc.zingg_mark_pairs(marked_df)
+        return self.dc.zingg_mark_pairs(marked_df)
 
     def zingg_get_stats(self) -> json:
-        self.dc.zingg_get_stats()
+        return self.dc.zingg_get_stats()
+
+    def zingg_get_clusters(self) -> json:
+        return self.dc.zingg_get_clusters()
     
     # DATA CLEANING
     def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline ) -> json:

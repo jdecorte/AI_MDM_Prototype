@@ -71,11 +71,16 @@ class StateManager:
             return
         if current_state == "ViewClusters":
             st.session_state["currentState"] = "LabelRecords_get_record_pair"
-            return
-        if current_state == "ViewClusters":
-            st.session_state["currentState"] = "LabelRecords_get_record_pair"
             return   
-            
+        
+        # ZINGG
+        if current_state == "LabelRecords_get_all_unmarked_pairs":
+            st.session_state["currentState"] = None
+            return
+        
+        if current_state == "Zingg_ViewClusters_get_clusters":
+            st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs"
+            return
 
     @staticmethod
     def initStateManagement():
@@ -161,7 +166,6 @@ class StateManager:
         if "cleaned_column_from_pipeline" not in st.session_state:
             st.session_state['cleaned_column_from_pipeline'] = None
         
-
 
     @staticmethod
     def reset_all_buttons():

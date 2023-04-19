@@ -37,7 +37,6 @@ class DeDupeClusterRedirectPage:
         st.session_state['currentState'] = "ViewClusters"
         st.experimental_rerun()
 
-
 class DeDupeClusterPage:
 
     def __init__(self, canvas, handler) -> None:
@@ -100,8 +99,6 @@ class DeDupeClusterPage:
             if st.button("Bevestig clusters"):
                 self._merge_clusters(st.session_state["list_of_cluster_view"])
                 
-
-
     def _merge_clusters(self, list_of_cluster_view):
         # Itereer over alle clusterview
         # df_to_use  = st.session_state["dataframe"]
@@ -151,7 +148,6 @@ class DeDupeClusterPage:
             # checkbox om te mergen, default actief
             _ = st.checkbox('Voeg samen',value=True, key=f'merge_{cv.cluster_id}')
                     
-
 class ClusterView:
     def __init__(self, cluster_id, cluster_confidence, records_df, new_row) -> None:
         self.cluster_id = cluster_id
@@ -161,3 +157,56 @@ class ClusterView:
 
     def set_new_row(self, new_row):
         self.new_row = new_row
+
+class ZinggClusterPage:
+    def __init__(self, canvas, handler) -> None:
+        self.canvas = canvas
+        self.handler = handler
+
+    def show(self):
+        with self.canvas.container():
+            st.title("Gevonden clusters")
+
+
+class ZinggClusterRedirectPage:
+    def __init__(self, canvas, handler) -> None:
+        self.canvas = canvas
+        self.handler = handler
+
+    def redirect_get_clusters(self):
+        st.session_state['zingg_clusters'] = self.handler.zingg_get_clusters()
+
+        if st.session_state['zingg_clusters'] == {}:
+            st.error('Er konden geen clusters worden gevormd op basis van de meegegeven labels', icon="🚨")
+
+        zingg_dataframe = st.session_state["zingg_clusters"]
+        # filter the dataframe and check if there are more than 2 records in a cluster based on z_id column
+        zingg_dataframe = zingg_dataframe[zingg_dataframe["z_id"].map(zingg_dataframe["z_id"].value_counts()) > 1]
+        # create a cluster view for each cluster, each cluster is defined by a z_id
+        cluster_view_dict = {}
+        for index, row in zingg_dataframe.iterrows():
+            if row["z_id"] in cluster_view_dict:
+                cluster_view_dict[row["z_id"]].append({"record_id":index, "prediction_confidence":row["z_prediction"]})
+            else:
+                cluster_view_dict[row["z_id"]] = [{"record_id":index, "record_confidence":row["z_confidence"]}]
+        
+
+        
+
+        list_of_cluster_view = []
+        for k,v in cluster_view_dict.items():
+            if len(v) > 1:
+                tmpList = []
+                accumulated_confidence = 0
+                for e in v:
+                    tmpList.append(e["record_id"])
+                    accumulated_confidence = accumulated_confidence + float(e["record_confidence"])
+                
+                records = st.session_state["dataframe"].iloc[tmpList]
+                list_of_cluster_view.append(ClusterView(k,accumulated_confidence/len(v),records, records.head(1)))
+        
+        st.session_state['list_of_cluster_view'] = list_of_cluster_view
+
+        st.session_state['currentState'] = "ViewClusters"
+        st.experimental_rerun()
+        

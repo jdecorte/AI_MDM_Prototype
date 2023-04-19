@@ -116,6 +116,25 @@ class DomainController(FlaskView):
             _ = Zingg(dedupe_type_dict, dedupe_data, unique_storage_id)
             return ""
         
+    @route('/zingg_clear', methods=['POST'])
+    def zingg_clear(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            _ = Zingg.clear_marked_pairs(unique_storage_id)
+            return ""
+        
+    @route('/run_zingg_phase', methods=['POST'])
+    def run_zingg_phase(self, phase="") -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+            data_to_use = json.loads(request.data)
+            phase = data_to_use["phase"]
+        finally:
+            return json.dumps(Zingg.run_zingg_phase(phase, unique_storage_id))
+        
     @route('/zingg_unmarked_pairs', methods=['GET'])
     def zingg_unmarked_pairs(self) -> json:
         cfg.logger.debug("Calling zingg_unmarked_pairs")
@@ -143,6 +162,14 @@ class DomainController(FlaskView):
             unique_storage_id = request.cookies.get("session_flask")
         finally:
             return json.dumps(Zingg.get_stats(unique_storage_id))
+        
+    @route('/zingg_get_clusters', methods=['GET'])
+    def zingg_get_clusters(self) -> json:
+        unique_storage_id = "Local"
+        try:
+            unique_storage_id = request.cookies.get("session_flask")
+        finally:
+            return Zingg.get_clusters(unique_storage_id).to_json(orient="records")
     
     # FETCHING OF FILES FOR GUI STATE:
     @route('/fetch_file_from_filepath', methods=['POST'])

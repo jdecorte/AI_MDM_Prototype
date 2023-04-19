@@ -59,6 +59,14 @@ class IHandler(ABC):
         raise Exception("Not implemented Exception")
     
     @abstractmethod
+    def zingg_clear(self) -> json:
+        raise Exception("Not implemented Exception")
+    
+    @abstractmethod
+    def run_zingg_phase(self, phase) -> json:
+        raise Exception("Not implemented Exception")
+    
+    @abstractmethod
     def zingg_unmarked_pairs(self) -> json:
         raise Exception("Not implemented Exception")
     
@@ -70,9 +78,9 @@ class IHandler(ABC):
     def zingg_get_stats(self) -> json:
         raise Exception("Not implemented Exception")
     
-
-    
-
+    @abstractmethod
+    def zingg_get_clusters(self) -> json:
+        raise Exception("Not implemented Exception")
     
     # DATA CLEANING
     @abstractmethod
