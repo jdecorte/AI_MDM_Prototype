@@ -201,8 +201,7 @@ class DomainController(FlaskView):
                     self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl,True)
                 return to_return["result"]
 
-        return None
-        
+        return None 
     
     # METHODS FOR SESSION_MAP
     @route('/get_session_map', methods=['GET', 'POST'])

@@ -12,12 +12,12 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 from src.frontend.Handler.IHandler import IHandler
 from src.frontend.Cleaner.CleanerInitPage import CleanerInitPage
 from streamlit_pandas_profiling import st_profile_report
-from src.frontend.DeDuper.DeDupeInitPage import DeDupeInitPage
-from src.frontend.DeDuper.DeDupeLabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
-from src.frontend.DeDuper.DeDupeClusterPage import DeDupeClusterPage, DeDupeClusterRedirectPage, ZinggClusterPage
+from src.frontend.Deduplication.InitPage import InitPage
+from src.frontend.Deduplication.LabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
+from src.frontend.Deduplication.ClusterPage import ClusterPage, DeDupeClusterRedirectPage, ZinggClusterRedirectPage
 from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
-from src.frontend.DeDuper.DeDupeLabelPage import ZinggLabelPage
+from src.frontend.Deduplication.LabelPage import ZinggLabelPage
 
 class Router:
     def __init__(self, handler:IHandler) -> None:
@@ -81,7 +81,7 @@ class Router:
         canvas = st.empty()
                 
         if st.session_state["currentState"] == None:
-            DeDupeInitPage(canvas=canvas, handler=self.handler).show()
+            InitPage(canvas=canvas, handler=self.handler).show()
         
         if st.session_state["currentState"] == "LabelRecords":
             DeDupeLabelPage(canvas=canvas, handler=self.handler).show()
@@ -99,8 +99,7 @@ class Router:
             DeDupeClusterRedirectPage(canvas=canvas, handler=self.handler).redirect_get_clusters()
 
         if st.session_state["currentState"] == "Zingg_ViewClusters_get_clusters":
-            # Moet een redirect worden
-            ZinggClusterPage(canvas=canvas, handler=self.handler).show()
+            ZinggClusterRedirectPage(canvas=canvas, handler=self.handler).redirect_get_clusters()
 
         if st.session_state["currentState"] == "ViewClusters":
-            DeDupeClusterPage(canvas=canvas, handler=self.handler).show()
+            ClusterPage(canvas=canvas, handler=self.handler).show()

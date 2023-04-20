@@ -30,14 +30,48 @@ class DeDupeClusterRedirectPage:
                     accumulated_confidence = accumulated_confidence + float(e["record_confidence"])
                 
                 records = st.session_state["dataframe"].iloc[tmpList]
-                list_of_cluster_view.append(ClusterView(k,accumulated_confidence/len(v),records, records.head(1)))
+                list_of_cluster_view.append(DedupeClusterView(k,accumulated_confidence/len(v),records, records.head(1)))
         
         st.session_state['list_of_cluster_view'] = list_of_cluster_view
 
         st.session_state['currentState'] = "ViewClusters"
         st.experimental_rerun()
 
-class DeDupeClusterPage:
+
+class ZinggClusterRedirectPage:
+    def __init__(self, canvas, handler) -> None:
+        self.canvas = canvas
+        self.handler = handler
+
+    def redirect_get_clusters(self):
+        st.session_state['zingg_clusters_df'] = pd.DataFrame(self.handler.zingg_get_clusters())
+        tmp = st.session_state['zingg_clusters_df']
+        # value_counts of values in cluster_id kolom and keep the cluster°id where there are more than 2 records
+        cluster_ids = st.session_state['zingg_clusters_df']['z_cluster'].value_counts()[st.session_state['zingg_clusters_df']['z_cluster'].value_counts() >= 2].index.tolist()
+
+        # for each cluster_id, get the records and create a ClusterView
+        list_of_cluster_view = []
+        for cluster_id in cluster_ids:
+            records_df = st.session_state['zingg_clusters_df'][st.session_state['zingg_clusters_df']['z_cluster'] == cluster_id]
+
+            cluster_low = records_df['z_minScore'].min()
+            cluster_high = records_df['z_maxScore'].max()
+
+            # cluster confidence is the average of the z_lower and z_higher values in the column
+            cluster_confidence  = (records_df['z_minScore'].mean() + records_df['z_maxScore'].mean()) / 2
+
+            # new_row is the row that with the highest 'cluster_high' value
+            new_row = records_df[records_df['z_minScore'] == records_df['z_minScore'].max()]
+            
+            list_of_cluster_view.append(ZinggClusterView(cluster_id, cluster_confidence, records_df.drop(['z_minScore', 'z_maxScore', 'z_cluster'], axis=1), new_row, cluster_low, cluster_high))
+
+        st.session_state['list_of_cluster_view'] = list_of_cluster_view
+
+        st.session_state['currentState'] = "ViewClusters"
+        st.experimental_rerun()
+
+
+class ClusterPage:
 
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
@@ -77,7 +111,7 @@ class DeDupeClusterPage:
 
     def show(self): 
         with self.canvas.container(): 
-            st.title("DeDupe")
+            st.title("Gevonden Clusters")
 
             sort_clusters = st.selectbox(
             'Sorteer clusters op:',
@@ -148,7 +182,7 @@ class DeDupeClusterPage:
             # checkbox om te mergen, default actief
             _ = st.checkbox('Voeg samen',value=True, key=f'merge_{cv.cluster_id}')
                     
-class ClusterView:
+class DedupeClusterView:
     def __init__(self, cluster_id, cluster_confidence, records_df, new_row) -> None:
         self.cluster_id = cluster_id
         self.cluster_confidence = cluster_confidence
@@ -158,55 +192,16 @@ class ClusterView:
     def set_new_row(self, new_row):
         self.new_row = new_row
 
-class ZinggClusterPage:
-    def __init__(self, canvas, handler) -> None:
-        self.canvas = canvas
-        self.handler = handler
 
-    def show(self):
-        with self.canvas.container():
-            st.title("Gevonden clusters")
+class ZinggClusterView:
+    def __init__(self, cluster_id, cluster_confidence, records_df, new_row, cluster_low, cluster_high) -> None:
+        self.cluster_id = cluster_id
+        self.cluster_confidence = cluster_confidence
+        self.records_df = records_df
+        self.cluster_low = cluster_low
+        self.cluster_high = cluster_high
+        self.set_new_row(new_row)
 
-
-class ZinggClusterRedirectPage:
-    def __init__(self, canvas, handler) -> None:
-        self.canvas = canvas
-        self.handler = handler
-
-    def redirect_get_clusters(self):
-        st.session_state['zingg_clusters'] = self.handler.zingg_get_clusters()
-
-        if st.session_state['zingg_clusters'] == {}:
-            st.error('Er konden geen clusters worden gevormd op basis van de meegegeven labels', icon="🚨")
-
-        zingg_dataframe = st.session_state["zingg_clusters"]
-        # filter the dataframe and check if there are more than 2 records in a cluster based on z_id column
-        zingg_dataframe = zingg_dataframe[zingg_dataframe["z_id"].map(zingg_dataframe["z_id"].value_counts()) > 1]
-        # create a cluster view for each cluster, each cluster is defined by a z_id
-        cluster_view_dict = {}
-        for index, row in zingg_dataframe.iterrows():
-            if row["z_id"] in cluster_view_dict:
-                cluster_view_dict[row["z_id"]].append({"record_id":index, "prediction_confidence":row["z_prediction"]})
-            else:
-                cluster_view_dict[row["z_id"]] = [{"record_id":index, "record_confidence":row["z_confidence"]}]
-        
-
-        
-
-        list_of_cluster_view = []
-        for k,v in cluster_view_dict.items():
-            if len(v) > 1:
-                tmpList = []
-                accumulated_confidence = 0
-                for e in v:
-                    tmpList.append(e["record_id"])
-                    accumulated_confidence = accumulated_confidence + float(e["record_confidence"])
-                
-                records = st.session_state["dataframe"].iloc[tmpList]
-                list_of_cluster_view.append(ClusterView(k,accumulated_confidence/len(v),records, records.head(1)))
-        
-        st.session_state['list_of_cluster_view'] = list_of_cluster_view
-
-        st.session_state['currentState'] = "ViewClusters"
-        st.experimental_rerun()
+    def set_new_row(self, new_row):
+        self.new_row = new_row
         

@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-from src.frontend.DeDuper.DeDupeTypesEnum import DeDupeTypesEnum
-from src.frontend.DeDuper.ZinggTypesEnum import ZinggTypesEnum
+from src.frontend.Deduplication.Enums.DeDupeTypesEnum import DeDupeTypesEnum
+from src.frontend.Deduplication.Enums.ZinggTypesEnum import ZinggTypesEnum
 from src.frontend.Handler.IHandler import IHandler
 from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDisplayerComponent
 
 
-class DeDupeInitPage:
+class InitPage:
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
         self.handler = handler
