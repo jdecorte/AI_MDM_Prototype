@@ -78,7 +78,7 @@ class StateManager:
             st.session_state["currentState"] = None
             return
         
-        if current_state == "Zingg_ViewClusters_get_clusters":
+        if current_state == "Zingg_ViewClusters":
             st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs"
             return
 

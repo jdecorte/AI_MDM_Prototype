@@ -14,7 +14,7 @@ from src.frontend.Cleaner.CleanerInitPage import CleanerInitPage
 from streamlit_pandas_profiling import st_profile_report
 from src.frontend.Deduplication.InitPage import InitPage
 from src.frontend.Deduplication.LabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
-from src.frontend.Deduplication.ClusterPage import ClusterPage, DeDupeClusterRedirectPage, ZinggClusterRedirectPage
+from src.frontend.Deduplication.ClusterPage import ClusterPage, DeDupeClusterRedirectPage, ZinggClusterRedirectPage, ZinggClusterPage
 from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
 from src.frontend.Deduplication.LabelPage import ZinggLabelPage
@@ -103,3 +103,6 @@ class Router:
 
         if st.session_state["currentState"] == "ViewClusters":
             ClusterPage(canvas=canvas, handler=self.handler).show()
+
+        if st.session_state["currentState"] == "Zingg_ViewClusters":
+            ZinggClusterPage(canvas=canvas, handler=self.handler).show()
