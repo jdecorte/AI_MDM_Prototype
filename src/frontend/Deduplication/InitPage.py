@@ -37,17 +37,17 @@ class InitPage:
             st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state["dataframe"].columns}
 
 
-            col_1, col_2, col_3,_ = st.columns([1,1,1,6])
+            col_1, col_3,_ = st.columns([1,2,8])
             with col_1:
-                add_btn = st.button("Voeg toe")
+                add_btn = st.button("Wijzig")
                 if add_btn:
                     st.session_state["dedupe_type_dict"][selected_col] = selected_type
                     
-            with col_2:
-                remove_btn = st.button("Verwijder")
-                if remove_btn:
-                    if selected_col in st.session_state["dedupe_type_dict"]:
-                        del st.session_state["dedupe_type_dict"][selected_col]
+            # with col_2:
+            #     remove_btn = st.button("Verwijder")
+            #     if remove_btn:
+            #         if selected_col in st.session_state["dedupe_type_dict"]:
+            #             del st.session_state["dedupe_type_dict"][selected_col]
             
             with col_3:
                 if len(st.session_state['dedupe_type_dict'].values()) > 0:

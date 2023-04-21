@@ -71,6 +71,10 @@ class ZinggClusterRedirectPage:
         st.experimental_rerun()
 
 class ZinggClusterPage:
+
+    TEXT_DEDUP_FALSE = "behouden maar aangepast naar de volgende waarden:"
+    TEXT_DEDUP_TRUE = "verwijderd en vervangen door één record:"
+    
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
         self.handler = handler
@@ -108,8 +112,12 @@ class ZinggClusterPage:
         return colstoUse[start_idx:end_idx]
 
     def show(self): 
+
         with self.canvas.container(): 
             st.title("Gevonden Clusters")
+            # Give which columns are primary keys
+            pks = st.multiselect("Kies de kolommen die de primary key zijn, deze zullen niet gewijzigd worden bij de clustering", st.session_state["dataframe"].columns)
+
             col0, col1 = st.columns([6,2])
             with col0:
                 sort_clusters = st.selectbox(
@@ -128,7 +136,7 @@ class ZinggClusterPage:
                 if f'merge_{cv.cluster_id}' not in st.session_state:
                     st.session_state[f'merge_{cv.cluster_id}'] = True
                 if f'dedup_{cv.cluster_id}' not in st.session_state:
-                    st.session_state[f'dedup_{cv.cluster_id}'] = False
+                    st.session_state[f'dedup_{cv.cluster_id}'] = self.TEXT_DEDUP_FALSE
 
             with col1:
                 st.write("")
@@ -143,21 +151,29 @@ class ZinggClusterPage:
             with container_for_cards:
                 self._give_custom_css_to_container()
                 for idx, cv in enumerate(sub_rowstoUse):
-                    self._create_cluster_card(idx, cv)
+                    self._create_cluster_card(idx, cv, pks=pks)
 
             if confirm_cluster:
-                self._merge_clusters(st.session_state["list_of_cluster_view"])
+                self._merge_clusters(st.session_state["list_of_cluster_view"], pks)
         self._clear_js_containers()
                 
-    def _merge_clusters(self, list_of_cluster_view):
-        # Itereer over alle clusterview
-        # df_to_use  = st.session_state["dataframe"]
+    def _merge_clusters(self, list_of_cluster_view, pks):
+
+        # TODO: check if all pks are in the new row
+
+
         merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
         for cv in list_of_cluster_view:
             if st.session_state[f'merge_{cv.cluster_id}']:
-                merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
-                # merged_df.append(cv.new_row, ignore_index=True)
-                # merged_df.loc[len(merged_df)] = cv.new_row
+                if st.session_state[f'dedup_{cv.cluster_id}'] == self.TEXT_DEDUP_TRUE:
+                    merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
+                else:
+                    for e in range(0,len(cv.records_df)):
+                        row_to_add = cv.new_row
+
+                        for pk in pks:
+                            row_to_add[pk] = cv.records_df.iloc[e][pk]
+                        merged_df = pd.concat([merged_df, row_to_add], ignore_index=True)
             else:
                 for _, row in cv.records_df.iterrows():
                     merged_df = pd.concat([merged_df, row], ignore_index=True)
@@ -167,7 +183,7 @@ class ZinggClusterPage:
         st.session_state["dataframe"] = merged_df
         st.experimental_rerun()
 
-    def _create_cluster_card(self, idx, cv):
+    def _create_cluster_card(self, idx, cv, pks):
         MIN_HEIGHT = 50
         MAX_HEIGHT = 500
         ROW_HEIGHT = 35
@@ -192,14 +208,15 @@ class ZinggClusterPage:
             gridOptions = gb1.build()
             _ = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="VALUE_CHANGED", height=min(MIN_HEIGHT + len(cv.records_df) * ROW_HEIGHT, MAX_HEIGHT))
             
-            dedupe_rows = st.radio('Geselecteerde records worden... ',('behouden maar aangepast naar de volgende waarden:', 'verwijderd en vervangen door één record:'), key=f'dedup_{cv.cluster_id}', horizontal = True)
-
+            dedupe_check = st.radio('Geselecteerde records worden... ',(self.TEXT_DEDUP_FALSE, self.TEXT_DEDUP_TRUE), key=f'dedup_{cv.cluster_id}', horizontal = True)
+            
             # AGGRID die wel editeerbaar is, met als suggestie de eerste van de selected_rows van hierboven
-            gb2 = GridOptionsBuilder.from_dataframe(cv.records_df.head(1))
+            gb2 = GridOptionsBuilder.from_dataframe(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row )
             gb2.configure_side_bar()
             gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
-            gridOptions = gb2.build()
-            grid = AgGrid(cv.new_row, gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
+            gridOptions2 = gb2.build()
+            grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row , gridOptions=gridOptions2, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
+            
             cv.set_new_row(grid["data"])
 
             customSpan = rf"""
@@ -299,6 +316,7 @@ class ClusterPage:
             if st.button("Bevestig clusters"):
                 self._merge_clusters(st.session_state["list_of_cluster_view"])
                 
+                
     def _merge_clusters(self, list_of_cluster_view):
         # Itereer over alle clusterview
         # df_to_use  = st.session_state["dataframe"]
@@ -366,8 +384,23 @@ class ZinggClusterView:
         self.records_df = records_df
         self.cluster_low = round(cluster_low, 4)
         self.cluster_high = round(cluster_high, 4)
-        self.set_new_row(new_row)
+        self.new_row = new_row
 
     def set_new_row(self, new_row):
-        self.new_row = new_row
+        # keep the values of self.new_row for columns that are not in new_row
+        try:
+            for col in self.new_row.columns:
+                if col not in new_row.columns:
+                    new_row[col] = self.new_row[col]
+        except Exception as e:
+            print(e)
+        finally:
+            # check if ['z_minScore', 'z_maxScore', 'z_cluster'] are present as columns in new_row, if they are delete them
+            if 'z_minScore' in new_row.columns:
+                del new_row['z_minScore']
+            if 'z_maxScore' in new_row.columns:
+                del new_row['z_maxScore']
+            if 'z_cluster' in new_row.columns:
+                del new_row['z_cluster']
+            self.new_row = new_row
         
