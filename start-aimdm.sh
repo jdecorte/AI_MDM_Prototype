@@ -4,7 +4,7 @@
 #source envs/ai-mdm/bin/activate
 
 # Start gunicorn and streamlit
-nohup gunicorn -w 3 run_flask:app --access-logfile gunicorn.access.log --error-logfile gunicorn.error.log &
+nohup gunicorn --worker-class gevent -w 3 run_flask:app --access-logfile gunicorn.access.log --error-logfile gunicorn.error.log &
 nohup streamlit run run_streamlit.py --server.port 8501 --server.baseUrlPath /aimdmtool/ --server.enableCORS true --server.enableXsrfProtection true --server.headless=true &
 
 # Set environment variables, but maybe this doesn't do much.
