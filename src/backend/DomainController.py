@@ -207,8 +207,7 @@ class DomainController(FlaskView):
                         True)
                 return to_return["result"]
 
-        return None
-        
+        return None 
     
     # METHODS FOR SESSION_MAP
     @route('/get_session_map', methods=['GET', 'POST'])

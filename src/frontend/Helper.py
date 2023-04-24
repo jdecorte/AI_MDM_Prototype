@@ -5,7 +5,6 @@ import numpy as np
 import streamlit as st
 import re
 import statistics
-import spacy
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +22,7 @@ def tagDuplicate(col):
         return ['color: red' for c in col]
     else:
         return ['color: green' for c in col] 
-
+    
 
 def extractNumber(s):
     lst = re.findall(r"[-+]?\d*\.\d+|\d+", str(s))
@@ -83,34 +82,34 @@ def convert_df(df):
     return df.to_csv().encode('utf-8')
 
 
-def transformColumnToSemanticCluster(df, col, n):
-    nlp = spacy.load('en_core_web_lg')
+# def transformColumnToSemanticCluster(df, col, n):
+#     nlp = spacy.load('en_core_web_lg')
     
-    uniqueVals = df[col][df[col].notnull()].unique()
+#     uniqueVals = df[col][df[col].notnull()].unique()
 
-    l = len(uniqueVals)
-    similarityMap = {}
+#     l = len(uniqueVals)
+#     similarityMap = {}
 
-    for idx1, record1 in enumerate(uniqueVals):
-        print(str(idx1) + " / "+ str(l))
-        columnSim = []
-        for _, record2 in enumerate(uniqueVals):
-            columnSim.append(nlp(record1).similarity(nlp(record2)))
-        similarityMap[record1] = columnSim
+#     for idx1, record1 in enumerate(uniqueVals):
+#         print(str(idx1) + " / "+ str(l))
+#         columnSim = []
+#         for _, record2 in enumerate(uniqueVals):
+#             columnSim.append(nlp(record1).similarity(nlp(record2)))
+#         similarityMap[record1] = columnSim
     
-    simDF = pd.DataFrame(similarityMap)
-    model = KMeans(n_clusters=n)
-    cluster_labels = model.fit_predict(simDF)
-    simDF["class"] = cluster_labels
-    simDF["Name"]= uniqueVals
+#     simDF = pd.DataFrame(similarityMap)
+#     model = KMeans(n_clusters=n)
+#     cluster_labels = model.fit_predict(simDF)
+#     simDF["class"] = cluster_labels
+#     simDF["Name"]= uniqueVals
 
-    mapToReturn = simDF.groupby(['class'])['Name'].apply(lambda grp: list(grp.value_counts().index)).to_dict()
+#     mapToReturn = simDF.groupby(['class'])['Name'].apply(lambda grp: list(grp.value_counts().index)).to_dict()
 
-    df["Grouped " + str(col)] = "Niet ingevuld"  
-    for key, value in mapToReturn.items():
-        df["Grouped " + str(col)][df[col].isin(value)]= "Groep " + str(key)
+#     df["Grouped " + str(col)] = "Niet ingevuld"  
+#     for key, value in mapToReturn.items():
+#         df["Grouped " + str(col)][df[col].isin(value)]= "Groep " + str(key)
 
-    return df, mapToReturn
+#     return df, mapToReturn
 
     
 

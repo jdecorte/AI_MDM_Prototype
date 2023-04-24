@@ -1,3 +1,4 @@
+
 #overzicht{
     padding: 0rem;
 }
@@ -12,14 +13,8 @@ div.css-ocqkz7{
 
 #containerDuplicateCards{
     overflow-y: scroll;
-    max-height: 35rem;
-    /* overflow-x: scroll; */
-    
-}
-
-#containerDuplicateCards > div{
-    max-height: inherit;
-    overflow-y: scroll;
+    max-height: 40rem;
+    background-color: lightgray;
 }
 
 .e1wqxbhn1{
@@ -30,24 +25,38 @@ div.css-ocqkz7{
     width: 90% !important;
 }
 
+.materialcard > div > div > iframe{
+    overflow: scroll !important;
+    max-width: 93% !important;
+    height: 100%;
+}
+
+.materialcard > div > div > div > div > div > div > iframe{
+    overflow: scroll !important;
+    max-width: 93% !important;
+    height: 100%;
+}
+
+/* .materialcard > div > div:nth-of-type(3) > iframe{
+    overflow: scroll !important;
+    max-width: 93% !important;
+    height: 100%;
+}
+
+.materialcard > div > div:nth-of-type(5) > iframe{
+    overflow: scroll !important;
+    max-width: 93% !important;
+    height: 100%;
+} */
+
 .materialcard > div{
     border-radius: 4px !important;
     background: #fff !important;
     box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05) !important;
-      transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12) !important;
+    transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12) !important;
     padding: 20px 20px 20px 20px;
-    margin-bottom: 2rem !important;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    
+    margin-bottom: 1.5rem !important;
 }
-
-.materialcard > div > div{
-    /* width: 95% !important; */
-    overflow-x: scroll !important;
-}
-
-
 
 .materialcard:hover > div{
     box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06) !important;
@@ -59,11 +68,4 @@ div [data-testid="stJson"]{
     /* overflow-x: scroll; */
     
 }
-
-
-.css-1ht1j8u{
-    overflow-x: scroll !important;
-    text-overflow: initial !important;
-}
-
 

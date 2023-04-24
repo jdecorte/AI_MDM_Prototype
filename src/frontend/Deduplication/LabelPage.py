@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import math
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
@@ -87,10 +88,15 @@ class ZinggLabelPage:
 
         st.subheader("Pairs to mark:")
         # group by z_cluster and create a new zingg_label_card for each cluster
-        for z_cluster_id, z_cluster_df in st.session_state["zingg_current_label_round"].groupby('z_cluster'):
-            self._create_zingg_label_card(z_cluster_df, z_cluster_id)
-            st.write("")
-            st.write("")
+        container_for_cards = st.container()
+        with container_for_cards:
+            self._give_custom_css_to_container()
+            counter = 0
+            for z_cluster_id, z_cluster_df in st.session_state["zingg_current_label_round"].groupby('z_cluster'):
+                counter += 1
+                self._create_zingg_label_card(z_cluster_df, z_cluster_id, counter)
+                st.write("")
+                st.write("")
 
         with stats:
             colB_1, colB_2 = st.columns([1,1])
@@ -142,28 +148,80 @@ class ZinggLabelPage:
                 st.experimental_rerun()
             else:
                 st.info(response)
+
+        self._clear_js_containers()
         
 
-    def _create_zingg_label_card(self, grouped_df, z_cluster_id):
+    def _create_zingg_label_card(self, grouped_df, z_cluster_id, idx):
+
+        MIN_HEIGHT = 40
+        MAX_HEIGHT = 500
+        ROW_HEIGHT = 40
         
         fields = st.session_state["dedupe_type_dict"].keys()
-        colLeft, colRight = st.columns([3,1])
-        with colLeft:
-            st.table(grouped_df[[c for c in grouped_df.columns if c in fields]])
-        with colRight: 
-            if grouped_df['z_prediction'].mean() > 0:
-                colAA, colBB = st.columns([1,1])
-                with colAA:
-                    st.write("Prediction score:", grouped_df['z_score'].mean())
-                with colBB:
-                    st.write(f"Prediction: {'is a match' if (grouped_df['z_prediction'].mean() > 0) else 'is not a match'}")
-            else:
-                st.write('')
 
-            choice = st.selectbox('Choice', ['is a match', 'is not a match', 'unsure'], index=2, key="selectbox_"+z_cluster_id)
-            if choice == 'is a match':
-                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 1
-            if choice == 'is not a match':
-                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 0
-            if choice == 'unsure':
-                st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 2
+        cont_card = st.container()
+        with cont_card:
+            colLeft, colRight = st.columns([3,1])
+            with colLeft:
+                st.write("#"+str(idx))
+                gb1 = GridOptionsBuilder.from_dataframe(grouped_df[[c for c in grouped_df.columns if c in fields]])
+                gb1.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
+                gridOptions = gb1.build()
+                _ = AgGrid(grouped_df[[c for c in grouped_df.columns if c in fields]], gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + len(grouped_df[[c for c in grouped_df.columns if c in fields]]) * ROW_HEIGHT, MAX_HEIGHT))
+
+            with colRight: 
+                if grouped_df['z_prediction'].mean() > 0:
+                    colAA, colBB = st.columns([1,1])
+                    with colAA:
+                        st.write("Prediction score:", str(format(grouped_df['z_score'].mean() * 100, '.2f') )+ '%')
+                    with colBB:
+                        st.write(f"Prediction: {'is a match' if (grouped_df['z_prediction'].mean() > 0) else 'is not a match'}")
+                else:
+                    st.write('')
+                    st.write('')
+                    st.write('')
+
+                choice = st.selectbox('Choice', ['is a match', 'is not a match', 'unsure'], index=2, key="selectbox_"+z_cluster_id)
+                if choice == 'is a match':
+                    st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 1
+                if choice == 'is not a match':
+                    st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 0
+                if choice == 'unsure':
+                    st.session_state["zingg_current_label_round"].loc[st.session_state["zingg_current_label_round"]['z_cluster'] == z_cluster_id, 'z_isMatch'] = 2
+
+            customSpan = rf"""
+                <span id="duplicateCardsFinder{z_cluster_id}">
+                </span>
+                """
+            st.markdown(customSpan,unsafe_allow_html=True)
+            js = f'''<script>
+            containerElement = window.parent.document.getElementById("duplicateCardsFinder{z_cluster_id}").parentElement.parentElement.parentElement.parentElement.parentElement
+            containerElement.setAttribute('class', 'materialcard')
+            </script>
+            '''
+            st.components.v1.html(js)
+
+
+    def _clear_js_containers(self):
+        js = f'''<script>
+            iframes = window.parent.document.getElementsByTagName("iframe")
+            for (var i=0, max=iframes.length; i < max; i++)
+                iframes[i].title == "st.iframe" ? iframes[i].style.display = "none" : iframes[i].style.display = "block";
+            </script>
+            '''
+        st.components.v1.html(js)
+    
+
+    def _give_custom_css_to_container(self):
+        customSpan = rf"""
+        <span id="containerDuplicateCardsFinder">
+        </span>
+        """
+        st.markdown(customSpan,unsafe_allow_html=True)
+        js = '''<script>
+        containerElement = window.parent.document.getElementById("containerDuplicateCardsFinder").parentElement.parentElement.parentElement.parentElement.parentElement
+        containerElement.setAttribute('id', 'containerDuplicateCards')
+        </script>
+        '''
+        st.components.v1.html(js)

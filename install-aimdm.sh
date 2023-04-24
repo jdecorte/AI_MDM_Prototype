@@ -17,8 +17,8 @@ git clone https://github.com/hogent-cads/AI_MDM_Prototype.git
 mkdir AI_MDM_Prototype/external
 cp -r zingg-0.3.4 AI_MDM_Prototype/external/
 cp -r spark-3.1.2-bin-hadoop3.2 AI_MDM_Prototype/external/
-ln -s AI_MDM_Prototype/external/zingg-0.3.4 AI_MDM_Prototype/external/zingg
-ln -s AI_MDM_Prototype/external/spark-3.1.2-bin-hadoop3.2 AI_MDM_Prototype/external/spark 
+ln -sr AI_MDM_Prototype/external/zingg-0.3.4 AI_MDM_Prototype/external/zingg
+ln -sr AI_MDM_Prototype/external/spark-3.1.2-bin-hadoop3.2 AI_MDM_Prototype/external/spark 
 
 
 
@@ -28,13 +28,15 @@ cd AI_MDM_Prototype
 #python -m venv envs/ai-mdm
 #source envs/ai-mdm/bin/activate
 pip install -r requirements.txt
-pip install gunicorn
+pip install gunicorn gunicorn[gevent]
 
 # Configure and start nginx
 # Note: root is set as /usr/share/nginx/html in nginx.conf
 sudo mkdir  -p /usr/share/nginx/html/reports
 sudo chmod a+rw /usr/share/nginx/html/reports
-sudo cp /vagrant/nginx.conf /etc/nginx/
+# Copy nginx.conf to /etc/nginx. 
+# !! THIS WILL OVERWRITE THE EXISTING nginx.conf FILE !!
+sudo cp nginx.conf /etc/nginx/
 sudo systemctl enable nginx
 sudo systemctl start nginx
 

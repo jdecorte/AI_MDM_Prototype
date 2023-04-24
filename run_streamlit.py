@@ -13,6 +13,14 @@ from streamlit.components.v1 import html
 from streamlit_javascript import st_javascript
 from streamlit_ws_localstorage import injectWebsocketCode, getOrCreateUID
 
+def _reload_dataframe(uploaded_file):
+    seperator_input = st.session_state['seperator_input']
+    # StateManager.clear_session_state()
+    st.session_state["currentState"] = None
+    df = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
+    st.session_state["dataframe"] = df
+    st.session_state["dataframe_name"] = uploaded_file.name
+
 def main():
 
     # Pagina Stijl:
@@ -60,9 +68,10 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Kies een .csv bestand", key="inputOneDataSet")
 
     # Sidebar vullen met optionele seperator
-    with st.sidebar.expander("Optionele seperator", expanded=False):
-        st.write("Aan te passen wanneer de seperator niet een ',' is.")
-        seperator_input = st.text_input("Seperator", value=',', key="inputSeperator")
+    if uploaded_file:
+        with st.sidebar.expander("Optionele seperator", expanded=False):
+            st.write("Aan te passen wanneer de seperator niet een ',' is.")
+            seperator_input = st.text_input("Seperator", value=',', key="seperator_input", on_change=_reload_dataframe(uploaded_file))
 
     # Sidebar vullen met Remote of local functionaliteit
     type_handler_input = st.sidebar.radio(
@@ -78,16 +87,8 @@ def main():
     # handler = RemoteHandler(f"http://127.0.0.1:5000")
 
     if uploaded_file:
-
-        # Check of het een nieuwe file is op basis van file naam:
         if st.session_state["dataframe_name"] != uploaded_file.name:
-            # StateManager.clear_session_state()
-            st.session_state["currentState"] = None
-            df = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
-            st.session_state["dataframe"] = df
-            st.session_state["dataframe_name"] = uploaded_file.name
-
-            # st.session_state["session_flask"] = f"{_get_from_local_storage('session_flask')}-{hashlib.md5(df.to_json().encode('utf-8')).hexdigest()}"
+            _reload_dataframe(uploaded_file)
 
         # LOAD IN SESSION_MAP
         st.session_state['session_map'] = handler.get_session_map(dataframe_in_json=st.session_state["dataframe"].to_json())

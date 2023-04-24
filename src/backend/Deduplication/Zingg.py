@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE, STDOUT
 import platform
 import shutil
 import pyarrow.parquet as pq
+import config as cfg
 
 
 class Zingg:
@@ -27,6 +28,9 @@ class Zingg:
 
     @staticmethod
     def run_zingg_phase(phase, modelID):
+
+        cfg.logger.debug(f"Running Zingg phase: {phase} on modelID: {modelID}")
+
         if phase == "findTrainingData":
             # remove existing unmarked pairs and run findTrainingData phase
             if os.path.exists(f"storage/{modelID}/models/{modelID}/trainingData/unmarked"):
@@ -44,7 +48,7 @@ class Zingg:
             process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
             _, _ = process.communicate()
         elif system == "Linux":
-            print("Calling zingg.sh for Linux")
+            cfg.logger.debug("Calling zingg.sh for Linux")
             cmd = (["/bin/bash"] + ["./external/zingg/scripts/zingg.sh"] + ["--run"] +
                    [f"storage/{modelID}/scripts/{phase}/generated_zingg_script.py"])
             #command_args = ["/bin/bash", "-c", cmd]
@@ -59,18 +63,18 @@ class Zingg:
             #              + "generated_zingg_script.py")
             # process = Popen(cmd_shell, stdout=PIPE, stderr=STDOUT, shell=True, env=env)
             output, err = process.communicate()
-            print(output)
-            print(err)
+            cfg.logger.debug(output.decode("utf-8") if output is not None else "")
+            cfg.logger.debug(err.decode("utf-8") if err is not None else "")
         else:
             raise ValueError("Unsupported OS")
-        
+
         # Verify if model could be trained
         if phase == "train":
             if not os.path.exists(f"storage/{modelID}/models/{modelID}/model"):
                 return "500"
-                
+
         return "200"
-    
+
     @staticmethod
     def _read_parquet_schema_df(uri: str) -> pd.DataFrame:
         """Return a Pandas dataframe corresponding to the schema of a local URI of a parquet file.
@@ -87,10 +91,12 @@ class Zingg:
     def get_unmarked_pairs(modelID):
         # Go to directory and read in parquet files
         dir = f"storage/{modelID}/models/{modelID}/trainingData/unmarked"
+
         files = os.listdir(dir)
         files = [os.path.join(dir, f) for f in files if f.endswith(".parquet")]
+
         return pd.concat([pd.read_parquet(f) for f in files])
-    
+
     @staticmethod
     def clear_marked_pairs(modelID):
         # remove existing marked pairs
@@ -120,9 +126,9 @@ class Zingg:
             # z_cluster_df["z_score"] = z_cluster_df["z_score"].astype("string")           
 
             # save to parquet file
-            z_cluster_df.to_parquet(f"{dir}/{label}µ{z_cluster_id}.parquet", index=False, )
-            tmp = Zingg._read_parquet_schema_df(f"{dir}/{label}µ{z_cluster_id}.parquet")
-            print(f"Saved {z_cluster_id}.parquet")
+            z_cluster_df.to_parquet(f"{dir}/{label}{z_cluster_id}.parquet", index=False, )
+            tmp = Zingg._read_parquet_schema_df(f"{dir}/{label}{z_cluster_id}.parquet")
+            cfg.logger.debug(f"Saved {z_cluster_id}.parquet")
 
     @staticmethod
     def get_stats(modelID):
