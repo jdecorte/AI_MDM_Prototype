@@ -21,6 +21,7 @@ def _reload_dataframe(uploaded_file):
     df = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
     st.session_state["dataframe"] = df
     st.session_state["dataframe_name"] = uploaded_file.name
+    st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
 def get_from_local_storage(k):
     v = st_javascript(
@@ -28,12 +29,12 @@ def get_from_local_storage(k):
     )
     return v or {}
 
-
 def set_to_local_storage(k, v):
     jdata = json.dumps(v)
-    st_javascript(
-        f"localStorage.setItem('{k}', JSON.stringify({jdata}));"
-    )
+    # st_javascript(
+    #     f"localStorage.setItem('{k}', JSON.stringify({jdata}));"
+    # )
+    st.markdown(f"<script>localStorage.setItem('{k}', JSON.stringify({jdata}));</script>", unsafe_allow_html=True)
 
 def main():
 
@@ -44,16 +45,14 @@ def main():
 
     # StateManagement init
     StateManager.initStateManagement()
+    st.write(st.session_state["currentState"])
 
     # Cookie Management
     if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
-            # conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
             ret=get_from_local_storage('session_flask')
-            # ret = conn.getLocalStorageVal(key='session_flask')
             if ret == {}:
                 temp_id = uuid.uuid4()
-                # _ = conn.setLocalStorageVal(key='session_flask', val=str(uuid.uuid4()))
                 _ = set_to_local_storage('session_flask', str(uuid.uuid4()))
                 st.session_state["session_flask_local_id"] = temp_id
             else:
@@ -63,6 +62,7 @@ def main():
 
     if st.session_state["currentState"] != None:
         st.sidebar.button("Ga terug naar vorige fase", on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state["currentState"],))
+
 
     # Sidebar vullen met functionaliteit-mogelijkheden
     functionality_selectbox = st.sidebar.selectbox(
@@ -87,7 +87,7 @@ def main():
     if uploaded_file:
         with st.sidebar.expander("Optionele seperator", expanded=False):
             st.write("Aan te passen wanneer de seperator niet een ',' is.")
-            seperator_input = st.text_input("Seperator", value=',', key="seperator_input", on_change=_reload_dataframe(uploaded_file))
+            seperator_input = st.text_input("Seperator", value=',', key="seperator_input", on_change=_reload_dataframe, kwargs={"uploaded_file": uploaded_file})
 
     # Sidebar vullen met Remote of local functionaliteit
     type_handler_input = st.sidebar.radio(
@@ -137,7 +137,6 @@ def main():
 
         # Aanmaken van Router object:
         router = Router(handler=handler)
-
         if functionality_selectbox == "Data Profiling":
             if profiling_radio == "Pandas Profiling":
                 router.route_pandas_data_profiling()

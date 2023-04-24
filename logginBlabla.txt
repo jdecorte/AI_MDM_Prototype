@@ -1,0 +1,98 @@
+['--phase', 'findTrainingData']
+arguments for client options are  ['--phase', 'findTrainingData', '--license', 'zinggLic.txt', '--email', 'zingg@zingg.ai', '--conf', 'dummyConf.json']
+2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - --phase
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - findTrainingData
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - --license
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - zinggLic.txt
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - --email
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - zingg@zingg.ai
+ 2023-04-24 09:54:39,694 [Thread-4] INFO  zingg.client.ClientOptions - --conf
+ 2023-04-24 09:54:39,695 [Thread-4] INFO  zingg.client.ClientOptions - dummyConf.json
+ 2023-04-24 09:54:39,697 [Thread-4] INFO  zingg.client.Client - 
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - **************************************************************************
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *            ** Note about analytics collection by Zingg AI **           *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *                                                                        *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *  Please note that Zingg captures a few metrics about application's     *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *  runtime parameters. However, no user's personal data or application   *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *  data is captured. If you want to switch off this feature, please      *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *  set the flag collectMetrics to false in config. For details, please   *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - *  refer to the Zingg docs (https://docs.zingg.ai/docs/security.html)    *
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - **************************************************************************
+ 2023-04-24 09:54:39,698 [Thread-4] INFO  zingg.client.Client - 
+ 2023-04-24 09:54:39,704 [Thread-4] WARN  org.apache.spark.sql.SparkSession$Builder - Using an existing SparkSession; some spark core configurations may not take effect.
+ 2023-04-24 09:54:39,812 [Thread-4] WARN  org.apache.spark.sql.catalyst.analysis.SimpleFunctionRegistry - The function round replaced a previously registered function.
+ 2023-04-24 09:54:39,812 [Thread-4] INFO  zingg.ZinggBase - Start reading internal configurations and functions
+ 2023-04-24 09:54:39,821 [Thread-4] INFO  zingg.ZinggBase - Finished reading internal configurations and functions
+ 2023-04-24 09:54:39,826 [Thread-4] WARN  zingg.util.PipeUtil - Reading input csv
+ 2023-04-24 09:54:39,826 [Thread-4] WARN  zingg.util.PipeUtil - Reading Pipe [name=input1, format=csv, preprocessors=null, props={location=storage/8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29/input_dir/input.csv}, schema=StructType(StructField(id,StringType,true), StructField(name,StringType,true), StructField(addr,StringType,true), StructField(city,StringType,true), StructField(type,StringType,true))]
+ 2023-04-24 09:54:41,767 [Thread-4] WARN  zingg.TrainingDataFinder - Read input data 865
+ 2023-04-24 09:54:41,768 [Thread-4] WARN  zingg.util.PipeUtil - Reading input parquet
+ 2023-04-24 09:54:41,768 [Thread-4] WARN  zingg.util.PipeUtil - Reading Pipe [name=null, format=parquet, preprocessors=null, props={location=storage/8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29/models/8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29/trainingData//marked/}, schema=null]
+ 2023-04-24 09:54:42,196 [Thread-4] WARN  zingg.util.DSUtil - Read marked training samples 
+ 2023-04-24 09:54:42,208 [Thread-4] WARN  zingg.util.DSUtil - No configured training samples
+ 2023-04-24 09:54:42,974 [Thread-4] WARN  zingg.TrainingDataFinder - Read training samples 0 neg 24
+ 2023-04-24 09:54:43,105 [Thread-4] INFO  zingg.TrainingDataFinder - Created positive sample pairs 
+ 2023-04-24 09:54:43,182 [Thread-4] INFO  zingg.TrainingDataFinder - Preprocessing DS for stopWords
+ 2023-04-24 09:54:43,318 [Thread-4] INFO  zingg.util.Heuristics - **Block size **8 and total count was 442
+ 2023-04-24 09:54:43,318 [Thread-4] INFO  zingg.util.Heuristics - Heuristics suggest 8
+ 2023-04-24 09:54:43,318 [Thread-4] INFO  zingg.util.BlockingTreeUtil - Learning indexing rules for block size 8
+ 2023-04-24 09:54:43,636 [Thread-4] WARN  org.apache.spark.sql.execution.CacheManager - Asked to cache already cached data.
+ 2023-04-24 09:54:43,926 [Thread-4] INFO  zingg.util.ModelUtil - Learning similarity rules
+ 2023-04-24 09:54:44,111 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] Stage class: LogisticRegression
+ 2023-04-24 09:54:44,111 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] Stage uid: logreg_8825c4839c00
+ 2023-04-24 09:54:44,283 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] training: numPartitions=1 storageLevel=StorageLevel(1 replicas)
+ 2023-04-24 09:54:44,285 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"featuresCol":"z_feature","fitIntercept":true,"labelCol":"z_isMatch","predictionCol":"z_prediction","probabilityCol":"z_probability","maxIter":100}
+ 2023-04-24 09:54:44,629 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"numClasses":2}
+ 2023-04-24 09:54:44,629 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"numFeatures":285}
+ 2023-04-24 09:54:44,629 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"numExamples":441}
+ 2023-04-24 09:54:44,629 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"lowestLabelWeight":"24.0"}
+ 2023-04-24 09:54:44,629 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"highestLabelWeight":"417.0"}
+ 2023-04-24 09:54:44,631 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"sumOfWeights":441.0}
+ 2023-04-24 09:54:44,632 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a120abc7] {"actualBlockSizeInMB":"1.0"}
+ 2023-04-24 09:54:44,893 [Executor task launch worker for task 0.0 in stage 30.0 (TID 157)] WARN  com.github.fommil.netlib.BLAS - Failed to load implementation from: com.github.fommil.netlib.NativeSystemBLAS
+ 2023-04-24 09:54:44,894 [Executor task launch worker for task 0.0 in stage 30.0 (TID 157)] WARN  com.github.fommil.netlib.BLAS - Failed to load implementation from: com.github.fommil.netlib.NativeRefBLAS
+ 2023-04-24 09:54:45,705 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [a5645a5a] training finished
+ 2023-04-24 09:54:45,705 [Thread-4] INFO  zingg.model.Model - threshold while predicting is 0.5
+ 2023-04-24 09:54:45,767 [Thread-4] INFO  org.apache.spark.ml.util.Instrumentation - [1d0fba2d] training finished
+ 2023-04-24 09:54:45,772 [Thread-4] INFO  zingg.TrainingDataFinder - Writing uncertain pairs
+ 2023-04-24 09:54:46,290 [Thread-4] WARN  zingg.util.PipeUtil - Writing output Pipe [name=null, format=parquet, preprocessors=null, props={location=storage/8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29/models/8be17881-85a9-4a01-aa0e-031441ea303b-59c842936079079f6cac55b9fb1abd29/trainingData//unmarked/}, schema=null]
+ 2023-04-24 09:54:46,290 [Thread-4] WARN  zingg.util.PipeUtil - Writing file
+ 2023-04-24 09:54:47,315 [Executor task launch worker for task 15.0 in stage 95.0 (TID 456)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 96,54% for 7 writers
+ 2023-04-24 09:54:47,316 [Executor task launch worker for task 9.0 in stage 95.0 (TID 450)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 84,47% for 8 writers
+ 2023-04-24 09:54:47,316 [Executor task launch worker for task 4.0 in stage 95.0 (TID 445)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 75,08% for 9 writers
+ 2023-04-24 09:54:47,317 [Executor task launch worker for task 1.0 in stage 95.0 (TID 442)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 67,58% for 10 writers
+ 2023-04-24 09:54:47,318 [Executor task launch worker for task 10.0 in stage 95.0 (TID 451)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 61,43% for 11 writers
+ 2023-04-24 09:54:47,318 [Executor task launch worker for task 13.0 in stage 95.0 (TID 454)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 56,31% for 12 writers
+ 2023-04-24 09:54:47,319 [Executor task launch worker for task 0.0 in stage 95.0 (TID 441)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 51,98% for 13 writers
+ 2023-04-24 09:54:47,320 [Executor task launch worker for task 6.0 in stage 95.0 (TID 447)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 48,27% for 14 writers
+ 2023-04-24 09:54:47,321 [Executor task launch worker for task 2.0 in stage 95.0 (TID 443)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 45,05% for 15 writers
+ 2023-04-24 09:54:47,322 [Executor task launch worker for task 5.0 in stage 95.0 (TID 446)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 42,24% for 16 writers
+ 2023-04-24 09:54:47,354 [Executor task launch worker for task 9.0 in stage 95.0 (TID 450)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 45,05% for 15 writers
+ 2023-04-24 09:54:47,355 [Executor task launch worker for task 15.0 in stage 95.0 (TID 456)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 48,27% for 14 writers
+ 2023-04-24 09:54:47,355 [Executor task launch worker for task 2.0 in stage 95.0 (TID 443)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 51,98% for 13 writers
+ 2023-04-24 09:54:47,355 [Executor task launch worker for task 11.0 in stage 95.0 (TID 452)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 56,31% for 12 writers
+ 2023-04-24 09:54:47,356 [Executor task launch worker for task 3.0 in stage 95.0 (TID 444)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 61,43% for 11 writers
+ 2023-04-24 09:54:47,356 [Executor task launch worker for task 6.0 in stage 95.0 (TID 447)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 67,58% for 10 writers
+ 2023-04-24 09:54:47,356 [Executor task launch worker for task 7.0 in stage 95.0 (TID 448)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 75,08% for 9 writers
+ 2023-04-24 09:54:47,357 [Executor task launch worker for task 14.0 in stage 95.0 (TID 455)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 84,47% for 8 writers
+ 2023-04-24 09:54:47,357 [Executor task launch worker for task 5.0 in stage 95.0 (TID 446)] WARN  org.apache.parquet.hadoop.MemoryManager - Total allocation exceeds 95,00% (906.992.014 bytes) of heap memory
+Scaling row group sizes to 96,54% for 7 writers
+ 
