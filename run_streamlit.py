@@ -45,7 +45,6 @@ def main():
 
     # StateManagement init
     StateManager.initStateManagement()
-    st.write(st.session_state["currentState"])
 
     # Cookie Management
     if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
