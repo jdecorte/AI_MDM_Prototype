@@ -16,7 +16,12 @@ class RemoteHandler(IHandler):
         data["dataframe_in_json"] = dataframe_in_json
         data["rule_finding_config_in_json"] = rule_finding_config_in_json
         data["seq"] = seq
-        return  {k: ColumnRuleView.parse_from_json(v) for (k,v) in requests.post(f"{self.connection_string}/get_all_column_rules_from_df_and_config", data=json.dumps(data)).json().items()}
+
+        return {k: ColumnRuleView.parse_from_json(v)
+                for (k, v) in requests.post(
+                    f"{self.connection_string}/get_all_column_rules_from_df_and_config",
+                    cookies={"session_flask": st.session_state['session_flask']},
+                    data=json.dumps(data)).json().items()}
 
     def get_column_rule_from_string(self,dataframe_in_json, rule_string):
         data = {}
@@ -29,7 +34,10 @@ class RemoteHandler(IHandler):
         data["dataframe_in_json"] = dataframe_in_json
         data["list_of_rule_string_in_json"] = list_of_rule_string_in_json
         data["seq"] = seq
-        return json.dumps(requests.post(f"{self.connection_string}/get_suggestions_given_dataframe_and_column_rules", data=json.dumps(data)).json())
+        return json.dumps(requests.post(
+            f"{self.connection_string}/get_suggestions_given_dataframe_and_column_rules",
+            cookies={"session_flask": st.session_state['session_flask']},
+            data=json.dumps(data)).json())
 
     def fetch_file_from_filepath(self, filepath:str):
         data = {}
@@ -39,7 +47,10 @@ class RemoteHandler(IHandler):
     def get_session_map(self, dataframe_in_json):
         data = {}
         data["dataframe_in_json"] = dataframe_in_json
-        return requests.post(f"{self.connection_string}/get_session_map", data=json.dumps(data)).json()
+        return requests.post(
+            f"{self.connection_string}/get_session_map",
+            cookies={"session_flask": st.session_state['session_flask']},
+            data=json.dumps(data)).json()
 
     def recalculate_column_rules(
             self,
@@ -55,6 +66,7 @@ class RemoteHandler(IHandler):
 
         requests.post(
             f"{self.connection_string}/recalculate_column_rules",
+            cookies={"session_flask": st.session_state['session_flask']},
             data=json.dumps(data))
         
 

@@ -191,14 +191,20 @@ class DomainController(FlaskView):
             save_file=True) -> json:
         # If method returns None -> Was not in storage with specific settings
         list_of_globs = glob.glob(f"storage/{unique_storage_id}/{md5_of_dataframe}/*.json")
-               
+
         for gl in list_of_globs:
             found_md5 = (gl.split("_")[-1]).split(".")[0]
             if md5_to_check == found_md5:
                 with open(gl, "r") as json_file:
                     to_return = json.loads(json_file.read())
                 if save_file:
-                    self._write_to_session_map(unique_storage_id,md5_of_dataframe,gl.split("/")[-1].split("_")[1],seq,gl,True)
+                    self._write_to_session_map(
+                        unique_storage_id,
+                        md5_of_dataframe,
+                        gl.split("/")[-1].split("_")[1],
+                        seq,
+                        gl,
+                        True)
                 return to_return["result"]
 
         return None 
@@ -210,15 +216,15 @@ class DomainController(FlaskView):
         unique_storage_id = "Local"
         if dataframe_in_json == "":
             data_to_use = json.loads(request.data)
-            unique_storage_id = request.remote_addr
+            unique_storage_id = request.cookies.get("session_flask")
             dataframe_in_json = data_to_use["dataframe_in_json"]
-
+        
         path = f"storage/{unique_storage_id}/{hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest()}"
         path_with_file = f"{path}/session_map.json"
         if not os.path.exists(path):
             cfg.logger.debug(f"Creating new session_map.json in {path}")
             os.makedirs(path)
-            with open(path_with_file,"w+") as f:
+            with open(path_with_file, "w+") as f:
                 f.write(json.dumps({}))
             return {}
         else:
@@ -358,7 +364,7 @@ class DomainController(FlaskView):
             unique_storage_id = "Local"
             if dataframe_in_json == "" and rule_finding_config_in_json == "" and seq == "":
                 data_to_use = json.loads(request.data)
-                unique_storage_id = request.remote_addr
+                unique_storage_id = request.cookies.get("session_flask")
                 dataframe_in_json = data_to_use["dataframe_in_json"]
                 rule_finding_config_in_json = data_to_use["rule_finding_config_in_json"]
                 if "seq" not in data_to_use:
@@ -397,19 +403,31 @@ class DomainController(FlaskView):
                 min_lift=rfc.lift,
                 min_confidence=rfc.confidence,
                 filterer_string=rfc.filtering_string)
+
             result = {k: v.parse_self_to_view().to_json()
                       for (k, v) in self.rule_mediator.get_all_column_rules().items()}
             save_dump = json.dumps(
                 {"result": result,
-                 "params": {"rule_finding_config_in_json" : rule_finding_config_in_json}})
-
+                 "params": {"rule_finding_config_in_json": rule_finding_config_in_json}})
+            
             # SAVE RESULTS
             parsed_date_time = datetime.now().strftime("%m_%d_%H_%M_%S")
             file_name = f"Rule-learning_rules_{parsed_date_time}_{hashlib.md5(rule_finding_config_in_json.encode('utf-8')).hexdigest()}"
             file_path = f"storage/{unique_storage_id}/{md5_of_dataframe}/{file_name}.json"
-            HelperFunctions.save_results_to(unique_id=unique_storage_id, md5_hash= hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest()
-                                            ,json_string=save_dump, file_name=file_name)
-            self._write_to_session_map(unique_storage_id,md5_of_dataframe,"rules",seq,file_path, False)
+            HelperFunctions.save_results_to(
+                unique_id=unique_storage_id,
+                md5_hash=hashlib.md5(dataframe_in_json.encode('utf-8')).hexdigest(),
+                json_string=save_dump,
+                file_name=file_name)
+
+            self._write_to_session_map(
+                unique_storage_id,
+                md5_of_dataframe,
+                "rules",
+                seq,
+                file_path,
+                False)
+
             # RETURN RESULTS
             return json.dumps(result)
         except Exception as e:
@@ -443,7 +461,7 @@ class DomainController(FlaskView):
         if (old_df_in_json == "" and new_df_in_json == "" and
            rule_finding_config_in_json == "" and affected_columns == ""):
             data_to_use = json.loads(request.data)
-            unique_storage_id = request.remote_addr
+            unique_storage_id = request.cookies.get("session_flask")
             old_df_in_json = data_to_use["old_dataframe_in_json"]
             new_df_in_json = data_to_use["new_dataframe_in_json"]
             rule_finding_config_in_json = data_to_use["rule_finding_config_in_json"]
@@ -509,7 +527,7 @@ class DomainController(FlaskView):
         unique_storage_id = "Local"
         if dataframe_in_json == "" and list_of_rule_string_in_json=="":
             data_to_use = json.loads(request.data)
-            unique_storage_id = request.remote_addr
+            unique_storage_id = request.cookies.get("session_flask")
             dataframe_in_json = data_to_use["dataframe_in_json"]
             list_of_rule_string_in_json = data_to_use["list_of_rule_string_in_json"]
             if "seq" not in data_to_use:
