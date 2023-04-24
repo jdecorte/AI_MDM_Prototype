@@ -33,8 +33,8 @@ class InitPage:
 
             
             # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
-            # if st.session_state['dedupe_type_dict'] == {}:
-            st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state["dataframe"].columns}
+            if st.session_state['dedupe_type_dict'] == {}:
+                st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state["dataframe"].columns}
 
 
             col_1, col_3,_ = st.columns([1,2,8])
