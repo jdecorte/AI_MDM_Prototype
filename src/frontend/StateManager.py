@@ -17,7 +17,14 @@ class StateManager:
 
     @staticmethod
     def clear_session_state():
+        # Only keep the session_flask and session_flask_local_id, delete the rest
+        tmp1 = st.session_state['session_flask_local_id']
+        tmp2 = st.session_state['session_flask']
+        tmp3 = st.session_state['seperator_input']
         st.session_state = {}
+        st.session_state['session_flask_local_id'] = tmp1
+        st.session_state['session_flask'] = tmp2
+        st.session_state['seperator_input'] = tmp3
 
 
     @staticmethod
@@ -89,6 +96,9 @@ class StateManager:
         if 'session_flask' not in st.session_state:
             st.session_state['session_flask'] = None
 
+
+        if 'seperator_input' not in st.session_state:
+            st.session_state['seperator_input'] = None
 
         if 'profile_report' not in st.session_state:
             st.session_state['profile_report'] = None
@@ -175,4 +185,6 @@ class StateManager:
         StateManager.turn_state_button_false("select_all_rules_btn")
         StateManager.turn_state_button_false("calculate_entropy_btn")
         
-        
+    @staticmethod
+    def reset_all_cached_on_functionality(functionality):
+        pass
