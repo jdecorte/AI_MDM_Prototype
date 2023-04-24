@@ -12,6 +12,7 @@ from src.frontend.StateManager import StateManager
 from streamlit.components.v1 import html
 from streamlit_javascript import st_javascript
 from streamlit_ws_localstorage import injectWebsocketCode, getOrCreateUID
+import json
 
 def _reload_dataframe(uploaded_file):
     seperator_input = st.session_state['seperator_input']
@@ -20,6 +21,19 @@ def _reload_dataframe(uploaded_file):
     df = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
     st.session_state["dataframe"] = df
     st.session_state["dataframe_name"] = uploaded_file.name
+
+def get_from_local_storage(k):
+    v = st_javascript(
+        f"JSON.parse(localStorage.getItem('{k}'));"
+    )
+    return v or {}
+
+
+def set_to_local_storage(k, v):
+    jdata = json.dumps(v)
+    st_javascript(
+        f"localStorage.setItem('{k}', JSON.stringify({jdata}));"
+    )
 
 def main():
 
@@ -34,11 +48,13 @@ def main():
     # Cookie Management
     if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
-            conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
-            ret = conn.getLocalStorageVal(key='session_flask')
-            if ret == "":
+            # conn = injectWebsocketCode(hostPort='linode.liquidco.in', uid=getOrCreateUID())
+            ret=get_from_local_storage('session_flask')
+            # ret = conn.getLocalStorageVal(key='session_flask')
+            if ret == {}:
                 temp_id = uuid.uuid4()
-                _ = conn.setLocalStorageVal(key='session_flask', val=str(uuid.uuid4()))
+                # _ = conn.setLocalStorageVal(key='session_flask', val=str(uuid.uuid4()))
+                _ = set_to_local_storage('session_flask', str(uuid.uuid4()))
                 st.session_state["session_flask_local_id"] = temp_id
             else:
                 st.session_state["session_flask_local_id"] = ret
@@ -135,6 +151,9 @@ def main():
             router.route_rule_learning()
         if functionality_selectbox == "Data Extractie":
             router.route_data_extraction()
+
+    st.sidebar.write("Current Session ID:")
+    st.sidebar.write(st.session_state["session_flask"])
 
 if __name__ == "__main__":
         print("Starting Streamlit")
