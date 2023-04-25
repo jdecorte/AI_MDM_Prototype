@@ -147,20 +147,16 @@ def main():
     # Cookie Management
     if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
-            conn = injectWebsocketCode(hostPort='localhost:8001', uid=getOrCreateUID())
-            ## ret = get_from_local_storage('session_flask') # DOESN'T WORK
+            port = cfg.configuration["WEBSOCKET_SERVER_PORT"]
+            conn = injectWebsocketCode(hostPort=f'localhost:{port}', uid=getOrCreateUID())
             ret = conn.getLocalStorageVal(key='session_flask')
-            cfg.logger.debug("get local storage value returns " + ret + "of type " + str(type(ret)))
             if not ret:
                 temp_id = uuid.uuid4()                
                 _ = conn.setLocalStorageVal(key='session_flask', val=str(temp_id))
-                #_ = set_to_local_storage('session_flask', str(uuid.uuid4()))
                 st.session_state["session_flask_local_id"] = temp_id
             else:
                 st.session_state["session_flask_local_id"] = ret
 
-
-    cfg.logger.debug(f"Prior to clipping session_flask_local_id:  +{st.session_state['session_flask_local_id']}")
     # Limit session_flask_local_id to 20 characters to avoid problems with
     # very long file names later.
     st.session_state["session_flask_local_id"] = \

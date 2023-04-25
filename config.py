@@ -16,4 +16,6 @@ logger.addHandler(handler)
 configuration = {
     # Data profiling report will be stored in the following directory under "reports"
     "WWW_ROOT": "/usr/share/nginx/html",
+    # Port for the web socket server
+    "WEBSOCKET_SERVER_PORT": 8001
 }
