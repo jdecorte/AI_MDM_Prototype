@@ -33,7 +33,7 @@ def getOrCreateUID():
 # server sends commands like localStorage_get_key, localStorage_set_key, localStorage_clear_key etc. to the WS server,
 # which relays the commands to the other connected endpoint (the frontend), and back
 def injectWebsocketCode(hostPort, uid):
-    code = '<script>function connect() { console.log("in connect uid: ", "' + uid + '"); var ws = new WebSocket("ws://' + hostPort + '/?uid=' + uid + '");' + """
+    code = '<script>function connect() { console.log("in connect uid: ", "' + uid + '"); var ws = new WebSocket("' + hostPort + '/?uid=' + uid + '");' + """
   ws.onopen = function() {
     // subscribe to some channels
     // ws.send(JSON.stringify({ status: 'connected' }));
@@ -81,7 +81,7 @@ class WebsocketClient:
     def sendCommand(self, value, waitForResponse=True):
 
         async def query(future):
-            async with websockets.connect("ws://" + self.hostPort + "/?uid=" + self.uid) as ws:
+            async with websockets.connect(self.hostPort + "/?uid=" + self.uid) as ws:
                 await ws.send(value)
                 if waitForResponse:
                     response = await ws.recv()
@@ -147,8 +147,8 @@ def main():
     # Cookie Management
     if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
         if "session_flask_local_id" not in st.session_state:
-            port = cfg.configuration["WEBSOCKET_SERVER_PORT"]
-            conn = injectWebsocketCode(hostPort=f'localhost:{port}', uid=getOrCreateUID())
+            url = cfg.configuration["WEBSOCKET_SERVER_URL"]
+            conn = injectWebsocketCode(hostPort=url, uid=getOrCreateUID())
             ret = conn.getLocalStorageVal(key='session_flask')
             if not ret:
                 temp_id = uuid.uuid4()                
@@ -160,7 +160,7 @@ def main():
     # Limit session_flask_local_id to 20 characters to avoid problems with
     # very long file names later.
     st.session_state["session_flask_local_id"] = \
-        st.session_state["session_flask_local_id"][:20]
+        f'{st.session_state["session_flask_local_id"]}'[:20]
 
     if st.session_state["dataframe"] is not None:
         st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
