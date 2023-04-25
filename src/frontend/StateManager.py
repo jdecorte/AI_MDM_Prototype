@@ -97,8 +97,8 @@ class StateManager:
             st.session_state['session_flask'] = None
 
 
-        if 'seperator_input' not in st.session_state:
-            st.session_state['seperator_input'] = None
+        # if 'seperator_input' not in st.session_state:
+        #     st.session_state['seperator_input'] = None
 
         if 'profile_report' not in st.session_state:
             st.session_state['profile_report'] = None

@@ -117,18 +117,22 @@ def _reload_dataframe(uploaded_file):
         f"{st.session_state['session_flask_local_id']}"
         + f"-{hashlib.md5(df.to_json().encode('utf-8')).hexdigest()}")
 
+    st.session_state["session_flask"] = (
+        f"{st.session_state['session_flask_local_id']}"
+        + f"-{hashlib.md5(df.to_json().encode('utf-8')).hexdigest()}")
+
 def get_from_local_storage(k):
     v = st_javascript(
         f"JSON.parse(localStorage.getItem('{k}'));"
     )
     return v or {}
 
-
 def set_to_local_storage(k, v):
     jdata = json.dumps(v)
-    st_javascript(
-        f"localStorage.setItem('{k}', JSON.stringify({jdata}));"
-    )
+    # st_javascript(
+    #     f"localStorage.setItem('{k}', JSON.stringify({jdata}));"
+    # )
+    st.markdown(f"<script>localStorage.setItem('{k}', JSON.stringify({jdata}));</script>", unsafe_allow_html=True)
 
 def main():
 
@@ -168,6 +172,7 @@ def main():
     if st.session_state["currentState"] != None:
         st.sidebar.button("Ga terug naar vorige fase", on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state["currentState"],))
 
+
     # Sidebar vullen met functionaliteit-mogelijkheden
     functionality_selectbox = st.sidebar.selectbox(
         "Functionaliteit:",
@@ -191,7 +196,7 @@ def main():
     if uploaded_file:
         with st.sidebar.expander("Optionele seperator", expanded=False):
             st.write("Aan te passen wanneer de seperator niet een ',' is.")
-            seperator_input = st.text_input("Seperator", value=',', key="seperator_input", on_change=_reload_dataframe(uploaded_file))
+            seperator_input = st.text_input("Seperator", value=',', key="seperator_input", on_change=_reload_dataframe, kwargs={"uploaded_file": uploaded_file})
 
     # Sidebar vullen met Remote of local functionaliteit
     type_handler_input = st.sidebar.radio(
@@ -241,7 +246,6 @@ def main():
 
         # Aanmaken van Router object:
         router = Router(handler=handler)
-
         if functionality_selectbox == "Data Profiling":
             if profiling_radio == "Pandas Profiling":
                 router.route_pandas_data_profiling()
