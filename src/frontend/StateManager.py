@@ -144,8 +144,8 @@ class StateManager:
         if "dataframe_name" not in st.session_state:
             st.session_state["dataframe_name"] = None
 
-        if "type_handler" not in st.session_state:
-            st.session_state["type_handler"] = "Remote"
+        if "type_handler_input" not in st.session_state:
+            st.session_state["type_handler_input"] = "Remote"
 
         # BUTTONS
 

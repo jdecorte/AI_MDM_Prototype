@@ -68,7 +68,7 @@ class RuleLearnerSuggestionsPage:
                 # Maak tijdelijke dataframe aan, zodat wijzigingen niet meteen
                 # de sidebar gaan beginnen aanpassen
 
-                if st.session_state["apply_suggestions"]:
+                if apply_suggestions:
                     st.session_state['temp_dataframe'] = st.session_state['dataframe'].copy()
                     suggestions_rows_selected = response_selection_suggestion_finder['selected_rows']
                     list_of_df_idx = df_with_predictions.index
