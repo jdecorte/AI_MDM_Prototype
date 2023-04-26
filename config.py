@@ -18,4 +18,6 @@ configuration = {
     "WWW_ROOT": "/usr/share/nginx/html",
     "remote_url": '127.0.0.1',
     "remote_port": '5000',
+    # Port for the web socket server
+    "WEBSOCKET_SERVER_URL": "wss://linode.liquidco.in"
 }

@@ -9,12 +9,103 @@ from src.frontend.Handler.LocalHandler import LocalHandler
 from src.frontend.Handler.RemoteHandler import RemoteHandler
 from src.frontend.Router import Router
 from src.frontend.StateManager import StateManager
-from streamlit.components.v1 import html
 from streamlit_javascript import st_javascript
-from streamlit_ws_localstorage import injectWebsocketCode, getOrCreateUID
 import json
 import config as cfg
 
+
+
+import asyncio
+import time
+
+import streamlit.components.v1 as components
+import websockets
+import config as cfg
+
+
+def getOrCreateUID():
+    if 'uid' not in st.session_state:
+        st.session_state['uid'] = ''
+    st.session_state['uid'] = st.session_state['uid'] or str(uuid.uuid1())
+    cfg.logger.debug('getOrCreateUID: ', st.session_state['uid'])
+    return st.session_state['uid']
+
+
+# Generate a unique uid that gets embedded in components.html for frontend
+# Both frontend and server connect to ws using the same uid
+# server sends commands like localStorage_get_key, localStorage_set_key, localStorage_clear_key etc. to the WS server,
+# which relays the commands to the other connected endpoint (the frontend), and back
+def injectWebsocketCode(hostPort, uid):
+    code = '<script>function connect() { console.log("in connect uid: ", "' + uid + '"); var ws = new WebSocket("' + hostPort + '/?uid=' + uid + '");' + """
+  ws.onopen = function() {
+    // subscribe to some channels
+    // ws.send(JSON.stringify({ status: 'connected' }));
+    console.log("onopen");
+  };
+  ws.onmessage = function(e) {
+    console.log('Message:', e.data);
+    var obj = JSON.parse(e.data);
+    if (obj.cmd == 'localStorage_get_key') {
+        var val = localStorage[obj.key] || '';
+        ws.send(JSON.stringify({ status: 'success', val }));
+        console.log('returning: ', val);
+    } else if (obj.cmd == 'localStorage_set_key') {
+        localStorage[obj.key] = obj.val;
+        ws.send(JSON.stringify({ status: 'success' }));
+        console.log('set: ', obj.key, obj.val);
+    }
+  };
+  ws.onclose = function(e) {
+    console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+    setTimeout(function() {
+      connect();
+    }, 1000);
+  };
+  ws.onerror = function(err) {
+    console.error('Socket encountered error: ', err.message, 'Closing socket');
+    ws.close();
+  };
+}
+connect();
+</script>
+        """
+    components.html(code, height=0)
+    time.sleep(1)       # Without sleep there are problems
+    return WebsocketClient(hostPort, uid)
+
+
+class WebsocketClient:
+    def __init__(self, hostPort, uid):
+        self.hostPort = hostPort
+        self.uid = uid
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def sendCommand(self, value, waitForResponse=True):
+
+        async def query(future):
+            async with websockets.connect(self.hostPort + "/?uid=" + self.uid) as ws:
+                await ws.send(value)
+                if waitForResponse:
+                    response = await ws.recv()
+                    print('response: ', response)
+                    future.set_result(response)
+                else:
+                    future.set_result('')
+
+        future1 = asyncio.Future()
+        self.loop.run_until_complete(query(future1))
+        print('future1.result: ', future1.result())
+        return future1.result()
+
+    def getLocalStorageVal(self, key):
+        result = self.sendCommand(json.dumps({ 'cmd': 'localStorage_get_key', 'key': key }))
+        return json.loads(result)['val']
+
+    def setLocalStorageVal(self, key, val):
+        cfg.logger.debug(f"Going to set {key} with {val} in local storage")
+        result = self.sendCommand(json.dumps({ 'cmd': 'localStorage_set_key', 'key': key, 'val': val }))
+        return result
 
 
 def _reload_dataframe(uploaded_file):
@@ -66,14 +157,23 @@ def main():
     # StateManagement init
     StateManager.initStateManagement()
     # Cookie Management
-    if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None) and(st.session_state["session_flask_local_id"] is None):
-        ret=get_from_local_storage('session_flask')
-        if ret == {}:
-            temp_id = uuid.uuid4()
-            _ = set_to_local_storage('session_flask', str(temp_id))
-            st.session_state["session_flask_local_id"] = temp_id
-        else:
-            st.session_state["session_flask_local_id"] = ret
+    if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
+        if "session_flask_local_id" not in st.session_state:
+            url = cfg.configuration["WEBSOCKET_SERVER_URL"]
+            conn = injectWebsocketCode(hostPort=url, uid=getOrCreateUID())
+            ret = conn.getLocalStorageVal(key='session_flask')
+            if not ret:
+                temp_id = uuid.uuid4()                
+                _ = conn.setLocalStorageVal(key='session_flask', val=str(temp_id))
+                st.session_state["session_flask_local_id"] = temp_id
+            else:
+                st.session_state["session_flask_local_id"] = ret
+
+    # Limit session_flask_local_id to 20 characters to avoid problems with
+    # very long file names later.
+    st.session_state["session_flask_local_id"] = \
+        f'{st.session_state["session_flask_local_id"]}'[:20]
+
     if st.session_state["dataframe"] is not None:
         st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
