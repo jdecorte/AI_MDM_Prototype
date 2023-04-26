@@ -16,14 +16,15 @@ class InitPage:
     def show(self):        
 
         with self.canvas.container(): 
-            st.title("De-duplicatie")
+            st.title("Deduplication")
             DatasetDisplayerComponent().show(st.session_state["dataframe"])
             
             # Select if you want to use Zingg or Dedupe
-            st.subheader("Selecteer de methode die je wilt gebruiken")
-            st.session_state['selected_deduplication_method'] = st.selectbox('Methode:', ["Dedupe", "Zingg"], index=1)
+            # st.subheader("Select an algorithm to use for deduplication")
+            # st.session_state['selected_deduplication_method'] = st.selectbox('Methode:', ["Dedupe", "Zingg"], index=1)
+            st.session_state['selected_deduplication_method'] = "Zingg"
 
-            st.subheader("Selecteer kolommen om te gebruiken in deduplicatie-proces")
+            st.subheader("Select which columns to use in the deduplication-proces")
 
             if st.session_state['selected_deduplication_method'] == "Dedupe":
                 selected_col, selected_type = self._show_format_for_dedupe()
@@ -39,7 +40,7 @@ class InitPage:
 
             col_1, col_3,_ = st.columns([1,2,8])
             with col_1:
-                add_btn = st.button("Wijzig")
+                add_btn = st.button("Change type")
                 if add_btn:
                     st.session_state["dedupe_type_dict"][selected_col] = selected_type
                     
@@ -63,7 +64,7 @@ class InitPage:
                             st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs" 
                             st.experimental_rerun()
 
-            st.markdown("**Geselecteerd:**")
+            st.markdown("**Selected:**")
             if st.session_state['dedupe_type_dict'] == {}:
                 st.write("U heeft nog geen kolommen gekozen")
             else:

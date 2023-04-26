@@ -3,6 +3,7 @@ import json
 import hashlib
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 from src.frontend.Handler.IHandler import IHandler
+
 class StateManager:
     def __init__(self) -> None:
         pass
@@ -21,10 +22,12 @@ class StateManager:
         tmp1 = st.session_state['session_flask_local_id']
         tmp2 = st.session_state['session_flask']
         tmp3 = st.session_state['seperator_input']
+        tmp4 = st.session_state['dataframe_name']
         st.session_state = {}
         st.session_state['session_flask_local_id'] = tmp1
         st.session_state['session_flask'] = tmp2
         st.session_state['seperator_input'] = tmp3
+        st.session_state['dataframe_name'] = tmp4
 
 
     @staticmethod
@@ -92,13 +95,21 @@ class StateManager:
     @staticmethod
     def initStateManagement():
 
+        if 'dataframe' not in st.session_state:
+            st.session_state['dataframe'] = None
+            
         # SESSION
         if 'session_flask' not in st.session_state:
             st.session_state['session_flask'] = None
 
+        if 'session_flask_local_id' not in st.session_state:
+            st.session_state['session_flask_local_id'] = None
 
-        # if 'seperator_input' not in st.session_state:
-        #     st.session_state['seperator_input'] = None
+        if 'session_map' not in st.session_state:
+            st.session_state['session_map'] = None
+
+        if 'seperator_input' not in st.session_state:
+            st.session_state['seperator_input'] = None
 
         if 'profile_report' not in st.session_state:
             st.session_state['profile_report'] = None
@@ -108,6 +119,9 @@ class StateManager:
 
         if 'current_functionality' not in st.session_state:
             st.session_state['current_functionality'] = None
+
+        if 'current_profiling' not in st.session_state:
+            st.session_state['current_profiling'] = None
 
         if 'currentRegel_LL' not in st.session_state:
             st.session_state['currentRegel_LL'] = None
@@ -127,13 +141,11 @@ class StateManager:
         if "AdviseerOpslaan" not in st.session_state:
             st.session_state["AdviseerOpslaan"] = False
 
-        if "dataframe" not in st.session_state:
-            # Clearen van caches
-            st.cache_resource.clear()
-            st.session_state["dataframe"] = None
-
         if "dataframe_name" not in st.session_state:
             st.session_state["dataframe_name"] = None
+
+        if "type_handler" not in st.session_state:
+            st.session_state["type_handler"] = "Remote"
 
         # BUTTONS
 
@@ -184,7 +196,3 @@ class StateManager:
         StateManager.turn_state_button_false("select_all_suggestions_btn")
         StateManager.turn_state_button_false("select_all_rules_btn")
         StateManager.turn_state_button_false("calculate_entropy_btn")
-        
-    @staticmethod
-    def reset_all_cached_on_functionality(functionality):
-        pass

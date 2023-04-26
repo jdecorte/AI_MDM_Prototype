@@ -10,7 +10,7 @@ class DatasetDisplayerComponent:
         MAX_HEIGHT = 500
         ROW_HEIGHT = 60
 
-        st.markdown(f"<h4>Ingeladen Dataset: </h4>", unsafe_allow_html=True)
+        st.markdown(f"<h4>Loaded dataset: </h4>", unsafe_allow_html=True)
         gb = GridOptionsBuilder.from_dataframe(dataframe)
         gb.configure_side_bar()
         gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)

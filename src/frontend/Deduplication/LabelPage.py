@@ -86,6 +86,8 @@ class ZinggLabelPage:
         if "zingg_stats" not in st.session_state:
             st.session_state["zingg_stats"] = self.handler.zingg_get_stats()
 
+        reponse_error_container = st.empty()
+
         st.subheader("Pairs to mark:")
         # group by z_cluster and create a new zingg_label_card for each cluster
         container_for_cards = st.container()
@@ -116,7 +118,7 @@ class ZinggLabelPage:
                 colB_2_1, colB_2_2, colB_2_3 =st.columns([1,1,1])
                 with colB_2_1:
                     st.write("")
-                    next = st.button("Go to next round")
+                    next = st.button("Update and give new pairs")
                 with colB_2_2:
                     st.write("")
                     clear = st.button("Clear all previous labels (Rerun)")
@@ -147,7 +149,8 @@ class ZinggLabelPage:
                 st.session_state["currentState"] = "Zingg_ViewClusters_get_clusters"
                 st.experimental_rerun()
             else:
-                st.info(response)
+                with reponse_error_container:
+                    st.error("The model could not be created. Please label more data and try again.")
 
         self._clear_js_containers()
         

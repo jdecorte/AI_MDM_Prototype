@@ -64,7 +64,7 @@ class RuleLearnerSuggestionsPage:
 
             with colb0:
                 apply_suggestions = st.button(
-                    "Pas geselecteerde suggesties toe", key="apply_suggestions")
+                    "Apply the selected suggestions", key="apply_suggestions")
                 # Maak tijdelijke dataframe aan, zodat wijzigingen niet meteen
                 # de sidebar gaan beginnen aanpassen
 

@@ -16,4 +16,6 @@ logger.addHandler(handler)
 configuration = {
     # Data profiling report will be stored in the following directory under "reports"
     "WWW_ROOT": "/usr/share/nginx/html",
+    "remote_url": '127.0.0.1',
+    "remote_port": '5000',
 }

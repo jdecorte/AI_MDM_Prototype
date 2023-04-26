@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+import hashlib
 
 class DeDupeClusterRedirectPage:
     def __init__(self, canvas, handler) -> None:
@@ -47,23 +49,24 @@ class ZinggClusterRedirectPage:
         st.session_state['zingg_clusters_df'] = pd.DataFrame(self.handler.zingg_get_clusters())
         tmp = st.session_state['zingg_clusters_df']
         # value_counts of values in cluster_id kolom and keep the cluster°id where there are more than 2 records
-        cluster_ids = st.session_state['zingg_clusters_df']['z_cluster'].value_counts()[st.session_state['zingg_clusters_df']['z_cluster'].value_counts() >= 2].index.tolist()
+        # cluster_ids = st.session_state['zingg_clusters_df']['z_cluster'].value_counts()[st.session_state['zingg_clusters_df']['z_cluster'].value_counts() >= 2].index.tolist()
 
+        cluster_ids = st.session_state['zingg_clusters_df']['z_cluster'].value_counts()[st.session_state['zingg_clusters_df']['z_cluster'].value_counts() >= 0].index.tolist()
         # for each cluster_id, get the records and create a ClusterView
         list_of_cluster_view = []
         for cluster_id in cluster_ids:
             records_df = st.session_state['zingg_clusters_df'][st.session_state['zingg_clusters_df']['z_cluster'] == cluster_id]
 
-            cluster_low = records_df['z_minScore'].min()
-            cluster_high = records_df['z_maxScore'].max()
-
-            # cluster confidence is the average of the z_lower and z_higher values in the column
-            cluster_confidence  = (records_df['z_minScore'].mean() + records_df['z_maxScore'].mean()) / 2
-
-            # new_row is the row that with the highest 'cluster_high' value
-            new_row = records_df[records_df['z_minScore'] == records_df['z_minScore'].max()][:1]
-            
-            list_of_cluster_view.append(ZinggClusterView(cluster_id, cluster_confidence, records_df.drop(['z_minScore', 'z_maxScore', 'z_cluster'], axis=1), new_row, cluster_low, cluster_high))
+            if len(records_df)> 1:
+                cluster_low = records_df['z_minScore'].min()
+                cluster_high = records_df['z_maxScore'].max()
+                # cluster confidence is the average of the z_lower and z_higher values in the column
+                cluster_confidence  = (records_df['z_minScore'].mean() + records_df['z_maxScore'].mean()) / 2
+                # new_row is the row that with the highest 'cluster_high' value
+                new_row = records_df[records_df['z_minScore'] == records_df['z_minScore'].max()][:1]
+                list_of_cluster_view.append(ZinggClusterView(cluster_id, cluster_confidence, records_df.drop(['z_minScore', 'z_maxScore', 'z_cluster'], axis=1), new_row, cluster_low, cluster_high))
+            else:
+                list_of_cluster_view.append(ZinggClusterView(cluster_id, 0, records_df.drop(['z_minScore', 'z_maxScore', 'z_cluster'], axis=1), records_df.drop(['z_minScore', 'z_maxScore', 'z_cluster'], axis=1), 0, 0))
 
         st.session_state['list_of_cluster_view'] = list_of_cluster_view
 
@@ -72,14 +75,43 @@ class ZinggClusterRedirectPage:
 
 class ZinggClusterPage:
 
-    TEXT_DEDUP_FALSE = "behouden maar aangepast naar de volgende waarden:"
-    TEXT_DEDUP_TRUE = "verwijderd en vervangen door één record:"
+    TEXT_DEDUP_FALSE = "kept, but non-primary key values will be changed to:"
+    TEXT_DEDUP_TRUE = "deleted and replaced with one record:"
+
+    def _reload_dataframe(self):
+        t2 = st.session_state["dataframe"]
+        t3 = st.session_state["dataframe_name"]
+        t4 = st.session_state["session_flask"]
+        t5 = st.session_state["session_flask_local_id"]
+        seperator_input = st.session_state["seperator_input"]
+        t8 = st.session_state["session_map"]
+        t9 = st.session_state["type_handler_input"]
+        t10 = st.session_state["current_functionality"]
+        t11 = st.session_state["current_profiling"]
+
+        st.session_state = {}
+
+        st.session_state["currentState"] = None
+        st.session_state["dataframe"] = t2
+        st.session_state["dataframe_name"] = t3
+        st.session_state["session_flask_local_id"] = t5
+        st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
+        st.session_state["seperator_input"] = seperator_input
+
+        st.session_state["session_map"] = t8
+        st.session_state["type_handler_input"] = t9
+        st.session_state["current_functionality"] = t10
+        st.session_state["current_profiling"] = t11
+
+        st.experimental_rerun()
     
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
         self.handler = handler
         
     def _createPaginering(self, key, colstoUse, N):
+        # filter colstoUse based on length of the records in records_df
+        colstoUse = [x for x in colstoUse if len(x.records_df) > 1]
         # A variable to keep track of which product we are currently displaying
         if key not in st.session_state:
             st.session_state[key] = 0
@@ -89,13 +121,13 @@ class ZinggClusterPage:
         # Add a next button and a previous button
         prev, _, tussen, _ ,next = st.columns([2,1,2,1,2])
 
-        if next.button("Volgende resultaten"):
+        if next.button("Next results"):
             if st.session_state[key] + 1 > last_page:
                 st.session_state[key] = 0
             else:
                 st.session_state[key] += 1
 
-        if prev.button("Vorige resultaten"):
+        if prev.button("Previous results"):
             if st.session_state[key] - 1 < 0:
                 st.session_state[key] = last_page
             else:
@@ -112,20 +144,19 @@ class ZinggClusterPage:
         return colstoUse[start_idx:end_idx]
 
     def show(self): 
-
         with self.canvas.container(): 
-            st.title("Gevonden Clusters")
+            st.title("Found Clusters")
             # Give which columns are primary keys
-            pks = st.multiselect("Kies de kolommen die de primary key zijn, deze zullen niet gewijzigd worden bij de clustering", st.session_state["dataframe"].columns)
+            pks = st.multiselect("Select the columns that form primary key, they well be left alone during merging of records", st.session_state["dataframe"].columns)
 
             col0, col1 = st.columns([6,2])
             with col0:
                 sort_clusters = st.selectbox(
                 'Sorteer clusters op:',
-                ('Aantal records in cluster', 'Cluster confidence score', 'Lowest cluster Similairty', 'Highest cluster Similairty'))
+                ('Amount of records in a cluster', 'Cluster confidence score', 'Lowest cluster Similairty', 'Highest cluster Similairty'))
                 if sort_clusters == 'Cluster confidence score':
                     st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: x.cluster_confidence, reverse=True)
-                if sort_clusters == 'Aantal records in cluster':
+                if sort_clusters == 'Amount of records in a cluster':
                     st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: len(x.records_df), reverse=True)
                 if sort_clusters == 'Lowest cluster Similairty':
                     st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: x.cluster_low, reverse=False)
@@ -141,7 +172,7 @@ class ZinggClusterPage:
             with col1:
                 st.write("")
                 st.write("")
-                confirm_cluster = st.button("Bevestig clusters")
+                confirm_cluster = st.button("Confirm clusters")
 
             # Als test toon de eerste 5 elementen
             sub_rowstoUse = self. _createPaginering("page_number_Dedupe", st.session_state["list_of_cluster_view"], 5)
@@ -155,33 +186,55 @@ class ZinggClusterPage:
 
             if confirm_cluster:
                 self._merge_clusters(st.session_state["list_of_cluster_view"], pks)
-        self._clear_js_containers()
+            self._clear_js_containers()
                 
     def _merge_clusters(self, list_of_cluster_view, pks):
 
-        # TODO: check if all pks are in the new row
-
-
         merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
         for cv in list_of_cluster_view:
+
+            # rows that are not-selected must be added to the merged_df, but left in their original form
+            # non_selected_rows = cv.records_df[~cv.records_df.index.isin(cv.selected_rows.index)]
+
+            tmp = cv.selected_rows
+
+            all_df = pd.merge(cv.records_df, cv.selected_rows, on=list(cv.records_df.columns), how='left', indicator='exists')
+            all_df['exists'] = np.where(all_df.exists == 'both', True, False)
+
+            non_selected_rows = all_df[all_df['exists'] == False]
+
+            if len(non_selected_rows) > 0:
+                st.write("non selected rows")
+                st.write(non_selected_rows)
+
+            # for _, row in non_selected_rows.iterrows():
+            merged_df = pd.concat([merged_df, non_selected_rows], ignore_index=True)
+
+            # must only happen on the rows that are selected
             if st.session_state[f'merge_{cv.cluster_id}']:
                 if st.session_state[f'dedup_{cv.cluster_id}'] == self.TEXT_DEDUP_TRUE:
                     merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
                 else:
-                    for e in range(0,len(cv.records_df)):
+                    for e in range(0,len(cv.selected_rows)):
                         row_to_add = cv.new_row
 
                         for pk in pks:
-                            row_to_add[pk] = cv.records_df.iloc[e][pk]
+                            row_to_add[pk] = cv.selected_rows.iloc[e][pk]
                         merged_df = pd.concat([merged_df, row_to_add], ignore_index=True)
             else:
-                for _, row in cv.records_df.iterrows():
+                for _, row in cv.selected_rows.iterrows():
                     merged_df = pd.concat([merged_df, row], ignore_index=True)
                     # merged_df.append(row, ignore_index=True)
 
         st.session_state["currentState"] = None
+        if set(['_selectedRowNodeInfo', 'exists']) <= set(list(merged_df.columns)):
+            merged_df = merged_df.drop(columns=['_selectedRowNodeInfo', 'exists'])
+
+        if set(['z_minScore', 'z_maxScore', 'z_cluster']) <= set(list(merged_df.columns)):
+            merged_df = merged_df.drop(columns=['z_minScore', 'z_maxScore', 'z_cluster'])
+
         st.session_state["dataframe"] = merged_df
-        st.experimental_rerun()
+        self._reload_dataframe()
 
     def _create_cluster_card(self, idx, cv, pks):
         MIN_HEIGHT = 50
@@ -190,32 +243,56 @@ class ZinggClusterPage:
         
         cont_card = st.container()
         with cont_card:
-            _ = st.checkbox('Pas deze wijzingen toe!',value=True, key=f'merge_{cv.cluster_id}')
+            _ = st.checkbox('Apply changes!',value=True, key=f'merge_{cv.cluster_id}')
             col0, col1, col2 = st.columns([1,1,1])
             with col0:
-                st.write(f"Confidence van deze cluster: {cv.cluster_confidence}")
+                st.write(f"Confidence of this cluster: {cv.cluster_confidence}")
             with col1:
-                st.write(f"Laagste similarity in deze cluster: {cv.cluster_low}")
+                st.write(f"Lowest similarity in this cluster: {cv.cluster_low}")
             
             with col2:
-                st.write(f"Hoogste similarity in deze cluster: {cv.cluster_high}")
+                st.write(f"Highest similarity in this cluster: {cv.cluster_high}")
                  
+            # gb1 = GridOptionsBuilder.from_dataframe(cv.records_df)
+            # gb1.configure_side_bar()
+            #         # gb1.configure_selection('multiple',use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True, pre_selected_rows= list(range(0,len(cv.records_df))))
+            # gb1.configure_selection('multiple',use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True, pre_selected_rows= [0,1])
+            # gb1.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
+            # gridOptions = gb1.build()
+            # data_clustercard = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="VALUE_CHANGED", height=min(MIN_HEIGHT + len(cv.records_df) * ROW_HEIGHT, MAX_HEIGHT), key=f'before_{cv.cluster_id}')
+            # cv.selected_rows = pd.DataFrame(data_clustercard['selected_rows'])
+            # dedupe_check = st.radio('The selected records will be... ',(self.TEXT_DEDUP_FALSE, self.TEXT_DEDUP_TRUE), key=f'dedup_{cv.cluster_id}', horizontal = True)
+            
+            # # AGGRID die wel editeerbaar is, met als suggestie de eerste van de selected_rows van hierboven
+            # # new_drop = ["z_minScore", "z_maxScore", "z_cluster"]
+            # new_drop = []
+            # if set(new_drop) <= set(cv.new_row.columns):
+            #     pks = new_drop + pks
+            
+            # gb2 = GridOptionsBuilder.from_dataframe(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row)
+            # gb2.configure_side_bar()
+            # gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
+            # gridOptions2 = gb2.build()
+            # grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row,gridOptions=gridOptions2 ,enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT), key=f'after_{cv.cluster_id}')
+            
+            # cv.set_new_row(grid["data"])
+
             gb1 = GridOptionsBuilder.from_dataframe(cv.records_df)
             gb1.configure_side_bar()
                     # gb1.configure_selection('multiple',use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True, pre_selected_rows= list(range(0,len(cv.records_df))))
             gb1.configure_selection('multiple',use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True, pre_selected_rows= [0,1])
             gb1.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
             gridOptions = gb1.build()
-            _ = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="VALUE_CHANGED", height=min(MIN_HEIGHT + len(cv.records_df) * ROW_HEIGHT, MAX_HEIGHT))
-            
-            dedupe_check = st.radio('Geselecteerde records worden... ',(self.TEXT_DEDUP_FALSE, self.TEXT_DEDUP_TRUE), key=f'dedup_{cv.cluster_id}', horizontal = True)
+            data_clustercard = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="SELECTION_CHANGED", height=min(MIN_HEIGHT + (len(cv.records_df) * ROW_HEIGHT), MAX_HEIGHT), key=f'before_{cv.cluster_id}')
+            cv.selected_rows = pd.DataFrame(data_clustercard['selected_rows'])
+            dedupe_check = st.radio('The selected records will be... ',(self.TEXT_DEDUP_FALSE, self.TEXT_DEDUP_TRUE), key=f'dedup_{cv.cluster_id}', horizontal = True)
             
             # AGGRID die wel editeerbaar is, met als suggestie de eerste van de selected_rows van hierboven
             gb2 = GridOptionsBuilder.from_dataframe(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row )
             gb2.configure_side_bar()
             gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
             gridOptions2 = gb2.build()
-            grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row , gridOptions=gridOptions2, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
+            grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row ,update_mode="VALUE_CHANGED", gridOptions=gridOptions2, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
             
             cv.set_new_row(grid["data"])
 
@@ -283,7 +360,7 @@ class ClusterPage:
                 st.session_state[key] -= 1
         
         with tussen:
-            st.write( str(st.session_state[key] +1) + "/"+ str(last_page +1) +" (" + str(len(colstoUse)) +" resultaten)")
+            st.write( str(st.session_state[key] +1) + "/"+ str(last_page +1) +" (" + str(len(colstoUse)) +" results)")
 
         # Get start and end indices of the next page of the dataframe
         start_idx = st.session_state[key] * N 
@@ -294,14 +371,14 @@ class ClusterPage:
 
     def show(self): 
         with self.canvas.container(): 
-            st.title("Gevonden Clusters")
+            st.title("Found Clusters")
 
             sort_clusters = st.selectbox(
-            'Sorteer clusters op:',
-            ('Aantal records in cluster', 'Cluster confidence score'))
+            'Sort clusters on:',
+            ('Amount of records in a cluster', 'Cluster confidence score'))
             if sort_clusters == 'Cluster confidence score':
                 st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: x.cluster_confidence, reverse=True)
-            if sort_clusters == 'Aantal records in cluster':
+            if sort_clusters == 'Amount of records in a cluster':
                 st.session_state["list_of_cluster_view"] = sorted(st.session_state["list_of_cluster_view"], key=lambda x: len(x.records_df), reverse=True)
 
             for cv in st.session_state["list_of_cluster_view"]:
@@ -348,7 +425,9 @@ class ClusterPage:
         gb1.configure_selection('multiple',use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True, pre_selected_rows= [0,1])
         gb1.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
         gridOptions = gb1.build()
-        _ = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="VALUE_CHANGED", height=min(MIN_HEIGHT + len(cv.records_df) * ROW_HEIGHT, MAX_HEIGHT))
+        data_clustercard = AgGrid(cv.records_df, gridOptions=gridOptions, enable_enterprise_modules=False, update_mode="SELECTION_CHANGED", height=min(MIN_HEIGHT + len(cv.records_df) * ROW_HEIGHT, MAX_HEIGHT), key=f'before_{cv.cluster_id}')
+
+        cv.selected_rows = data_clustercard['selected_rows']
         
         st.write("Verander naar")
 
@@ -359,7 +438,7 @@ class ClusterPage:
             gb2.configure_side_bar()
             gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
             gridOptions = gb2.build()
-            grid = AgGrid(cv.new_row, gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
+            grid = AgGrid(cv.new_row, gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT), key=f'after_{cv.cluster_id}')
             cv.set_new_row(grid["data"])
 
         with colB:
@@ -385,6 +464,7 @@ class ZinggClusterView:
         self.cluster_low = round(cluster_low, 4)
         self.cluster_high = round(cluster_high, 4)
         self.new_row = new_row
+        self.selected_rows = pd.DataFrame(columns=records_df.columns)
 
     def set_new_row(self, new_row):
         # keep the values of self.new_row for columns that are not in new_row

@@ -28,13 +28,11 @@ div.css-ocqkz7{
 .materialcard > div > div > iframe{
     overflow: scroll !important;
     max-width: 93% !important;
-    height: 100%;
 }
 
 .materialcard > div > div > div > div > div > div > iframe{
     overflow: scroll !important;
     max-width: 93% !important;
-    height: 100%;
 }
 
 /* .materialcard > div > div:nth-of-type(3) > iframe{

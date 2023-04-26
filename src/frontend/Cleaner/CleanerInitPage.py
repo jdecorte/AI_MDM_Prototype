@@ -68,7 +68,7 @@ class CleanerInitPage:
             ], default=1)
 
         if chosen_tab == "1":
-            st.header('Ingeladen Dataset:')
+            st.header('Loaded dataset:')
             self._show_ag_grid()
 
         if chosen_tab == "2":
@@ -276,7 +276,7 @@ class CleanerInitPage:
         st.session_state["list_of_fuzzy_cluster_view"] = list_of_fuzzy_clusters
 
         if list_of_fuzzy_clusters != []:
-            st.header("Gevonden clusters:")
+            st.header("Found clusters:")
             st.write("")
             st.write("")
             sub_rows_to_use = self. _create_pagination(
@@ -287,7 +287,7 @@ class CleanerInitPage:
             if st.button("Bevestig clusters"):
                 self._merge_clusters(st.session_state["list_of_cluster_view"])
         else:
-            st.markdown("**Geen clusters gevonden**")
+            st.markdown("**No clusters have been found**")
 
     def _create_pagination(self, key, cols_to_use, N):
         # A variable to keep track of which product we are currently displaying
@@ -299,13 +299,13 @@ class CleanerInitPage:
         # Add a next button and a previous button
         prev, _, tussen, _, next, _ = st.columns([3, 1, 2, 1, 3, 2])
 
-        if next.button("Volgende resultaten"):
+        if next.button("Next results"):
             if st.session_state[key] + 1 > last_page:
                 st.session_state[key] = 0
             else:
                 st.session_state[key] += 1
 
-        if prev.button("Vorige resultaten"):
+        if prev.button("Previous results"):
             if st.session_state[key] - 1 < 0:
                 st.session_state[key] = last_page
             else:
