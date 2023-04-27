@@ -66,14 +66,14 @@ class InitPage:
 
             st.markdown("**Selected:**")
             if st.session_state['dedupe_type_dict'] == {}:
-                st.write("U heeft nog geen kolommen gekozen")
+                st.write("You haven't chosen any columns yet")
             else:
                 st.write(st.session_state["dedupe_type_dict"])
 
     def _show_format_for_dedupe(self):
         colA, colB, colC = st.columns([3,3,8])
         with colA:
-            selected_col = st.selectbox('Kolom:', st.session_state["dataframe"].columns)
+            selected_col = st.selectbox('Column:', st.session_state["dataframe"].columns)
 
         with colB:
             selected_type = st.selectbox('Type:', DeDupeTypesEnum._member_names_)
@@ -88,7 +88,7 @@ class InitPage:
     def _show_format_for_zingg(self):
         colA, colB, colC = st.columns([3,3,8])
         with colA:
-            selected_col = st.selectbox('Kolom:', st.session_state["dataframe"].columns)
+            selected_col = st.selectbox('Column:', st.session_state["dataframe"].columns)
 
         with colB:
             selected_type = st.selectbox('Type:', ZinggTypesEnum._member_names_)

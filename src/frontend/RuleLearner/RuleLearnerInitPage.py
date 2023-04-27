@@ -133,47 +133,47 @@ class RuleLearnerInitPage:
             if chosen_tab == "2":
                 colA, colB, _, colC = st.columns([3, 4, 1, 8])
                 with colB:
-                    v = st.selectbox('Default Voorwaarde:', [e.value for e in DroppingEnum])
+                    v = st.selectbox('Default Condition:', [e.value for e in DroppingEnum])
                     w = st.text_input("Waarde")
 
                     colA_1, colB_1 = st.columns(2)
                     with colA_1:
-                        button = st.button("Add/Change Default Voorwaarde")
+                        button = st.button("Add/Change Default Condition")
                         if button:
                             if v and w:
                                 preview_default_to_show[v] = w
                     with colB_1:
-                        button2 = st.button("Remove Default Voorwaarde")
+                        button2 = st.button("Remove Default Condition")
                         if button2:
                             if v:
                                 del preview_default_to_show[v]
 
                 with colC:
-                    st.subheader("Kolomspecifieke Dropping Options:")
+                    st.subheader("Column-specific Dropping Options:")
 
                     kolom_specific = None
                     col1, col2, col3 = st.columns(3)
                     with col1:
                         kolom_specific = st.selectbox(
-                            'Kolom:',
+                            'Column:',
                             [e for e in st.session_state["dataframe"].columns])
                     with col2:
                         vw_specific = st.selectbox(
-                            'Voorwaarde:',
+                            'Condition:',
                             [e.value for e in DroppingEnum])
                     with col3:
                         value_specific = st.text_input("Value")
 
                     colC_1, colC_2, _ = st.columns([4, 4, 14])
                     with colC_1:
-                        buttonC_1 = st.button("Add Voorwaarde")
+                        buttonC_1 = st.button("Add Condition")
                         if buttonC_1:
                             if kolom_specific and vw_specific and value_specific:
                                 if kolom_specific not in preview_total_to_show:
                                     preview_total_to_show[kolom_specific] = {}
                                 preview_total_to_show[kolom_specific][vw_specific] = value_specific
                     with colC_2:
-                        buttonC_2 = st.button("Remove Voorwaarde")
+                        buttonC_2 = st.button("Remove Condition")
                         if buttonC_2:
                             if vw_specific and kolom_specific:
                                 del preview_total_to_show[kolom_specific][vw_specific]
@@ -183,7 +183,7 @@ class RuleLearnerInitPage:
                     st.write(preview_default_to_show)
 
                     use_default = st.checkbox(
-                        'Maak gebruik van default voorwaarden',
+                        'Use default conditions',
                         value=True)
                     temp_dict = {key: preview_default_to_show.copy()
                                 for key in st.session_state["dataframe"].columns}
@@ -207,7 +207,7 @@ class RuleLearnerInitPage:
                                     preview_total_to_show[k] = {}
                                 preview_total_to_show[k].pop(v1, None)
 
-                st.subheader("Opties die zullen worden toegepast:")
+                st.subheader("Options that will be applied:")
                 st.write(preview_total_to_show)
 
             if chosen_tab == "3":
@@ -220,7 +220,7 @@ class RuleLearnerInitPage:
                         'Binning methode:',
                         [e.value for e in BinningEnum], key="kolom_default_binning")                    
                     use_default_binning = st.checkbox(
-                        'Maak gebruik van default voorwaarden',
+                        'Maak gebruik van default Condition',
                         value=False,
                         key="checkbox_default_binning")
                     temp_dict_binning = {key: default_binning_option
@@ -235,12 +235,12 @@ class RuleLearnerInitPage:
                                 del preview_total_to_show_binning[k]
 
                 with colB_binning:
-                    st.subheader("Kolomspecifieke Binning Options:")
+                    st.subheader("Column-specific Binning Options:")
                     kolom_specific_binnig = None
                     col1, col2, col3 = st.columns(3)
                     with col1:
                         kolom_specific_binnig = st.selectbox(
-                            'Kolom:',
+                            'Column:',
                             [e for e in st.session_state["dataframe"].columns],
                             key="Kolom_Binning")
                     with col2:
@@ -259,10 +259,10 @@ class RuleLearnerInitPage:
                             if k in preview_total_to_show_binning:
                                 del preview_total_to_show_binning[kolom_specific_binnig]
 
-                st.subheader("Opties die zullen worden toegepast:")
+                st.subheader("Options that will be applied:")
                 st.write(preview_total_to_show_binning)
 
-            if st.button("Analyseer Data"):
+            if st.button("Analyse Data"):
                 rule_finding_config = RuleFindingConfig(
                     rule_length=st.session_state["rule_length"],
                     min_support=st.session_state["min_support"],

@@ -41,13 +41,13 @@ class RuleLearnerSummaryRulesPage:
         with self.canvas.container():
 
             st.title("Rule Learning")
-            st.header("Gevonden Regels:")
+            st.header("Found Rules:")
 
             col_t1, _, col_t2 = st.columns([8, 1, 12])
 
             with col_t1:
                 # Stukje voor de selectionFinder
-                st.subheader("Kies regels om te gebruiken voor suggesties:")
+                st.subheader("Choose rules to give suggestions:")
                 if "list_of_rule_string" in st.session_state:
                     pre_selected = json.loads(st.session_state["list_of_rule_string"])
                 else:
@@ -83,13 +83,13 @@ class RuleLearnerSummaryRulesPage:
                 colsug1, colsug2, _ = st.columns([1, 1, 2])
                 with colsug1:
                     select_all_rules_btn = st.button(
-                        'Selecteer Alle',
+                        'Select all rules',
                         on_click=StateManager.turn_state_button_true,
                         args=("select_all_rules_btn",))
                     # Verder moet er niks gebeuren
 
                 with colsug2:
-                    find_suggestions_btn = st.button('Geef Suggesties')
+                    find_suggestions_btn = st.button('Give Suggestions')
                     if find_suggestions_btn:
                         st.session_state['suggesties_df'] = \
                             self.handler.get_suggestions_given_dataframe_and_column_rules(
@@ -101,10 +101,10 @@ class RuleLearnerSummaryRulesPage:
                         st.experimental_rerun()
 
             with col_t2:
-                st.subheader("Meer info over regel:")
-                more_info = st.selectbox('Regel:', st.session_state["gevonden_rules_dict"].keys())
+                st.subheader("More info about the rule:")
+                more_info = st.selectbox('Rule:', st.session_state["gevonden_rules_dict"].keys())
                 if more_info:
-                    st.write("Gevonden Mapping:")
+                    st.write("Found Mapping:")
                     cr = st.session_state["gevonden_rules_dict"][more_info]
                     gb2 = GridOptionsBuilder.from_dataframe(cr.value_mapping)
                     _ = AgGrid(
@@ -120,7 +120,7 @@ class RuleLearnerSummaryRulesPage:
                         columns_auto_size_mode=ColumnsAutoSizeMode.NO_AUTOSIZE
                     )
 
-                    st.markdown("**Rijen die NIET voldoen aan mapping:**")
+                    st.markdown("**Rows that do not comply with the found mapping:**")
                     gb3 = GridOptionsBuilder.from_dataframe(st.session_state['dataframe'].iloc[cr.idx_to_correct])
                     _ = AgGrid(
                         st.session_state['dataframe'].iloc[cr.idx_to_correct],
@@ -135,26 +135,26 @@ class RuleLearnerSummaryRulesPage:
                         columns_auto_size_mode=ColumnsAutoSizeMode.NO_AUTOSIZE
                     )
 
-            st.header("Valideer eigen regel:")
+            st.header("Validate own rule:")
 
             col_b1, col_b2, col_b3 = st.columns([4, 4, 1])
 
             with col_b1:
                 ant_set = st.multiselect(
-                    'Kies de antecedentenset',
+                    'Choose the antecedent set',
                     st.session_state["dataframe"].columns
                     )
 
             with col_b2:
                 con_set = st.selectbox(
-                    'Kies de consequent kolom',
+                    'Choose the consequent column',
                     st.session_state["dataframe"].columns)
 
             with col_b3:
                 st.write(" ")
                 st.write(" ")
                 validate_own_rule_btn = st.button(
-                    "Valideer eigen regel",
+                    "Valiate own rule",
                     on_click=StateManager.turn_state_button_true,
                     args=("validate_own_rule_btn",))
 
@@ -171,10 +171,10 @@ class RuleLearnerSummaryRulesPage:
                     st.write("Confidence:")
                     st.write(found_rule.confidence)
                 with col_bb2:
-                    st.write("Best mogelijke Mapping:")
+                    st.write("Most likely mapping:")
                     st.write(found_rule.value_mapping)
                 with col_bb3:
-                    st.markdown("**Rijen die NIET voldoen aan mapping:**")
+                    st.markdown("**Rows that do not comply with the found mapping:**")
                     # st.write(found_rule.idx_to_correct)
                     gb4 = GridOptionsBuilder.from_dataframe(
                         st.session_state['dataframe'].iloc[found_rule.idx_to_correct])
@@ -194,11 +194,11 @@ class RuleLearnerSummaryRulesPage:
 
                 with col_bb4:
                     add_own_rule_btn = st.button(
-                        "Voeg eigen regel toe voor suggesties",
+                        "Add own rule for suggestions",
                         on_click=StateManager.turn_state_button_true,
                         args=("add_own_rule_btn",))
                     calculate_entropy_btn = st.button(
-                        "Bereken entropy voor specifieke regel",
+                        "Calculate entropy for specific rule",
                         on_click=StateManager.turn_state_button_true,
                         args=("calculate_entropy_btn",))
 

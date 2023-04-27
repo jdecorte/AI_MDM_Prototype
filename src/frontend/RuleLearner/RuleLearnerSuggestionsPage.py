@@ -22,7 +22,7 @@ class RuleLearnerSuggestionsPage:
                 st.markdown("**Er zijn geen suggesties gevonden**")
                 return
 
-            st.header("Suggesties voor de doorgegeven regels:")     
+            st.header("Suggestions for the selected rules:")     
             df_with_predictions = df_with_predictions[
                 df_with_predictions.columns.drop(
                     list(df_with_predictions.filter(
@@ -60,7 +60,7 @@ class RuleLearnerSuggestionsPage:
                 enable_enterprise_modules=False
             )
 
-            colb0, colb1, colb2, colb3 = st.columns([2, 2, 1, 4])
+            colb3, colb0, colb1, colb2,  = st.columns([1, 2, 1, 4])
 
             with colb0:
                 apply_suggestions = st.button(
@@ -88,7 +88,7 @@ class RuleLearnerSuggestionsPage:
                     st.session_state["columns_affected_by_suggestion_application"] = list(set_of_cols)
 
             with colb1:
-                submitted = st.button("Bereken Regels opnieuw")                
+                submitted = st.button("Recalculate rules")                
                 if submitted:
                     # Get the rule_finding_config from the session_state
                     rule_finding_config = st.session_state["rule_finding_config"]
@@ -132,11 +132,11 @@ class RuleLearnerSuggestionsPage:
             with colb3:
                 # Select all button
                 select_all_rules_btn = st.button(
-                    'Selecteer Alle',
+                    'Select all',
                     on_click=StateManager.turn_state_button_true,
                     args=("select_all_suggestions_btn",))
 
-            if st.session_state["apply_suggestions"]:
+            if apply_suggestions:
                 st.header("Aangepaste dataset:")
                 rows_selected = []
 

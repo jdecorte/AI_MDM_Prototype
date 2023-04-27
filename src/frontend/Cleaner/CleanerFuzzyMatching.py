@@ -12,8 +12,7 @@ class CleanerFuzzyMatchingRedirectPage:
         st.session_state['fuzzy_clusters'] = self.handler.dedupe_get_clusters()
 
         if st.session_state['fuzzy_clusters'] == {}:
-            st.error('Er konden geen waarden in de kolom worden gevonden die' +
-                     ' op elkaar lijken', icon="🚨")
+            st.error('There are no values to be found that are similar to each other', icon="🚨")
 
         cluster_view_dict = {}
         for k, v in st.session_state['fuzzy_clusters'].items():
