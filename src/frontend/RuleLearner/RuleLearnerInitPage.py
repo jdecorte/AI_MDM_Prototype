@@ -69,13 +69,22 @@ class RuleLearnerInitPage:
             st.title("Rule Learning")
             DatasetDisplayerComponent().show(st.session_state["dataframe"])
             # # Default values:
-            default_rule_length = 3
-            default_min_support = 0.0001
-            default_lift = 1.0
-            default_confidence = 0.95
-            default_filtering_string = FiltererEnum.Z_SCORE
-            default_binning_option = {}
-            default_dropping_options = {}
+            if "rule_finding_config" not in st.session_state:
+                default_rule_length = 3
+                default_min_support = 0.0001
+                default_lift = 1.0
+                default_confidence = 0.95
+                default_filtering_string = FiltererEnum.C_METRIC
+                default_binning_option = {}
+                default_dropping_options = {}
+            else:
+                default_rule_length = st.session_state["rule_finding_config"].rule_length
+                default_min_support = st.session_state["rule_finding_config"].min_support
+                default_lift = st.session_state["rule_finding_config"].lift
+                default_confidence = st.session_state["rule_finding_config"].confidence
+                default_filtering_string = st.session_state["rule_finding_config"].filtering_string
+                default_binning_option = st.session_state["binning_option"]
+                default_dropping_options = st.session_state["dropping_options"]
 
             preview_default_to_show = self._create_default_dropping_dict(default_dropping_options)
             if "dropping_options" in st.session_state:
@@ -134,7 +143,7 @@ class RuleLearnerInitPage:
                 colA, colB, _, colC = st.columns([3, 4, 1, 8])
                 with colB:
                     v = st.selectbox('Default Condition:', [e.value for e in DroppingEnum])
-                    w = st.text_input("Waarde")
+                    w = st.text_input("Default Value:")
 
                     colA_1, colB_1 = st.columns(2)
                     with colA_1:
@@ -217,10 +226,10 @@ class RuleLearnerInitPage:
                     st.subheader("Default Binning Option:")
 
                     default_binning_option = st.selectbox(
-                        'Binning methode:',
+                        'Binning method:',
                         [e.value for e in BinningEnum], key="kolom_default_binning")                    
                     use_default_binning = st.checkbox(
-                        'Maak gebruik van default Condition',
+                        'Use the default condition',
                         value=False,
                         key="checkbox_default_binning")
                     temp_dict_binning = {key: default_binning_option
@@ -245,10 +254,10 @@ class RuleLearnerInitPage:
                             key="Kolom_Binning")
                     with col2:
                         specific_binnig = st.selectbox(
-                            'Binning methode:',
+                            'Binning method:',
                             [e.value for e in BinningEnum])
 
-                    colC_1_binning, colC_2_binning, _ = st.columns([4, 4, 14])
+                    colC_1_binning, colC_2_binning, _ = st.columns([5, 7, 14])
                     with colC_1_binning:
                         buttonC_1_binning = st.button("Add Binning")
                         if buttonC_1_binning:

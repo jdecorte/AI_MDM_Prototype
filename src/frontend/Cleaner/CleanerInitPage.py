@@ -364,6 +364,6 @@ class CleanerInitPage:
 
         with colC:
             # st.write("Verander naar")
-            new_value = st.text_input('Nieuwe waarde', value=cv.new_cell_value, key=f'new_value_{cv.cluster_id}')
+            new_value = st.text_input('New value', value=cv.new_cell_value, key=f'new_value_{cv.cluster_id}')
             cv.set_new_cell_value(new_value)
             
