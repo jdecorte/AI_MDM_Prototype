@@ -171,7 +171,7 @@ class ZinggLabelPage:
                 gb1 = GridOptionsBuilder.from_dataframe(grouped_df[[c for c in grouped_df.columns if c in fields]])
                 gb1.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
                 gridOptions = gb1.build()
-                _ = AgGrid(grouped_df[[c for c in grouped_df.columns if c in fields]], gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + len(grouped_df[[c for c in grouped_df.columns if c in fields]]) * ROW_HEIGHT, MAX_HEIGHT))
+                _ = AgGrid(grouped_df[[c for c in grouped_df.columns if c in fields]], gridOptions=gridOptions, enable_enterprise_modules=False, height=min(MIN_HEIGHT + len(grouped_df[[c for c in grouped_df.columns if c in fields]]) * ROW_HEIGHT, MAX_HEIGHT), key="grid_"+z_cluster_id)
 
             with colRight: 
                 if grouped_df['z_prediction'].mean() > 0:
