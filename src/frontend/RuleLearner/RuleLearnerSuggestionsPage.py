@@ -4,6 +4,7 @@ from st_aggrid import GridOptionsBuilder, AgGrid
 from src.frontend.StateManager import StateManager
 from src.frontend.Handler.IHandler import IHandler
 import config as cfg
+import hashlib
 
 
 class RuleLearnerSuggestionsPage:
@@ -19,7 +20,7 @@ class RuleLearnerSuggestionsPage:
 
             # Controleer of er wel suggesties gevonden zijn
             if df_with_predictions.shape[0] == 0:
-                st.markdown("**Er zijn geen suggesties gevonden**")
+                st.markdown("**There are no more suggestions**")
                 return
 
             st.header("Suggestions for the selected rules:")     
@@ -51,7 +52,7 @@ class RuleLearnerSuggestionsPage:
                 groupSelectsFiltered=True)
             response_selection_suggestion_finder = AgGrid(
                 df_with_predictions,
-                height=150,
+                height=350,
                 editable=False,
                 gridOptions=gb1.build(),
                 data_return_mode="filtered_and_sorted",
@@ -61,6 +62,8 @@ class RuleLearnerSuggestionsPage:
             )
 
             colb3, colb0, colb1, colb2,  = st.columns([1, 2, 1, 4])
+
+            aangepaste_dataset = st.container()
 
             with colb0:
                 apply_suggestions = st.button(
@@ -87,6 +90,30 @@ class RuleLearnerSuggestionsPage:
 
                     st.session_state["columns_affected_by_suggestion_application"] = list(set_of_cols)
 
+                    with aangepaste_dataset:
+                        st.info('Changes have been applied to the dataset! Press the "Recalculate rules" button to see what impact your changes have on the rules.')
+                        st.header("Modified dataset:")
+                        rows_selected = []
+
+                        for idx, row in enumerate(suggestions_rows_selected):
+                            rows_selected.append(int(list_of_df_idx[idx]))
+
+                        gb22 = GridOptionsBuilder.from_dataframe(st.session_state["temp_dataframe"])
+                        gb22.configure_side_bar()
+                        # gb22.configure_selection('multiple', pre_selected_rows=rows_selected)
+                        # gb22.configure_default_column(
+                        #     groupable=True,
+                        #     value=True,
+                        #     enableRowGroup=True,
+                        #     aggFunc="sum",
+                        #     editable=False)
+                        gridOptions = gb22.build()
+                        _ = AgGrid(
+                                st.session_state["temp_dataframe"],
+                                gridOptions=gridOptions,
+                                enable_enterprise_modules=True, height=350, key="aangepaste_dataset")
+
+
             with colb1:
                 submitted = st.button("Recalculate rules")                
                 if submitted:
@@ -94,6 +121,9 @@ class RuleLearnerSuggestionsPage:
                     rule_finding_config = st.session_state["rule_finding_config"]
 
                     json_rule_finding_config = rule_finding_config.to_json()
+
+                    # recalculate unique storage id
+                    st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['temp_dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
                     self.handler.recalculate_column_rules(
                         old_df_in_json=st.session_state["dataframe"].to_json(),
@@ -105,17 +135,17 @@ class RuleLearnerSuggestionsPage:
 
                     cfg.logger.debug("Recalculate rules done")
 
-                    # Nieuwe dataframe, betekent sowieso dat current_session gelijk zal zijn aan 1:
-                    st.session_state['dataframe'] = st.session_state['temp_dataframe'].copy()
-                    st.session_state["current_seq"] = 1
-
                     # Restore state van de aangemaakte file in de session_map
                     st.session_state["session_map"] = self.handler.get_session_map(
-                        st.session_state['dataframe'].to_json())
+                        st.session_state['temp_dataframe'].to_json())
                     StateManager.restore_state(
                         **{"handler": self.handler,
                            "file_path": st.session_state["session_map"]["1"]["rules"],
                            "chosen_seq": "1"})
+                    
+                    # Nieuwe dataframe, betekent sowieso dat current_session gelijk zal zijn aan 1:
+                    st.session_state['dataframe'] = st.session_state['temp_dataframe'].copy()
+                    st.session_state["current_seq"] = 1
 
                     st.experimental_rerun()
 
@@ -123,7 +153,7 @@ class RuleLearnerSuggestionsPage:
                 # Download de temp_dataframe
                 if "columns_affected_by_suggestion_application" in st.session_state:
                     st.download_button(
-                        label="Download aangepaste dataset",
+                        label="Download modified dataset",
                         data=st.session_state["temp_dataframe"].to_csv(index=False).encode('utf-8'),
                         file_name=f'new_{st.session_state["dataframe_name"]}',
                         mime='text/csv',
@@ -136,24 +166,24 @@ class RuleLearnerSuggestionsPage:
                     on_click=StateManager.turn_state_button_true,
                     args=("select_all_suggestions_btn",))
 
-            if apply_suggestions:
-                st.header("Aangepaste dataset:")
-                rows_selected = []
+            # if apply_suggestions:
+            #     st.header("Modified dataset:")
+            #     rows_selected = []
 
-                for idx, row in enumerate(suggestions_rows_selected):
-                    rows_selected.append(int(list_of_df_idx[idx]))
+            #     for idx, row in enumerate(suggestions_rows_selected):
+            #         rows_selected.append(int(list_of_df_idx[idx]))
 
-                gb = GridOptionsBuilder.from_dataframe(st.session_state["temp_dataframe"])
-                gb.configure_side_bar()
-                gb.configure_selection('multiple', pre_selected_rows=rows_selected)
-                gb.configure_default_column(
-                    groupable=True,
-                    value=True,
-                    enableRowGroup=True,
-                    aggFunc="sum",
-                    editable=False)
-                gridOptions = gb.build()
-                _ = AgGrid(
-                        st.session_state["temp_dataframe"],
-                        gridOptions=gridOptions,
-                        enable_enterprise_modules=True)
+            #     gb = GridOptionsBuilder.from_dataframe(st.session_state["temp_dataframe"])
+            #     gb.configure_side_bar()
+            #     gb.configure_selection('multiple', pre_selected_rows=rows_selected)
+            #     gb.configure_default_column(
+            #         groupable=True,
+            #         value=True,
+            #         enableRowGroup=True,
+            #         aggFunc="sum",
+            #         editable=False)
+            #     gridOptions = gb.build()
+            #     _ = AgGrid(
+            #             st.session_state["temp_dataframe"],
+            #             gridOptions=gridOptions,
+            #             enable_enterprise_modules=True)

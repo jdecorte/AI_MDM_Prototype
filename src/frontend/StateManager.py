@@ -3,6 +3,7 @@ import json
 import hashlib
 from src.shared.Views.ColumnRuleView import ColumnRuleView
 from src.frontend.Handler.IHandler import IHandler
+from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 
 class StateManager:
     def __init__(self) -> None:
@@ -46,8 +47,19 @@ class StateManager:
         if part_to_check_functionality == "Rule-learning":
             if part_to_check_state == 'rules':
                 st.session_state["gevonden_rules_dict"] = {k: ColumnRuleView.parse_from_json(v) for k,v in past_result_content_dict["result"].items()}
-                for k,v in json.loads(past_result_content_dict["params"]["rule_finding_config_in_json"]).items():
+                t_dict = json.loads(past_result_content_dict["params"]["rule_finding_config_in_json"])
+                for k,v in t_dict.items():
                     st.session_state[k] = v
+
+                st.session_state["rule_finding_config"] = RuleFindingConfig(
+                    rule_length=t_dict["rule_length"],
+                    min_support=t_dict["min_support"],
+                    lift=t_dict["lift"],
+                    confidence=t_dict["confidence"],
+                    filtering_string=t_dict["filtering_string"],
+                    dropping_options=t_dict["dropping_options"],
+                    binning_option=t_dict["binning_option"]
+                    )
                 st.session_state["currentState"] = "BekijkRules"
                 
             if part_to_check_state == 'suggestions':

@@ -239,7 +239,7 @@ def main():
             st.session_state["current_seq"] = str(max([int(x) for x in st.session_state['session_map'].keys()], default=0)+1)
 
         # CREATE BUTTONS FROM SESSION_MAP TODO
-        button_container =  st.sidebar.expander("Voorgaande Resultaten op deze dataset", expanded=False)
+        button_container =  st.sidebar.expander("Previous results on the dataset", expanded=False)
 
         for seq,method_dict in st.session_state['session_map'].items():
             button_container.write(seq)

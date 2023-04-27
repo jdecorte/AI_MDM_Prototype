@@ -240,6 +240,7 @@ class DomainController(FlaskView):
             session_id: str,
             file_name_of_results: str,
             is_in_local: bool):
+        session_id = str(session_id)
         path = f"storage/{unique_storage_id}/{md5_of_dataframe}/session_map.json"
         # Create file if it doesn't exist
         if not os.path.exists(path):
@@ -475,21 +476,24 @@ class DomainController(FlaskView):
         dict_of_column_rules = self._verify_in_local_storage(
             md5_to_check=md5_of_config,
             md5_of_dataframe=md5_of_old_dataframe,
-            unique_storage_id=unique_storage_id,
+            # VERY HOT PATCH
+            unique_storage_id='None-'+md5_of_old_dataframe,
+            # unique_storage_id=unique_storage_id,
             seq="",
             save_file=False)
 
         # Pas deze aan: Meest domme manier is om get_column_rule_from_string aan te roepen en op die manier deze te vervangen
-        for k in dict_of_column_rules.keys():
-            ks = k.split(" => ")
-            ksr = ks[1]
-            ksl_list = ks[0].split(",")
-            kstotal = [ksr] + ksl_list
-            for e in json.loads(affected_columns):
-                if e in kstotal:
-                    dict_of_column_rules[k] = self.get_column_rule_from_string(
-                        dataframe_in_json=new_df_in_json, rule_string=k)
-                    break
+        if dict_of_column_rules is not None:
+            for k in dict_of_column_rules.keys():
+                ks = k.split(" => ")
+                ksr = ks[1]
+                ksl_list = ks[0].split(",")
+                kstotal = [ksr] + ksl_list
+                for e in json.loads(affected_columns):
+                    if e in kstotal:
+                        dict_of_column_rules[k] = self.get_column_rule_from_string(
+                            dataframe_in_json=new_df_in_json, rule_string=k)
+                        break
 
         # Maak save_dump
         save_dump = json.dumps(
