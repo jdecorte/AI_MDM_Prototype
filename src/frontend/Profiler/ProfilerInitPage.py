@@ -15,7 +15,7 @@ class ProfilerInitPage:
         self.handler = handler
 
     def show_pandas_profiling(self):
-        st.header('Data Profiling Report is succesvol gegenereerd hieronder')
+        st.header('The Data Profiling report is getting generated. Please wait...')
         pr = ProfileReport(st.session_state["dataframe"])
         st_profile_report(pr)
 
@@ -36,8 +36,8 @@ class ProfilerInitPage:
 
         # Show a link to the report
         text = "Link to the report"
-        st.header('Data Profiling Report is gegenereerd.' +
-                  'Klik op de link hieronder om het te bekijken')
+        st.header('The Data Profiling report is getting generated. ' +
+                  'Click on the link below to view it')
         # The url starts from WWW_ROOT, so we need to go up one level
         # in order to get rid of "aimdmtool" in the url
         url = os.path.join("..", "reports", f"{md5_hash}.html")

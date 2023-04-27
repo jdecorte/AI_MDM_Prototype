@@ -64,7 +64,7 @@ class CleanerInitPage:
             stx.TabBarItemData(id=1, title="Dataset", description=""),
             stx.TabBarItemData(id=2, title="Structure Detection", description=""),
             stx.TabBarItemData(id=3, title="Fuzzy Matching", description=""),
-            stx.TabBarItemData(id=4, title="Data Cleaning", description="")
+            stx.TabBarItemData(id=4, title="Cleaning Pipelines", description="")
             ], default=1)
 
         if chosen_tab == "1":
