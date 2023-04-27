@@ -292,7 +292,7 @@ class ZinggClusterPage:
             gb2.configure_side_bar()
             gb2.configure_default_column(groupable=False, value=True, enableRowGroup=True, aggFunc="sum", editable=True)
             gridOptions2 = gb2.build()
-            grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row ,update_mode="VALUE_CHANGED", gridOptions=gridOptions2, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT),key=f'after_{cv.cluster_id}')
+            grid = AgGrid(cv.new_row.drop(pks, axis=1) if dedupe_check == self.TEXT_DEDUP_FALSE else cv.new_row ,update_mode="VALUE_CHANGED", gridOptions=gridOptions2, enable_enterprise_modules=False, height=min(MIN_HEIGHT + ROW_HEIGHT, MAX_HEIGHT))
             
             cv.set_new_row(grid["data"])
 
