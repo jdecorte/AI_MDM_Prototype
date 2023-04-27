@@ -285,7 +285,7 @@ class CleanerInitPage:
             for idx, cv in enumerate(sub_rows_to_use):
                 self._create_cluster_card(idx, cv)
             if st.button("Bevestig clusters"):
-                self._merge_clusters(st.session_state["list_of_cluster_view"])
+                self._merge_clusters(st.session_state["list_of_fuzzy_cluster_view"],chosen_column )
         else:
             st.markdown("**No clusters have been found**")
 
@@ -323,22 +323,21 @@ class CleanerInitPage:
         # Index into the sub dataframe
         return cols_to_use[start_idx:end_idx]
 
-    def _merge_clusters(self, list_of_cluster_view):
+    def _merge_clusters(self, list_of_cluster_view, column_name):
         # Itereer over alle clusterview
         # df_to_use  = st.session_state["dataframe"]
         merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
         for cv in list_of_cluster_view:
-            if st.session_state[f'merge_{cv.cluster_id}']:
-                merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
-                # merged_df.append(cv.new_row, ignore_index=True)
-                # merged_df.loc[len(merged_df)] = cv.new_row
+            if st.session_state[f'fuzzy_merge_{cv.cluster_id}']:
+                for e in list(cv.distinct_values_in_cluster['values']):
+                    # Look for value e in the dataframe in column column_name
+                    # and replace it with the value in the cluster
+                    st.session_state["dataframe"][column_name] = st.session_state["dataframe"][column_name].replace(
+                        e, cv.new_cell_value)
             else:
-                for _, row in cv.records_df.iterrows():
-                    merged_df = pd.concat([merged_df, row], ignore_index=True)
-                    # merged_df.append(row, ignore_index=True)
+                pass
 
         st.session_state["currentState"] = None
-        st.session_state["dataframe"] = merged_df
         st.experimental_rerun()
 
     def _create_cluster_card(self, idx, cv):
