@@ -7,6 +7,9 @@ import hashlib
 import os
 import config as cfg
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class ProfilerInitPage:
 
@@ -16,13 +19,13 @@ class ProfilerInitPage:
 
     def show_pandas_profiling(self):
         st.header('The Data Profiling report is getting generated. Please wait...')
-        pr = ProfileReport(st.session_state["dataframe"])
+        pr = ProfileReport(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
         st_profile_report(pr)
 
     def show_dataprep_profiling(self):
 
         # Create MD5 of the dataframe to use as a filename
-        df = st.session_state["dataframe"]
+        df = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]
         md5_hash = hashlib.md5(df.to_string().encode("utf-8")).hexdigest()
 
         # Make path to directory to store the reports.

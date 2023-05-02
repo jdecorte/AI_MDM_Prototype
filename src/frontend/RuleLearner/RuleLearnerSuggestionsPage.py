@@ -6,6 +6,9 @@ from src.frontend.Handler.IHandler import IHandler
 import config as cfg
 import hashlib
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class RuleLearnerSuggestionsPage:
 
@@ -72,7 +75,7 @@ class RuleLearnerSuggestionsPage:
                 # de sidebar gaan beginnen aanpassen
 
                 if apply_suggestions:
-                    st.session_state['temp_dataframe'] = st.session_state['dataframe'].copy()
+                    st.session_state['temp_dataframe'] = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].copy()
                     suggestions_rows_selected = response_selection_suggestion_finder['selected_rows']
                     list_of_df_idx = df_with_predictions.index
                     set_of_cols = set()
@@ -123,10 +126,10 @@ class RuleLearnerSuggestionsPage:
                     json_rule_finding_config = rule_finding_config.to_json()
 
                     # recalculate unique storage id
-                    st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['temp_dataframe'].to_json().encode('utf-8')).hexdigest()}"
+                    st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] = f"{st.session_state[VarEnum.gb_SESSION_ID.value]}-{hashlib.md5(st.session_state['temp_dataframe'].to_json().encode('utf-8')).hexdigest()}"
 
                     self.handler.recalculate_column_rules(
-                        old_df_in_json=st.session_state["dataframe"].to_json(),
+                        old_df_in_json=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json(),
                         new_df_in_json=st.session_state["temp_dataframe"].to_json(),
                         rule_finding_config_in_json=json_rule_finding_config,
                         affected_columns=st.session_state["columns_affected_by_suggestion_application"])                  
@@ -136,16 +139,16 @@ class RuleLearnerSuggestionsPage:
                     cfg.logger.debug("Recalculate rules done")
 
                     # Restore state van de aangemaakte file in de session_map
-                    st.session_state["session_map"] = self.handler.get_session_map(
+                    st.session_state[VarEnum.gb_SESSION_MAP.value] = self.handler.get_session_map(
                         st.session_state['temp_dataframe'].to_json())
                     StateManager.restore_state(
                         **{"handler": self.handler,
-                           "file_path": st.session_state["session_map"]["1"]["rules"],
+                           "file_path": st.session_state[VarEnum.gb_SESSION_MAP.value]["1"]["rules"],
                            "chosen_seq": "1"})
                     
                     # Nieuwe dataframe, betekent sowieso dat current_session gelijk zal zijn aan 1:
-                    st.session_state['dataframe'] = st.session_state['temp_dataframe'].copy()
-                    st.session_state["current_seq"] = 1
+                    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = st.session_state['temp_dataframe'].copy()
+                    st.session_state[VarEnum.gb_CURRENT_SEQUENCE_NUMBER.value] = 1
 
                     st.experimental_rerun()
 
@@ -155,7 +158,7 @@ class RuleLearnerSuggestionsPage:
                     st.download_button(
                         label="Download modified dataset",
                         data=st.session_state["temp_dataframe"].to_csv(index=False).encode('utf-8'),
-                        file_name=f'new_{st.session_state["dataframe_name"]}',
+                        file_name=f'new_{st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value]}',
                         mime='text/csv',
                     )
 

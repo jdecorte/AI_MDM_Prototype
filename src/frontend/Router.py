@@ -19,6 +19,9 @@ from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
 from src.frontend.Deduplication.LabelPage import ZinggLabelPage
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class Router:
     def __init__(self, handler:IHandler) -> None:
         self.handler = handler
@@ -44,65 +47,65 @@ class Router:
     def route_data_extraction(self):
         canvas = st.empty()
                 
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             DataExtractorInitPage(canvas=canvas, handler=self.handler).show()
 
     def route_dataprep_data_profiling(self):
         canvas = st.empty()
         
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             ProfilerInitPage(canvas=canvas, handler=self.handler).show_dataprep_profiling()
 
     def route_pandas_data_profiling(self):
         canvas = st.empty()
 
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             ProfilerInitPage(canvas=canvas, handler=self.handler).show_pandas_profiling()
 
     def route_data_cleaning(self):
         canvas = st.empty()
 
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             CleanerInitPage(canvas=canvas, handler=self.handler).show()
 
     def route_rule_learning(self):
         canvas = st.empty()
                 
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             RuleLearnerInitPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "BekijkRules":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "BekijkRules":
             RuleLearnerSummaryRulesPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "BekijkSuggesties":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "BekijkSuggesties":
             RuleLearnerSuggestionsPage(canvas=canvas, handler=self.handler).show()
 
     def route_dedupe(self):
         canvas = st.empty()
                 
-        if st.session_state["currentState"] == None:
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == None:
             InitPage(canvas=canvas, handler=self.handler).show()
         
-        if st.session_state["currentState"] == "LabelRecords":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "LabelRecords":
             DeDupeLabelPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "LabelRecords_get_record_pair":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "LabelRecords_get_record_pair":
             DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_get_record_pair()
 
-        if st.session_state["currentState"] == "LabelRecords_get_all_unmarked_pairs":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "LabelRecords_get_all_unmarked_pairs":
             ZinggLabelPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "LabelRecords_mark_record_pair":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "LabelRecords_mark_record_pair":
             DeDupeRedirectLabelPage(canvas=canvas, handler=self.handler).redirect_mark_record_pair()
 
-        if st.session_state["currentState"] == "ViewClusters_get_clusters":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "ViewClusters_get_clusters":
             DeDupeClusterRedirectPage(canvas=canvas, handler=self.handler).redirect_get_clusters()
 
-        if st.session_state["currentState"] == "Zingg_ViewClusters_get_clusters":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "Zingg_ViewClusters_get_clusters":
             ZinggClusterRedirectPage(canvas=canvas, handler=self.handler).redirect_get_clusters()
 
-        if st.session_state["currentState"] == "ViewClusters":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "ViewClusters":
             ClusterPage(canvas=canvas, handler=self.handler).show()
 
-        if st.session_state["currentState"] == "Zingg_ViewClusters":
+        if st.session_state[VarEnum.gb_CURRENT_STATE.value] == "Zingg_ViewClusters":
             ZinggClusterPage(canvas=canvas, handler=self.handler).show()

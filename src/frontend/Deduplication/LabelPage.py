@@ -5,6 +5,9 @@ import math
 
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class DeDupeRedirectLabelPage:
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
@@ -12,12 +15,12 @@ class DeDupeRedirectLabelPage:
 
     def redirect_get_record_pair(self):
         st.session_state['record_pair'] = self.handler.dedupe_next_pair()
-        st.session_state['currentState'] = "LabelRecords"
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords"
         st.experimental_rerun()
 
     def redirect_mark_record_pair(self):
         self.handler.dedupe_mark_pair(st.session_state['marked_record_pair'])
-        st.session_state['currentState'] = "LabelRecords_get_record_pair"
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_get_record_pair"
         st.experimental_rerun()
         
 
@@ -33,28 +36,28 @@ class DeDupeLabelPage:
             duplicate_btn = st.button('Duplicaat')
             if duplicate_btn:
                 st.session_state['marked_record_pair'] = (st.session_state['record_pair'], "match")
-                st.session_state["currentState"] = "LabelRecords_mark_record_pair"
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_mark_record_pair"
                 st.experimental_rerun()
 
         with colCC:
             not_duplicate_btn = st.button('Geen duplicaat')
             if not_duplicate_btn:
                 st.session_state['marked_record_pair'] = (st.session_state['record_pair'], "distinct")
-                st.session_state["currentState"] = "LabelRecords_mark_record_pair"
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_mark_record_pair"
                 st.experimental_rerun()
 
         with colDD:
             unsure_duplicate_btn = st.button('Onzeker')
             if unsure_duplicate_btn:
                 st.session_state['marked_record_pair'] = (st.session_state['record_pair'], "unsure")
-                st.session_state["currentState"] = "LabelRecords_mark_record_pair"
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_mark_record_pair"
                 st.experimental_rerun()
 
         with colEE:
             finish_label_btn = st.button('Ga verder naar clustering')
             if finish_label_btn:
                 self.handler.dedupe_train()         
-                st.session_state["currentState"] = "ViewClusters_get_clusters" 
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "ViewClusters_get_clusters" 
                 st.experimental_rerun()       
 
     def show(self): 
@@ -146,7 +149,7 @@ class ZinggLabelPage:
             response = self.handler.run_zingg_phase("train").json()
         
             if response == "200":
-                st.session_state["currentState"] = "Zingg_ViewClusters_get_clusters"
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "Zingg_ViewClusters_get_clusters"
                 st.experimental_rerun()
             else:
                 with reponse_error_container:

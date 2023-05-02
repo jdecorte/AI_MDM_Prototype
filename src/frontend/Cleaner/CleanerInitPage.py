@@ -6,6 +6,9 @@ from src.frontend.Cleaner.CleanerFuzzyMatching import FuzzyClusterView
 import re
 import extra_streamlit_components as stx
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class CleanerInitPage:
 
@@ -19,11 +22,11 @@ class CleanerInitPage:
         MAX_HEIGHT = 500
         ROW_HEIGHT = 60
 
-        gb = GridOptionsBuilder.from_dataframe(st.session_state["dataframe"])
+        gb = GridOptionsBuilder.from_dataframe(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
         gb.configure_side_bar()
         gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
         gridOptions = gb.build()
-        _ = AgGrid(st.session_state["dataframe"], gridOptions=gridOptions, enable_enterprise_modules=True, height=min(MIN_HEIGHT + len(st.session_state["dataframe"]) * ROW_HEIGHT, MAX_HEIGHT))
+        _ = AgGrid(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value], gridOptions=gridOptions, enable_enterprise_modules=True, height=min(MIN_HEIGHT + len(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]) * ROW_HEIGHT, MAX_HEIGHT))
 
     def _show_unique_values(self, series):
         # find all the unique characters in the values of the column and show the value counts
@@ -125,7 +128,7 @@ class CleanerInitPage:
             with colI_1:
                 chosen_column = st.selectbox(
                     "Select the column that you want to clean:",
-                    st.session_state["dataframe"].columns)
+                    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
 
             with colI_3:
                 st.write("")
@@ -133,7 +136,7 @@ class CleanerInitPage:
                 if st.button("Apply pipeline to column"):
                     st.session_state['cleaned_column_from_pipeline'] = pd.DataFrame(
                         self.handler.clean_dataframe_dataprep(
-                            dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(), 
+                            dataframe_in_json=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_frame().to_json(), 
                             custom_pipeline=st.session_state['pipeline']))
                     # transform the index to int and sort it
                     st.session_state['cleaned_column_from_pipeline'].index = st.session_state['cleaned_column_from_pipeline'].index.astype(int)
@@ -144,7 +147,7 @@ class CleanerInitPage:
 
                 if st.button("Save column"):
                     # save the cleaned column to the dataframe
-                    st.session_state["dataframe"][chosen_column] = st.session_state['cleaned_column_from_pipeline'][chosen_column]
+                    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column] = st.session_state['cleaned_column_from_pipeline'][chosen_column]
                     st.write("Column saved")
 
             with colG_1:
@@ -157,12 +160,12 @@ class CleanerInitPage:
         with colA_1:
             chosen_column = st.selectbox(
                 "Select a column to detect the structure of the values",
-                st.session_state["dataframe"].columns)
+                st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
         with colA_2:
             extra_exceptions = "".join(st.multiselect(
                 "Select the characters that you want to keep in the pattern",
                 self._show_unique_values(
-                    st.session_state["dataframe"][chosen_column])["character"].tolist()))
+                    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column])["character"].tolist()))
         with colA_3:
             st.write("")
             st.write("")
@@ -170,7 +173,7 @@ class CleanerInitPage:
 
         simple_repr = pd.Series(
             self.handler.structure_detection(
-                st.session_state["dataframe"][chosen_column].to_json(),
+                st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_json(),
                 extra_exceptions, compress))
 
         series_for_aggrid = (simple_repr.value_counts(normalize=True)
@@ -206,7 +209,7 @@ class CleanerInitPage:
                                     if len(response_patterns["selected_rows"]) > 0
                                     else None)
                 if selected_pattern is not None:
-                    df_for_aggrid2 = st.session_state['dataframe'][simple_repr.values == selected_pattern]
+                    df_for_aggrid2 = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][simple_repr.values == selected_pattern]
 
                     if st.session_state["idx_of_structure_df"] is None:
                         st.session_state["idx_of_structure_df"] = list(df_for_aggrid2.index)
@@ -224,7 +227,7 @@ class CleanerInitPage:
 
                     if st.button("Save"):
                         # Replace values in the dataframe with the (possibly) new values
-                        st.session_state['dataframe'].loc[grid['data'].index] = grid['data']
+                        st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].loc[grid['data'].index] = grid['data']
                         st.experimental_rerun()
             else:
                 st.session_state["idx_of_structure_df"] = None
@@ -235,7 +238,7 @@ class CleanerInitPage:
         with colC_1:
             chosen_column = st.selectbox(
                 "Select the column that you want to cluster:",
-                st.session_state["dataframe"].columns)
+                st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
         with colC_2:
             cluster_method = st.selectbox(
                 "Select the cluster method",
@@ -270,8 +273,8 @@ class CleanerInitPage:
         list_of_fuzzy_clusters = []
 
         for cluster_id, list_of_values in self.handler.fuzzy_match_dataprep(
-                dataframe_in_json=st.session_state["dataframe"][chosen_column].to_frame().to_json(),
-                df_name=st.session_state["dataframe_name"],
+                dataframe_in_json=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_frame().to_json(),
+                df_name=st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value],
                 col=chosen_column,
                 cluster_method=cluster_method,
                 ngram=n_gram,
@@ -282,7 +285,7 @@ class CleanerInitPage:
             # Create a view for each cluster
             list_of_fuzzy_clusters.append(FuzzyClusterView(
                 cluster_id, list_of_values,
-                st.session_state["dataframe"][chosen_column]))
+                st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column]))
         st.session_state["list_of_fuzzy_cluster_view"] = list_of_fuzzy_clusters
 
         if list_of_fuzzy_clusters != []:
@@ -335,19 +338,19 @@ class CleanerInitPage:
 
     def _merge_clusters(self, list_of_cluster_view, column_name):
         # Itereer over alle clusterview
-        # df_to_use  = st.session_state["dataframe"]
-        merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
+        # df_to_use  = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]
+        merged_df = pd.DataFrame(columns=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
         for cv in list_of_cluster_view:
             if st.session_state[f'fuzzy_merge_{cv.cluster_id}']:
                 for e in list(cv.distinct_values_in_cluster['values']):
                     # Look for value e in the dataframe in column column_name
                     # and replace it with the value in the cluster
-                    st.session_state["dataframe"][column_name] = st.session_state["dataframe"][column_name].replace(
+                    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][column_name] = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][column_name].replace(
                         e, cv.new_cell_value)
             else:
                 pass
 
-        st.session_state["currentState"] = None
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
         st.experimental_rerun()
 
     def _create_cluster_card(self, idx, cv):

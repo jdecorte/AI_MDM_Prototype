@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 # HELP FUNCTIONS
 def makeItalic(s):
     return "*"+str(s)+"*"

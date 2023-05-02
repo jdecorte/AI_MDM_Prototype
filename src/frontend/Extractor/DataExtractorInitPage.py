@@ -7,6 +7,9 @@ from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDispl
 from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.cluster import KMeans
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class DataExtractorInitPage:
     def __init__(self, canvas, handler):
         self.canvas = canvas
@@ -32,10 +35,10 @@ class DataExtractorInitPage:
 #         # else:
 #         #     st.write(f"Count: {count}" + " is odd")
 
-#         DatasetDisplayerComponent().show(st.session_state["dataframe"])
+#         DatasetDisplayerComponent().show(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
 
 #         st.subheader("Stap 1: Selecteer een kolom waarop je wil filteren")
-#         chosen_column = st.selectbox("Kies een kolom", st.session_state["dataframe"].columns)
+#         chosen_column = st.selectbox("Kies een kolom", st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
 
 #         st.subheader("Stap 2: Maak voor elke waarde een vector-representatie aan, dit kan volgens verschillende methodes:")
 #         st.write("Syntactische methoden: TF-IDF, Levenstein, Afiine Gap, etc;")
@@ -55,13 +58,13 @@ class DataExtractorInitPage:
 #                 chosen_ngram_range = st.slider("Kies een ngram range", 1, 5, (1, 5))
 
 #         tfidf_vectorizer=TfidfVectorizer(use_idf=True, analyzer = chosen_ngrams, ngram_range=chosen_ngram_range) 
-#         tfidf_vectorizer_vectors = tfidf_vectorizer.fit_transform(st.session_state["dataframe"][chosen_column].to_list())
+#         tfidf_vectorizer_vectors = tfidf_vectorizer.fit_transform(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_list())
 
 #         st.write("Shape van de vector(Dus de output-shape van de TF-IDF vectorizer): " + str(tfidf_vectorizer_vectors.shape))
 
 #         st.subheader("Voorbeeldje van een waarde naar zo'n vector:")
 #         st.write("Voor de waarde: ")
-#         st.write(st.session_state["dataframe"][chosen_column][1])
+#         st.write(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column][1])
 #         st.write("Vector: ")
 #         st.write(str(tfidf_vectorizer_vectors[1]))
 
@@ -79,7 +82,7 @@ class DataExtractorInitPage:
 
 #             # Create a dataframe with the cluster labels and the values of the column
 #             kmeans = self._kmeans_cluster(chosen_n_clusters, tfidf_vectorizer_vectors)
-#             df = pd.DataFrame({'cluster': kmeans.labels_, 'value': st.session_state["dataframe"][chosen_column].to_list()})
+#             df = pd.DataFrame({'cluster': kmeans.labels_, 'value': st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_list()})
 #             st.write(df)
         
 
@@ -114,18 +117,18 @@ class DataExtractorInitPage:
 #     chosen_n_clusters = 200
 
 #     tfidf_vectorizer=TfidfVectorizer(use_idf=True, analyzer = chosen_ngrams, ngram_range=chosen_ngram_range) 
-#     tfidf_vectorizer_vectors = tfidf_vectorizer.fit_transform(st.session_state["dataframe"][chosen_column].to_list())
+#     tfidf_vectorizer_vectors = tfidf_vectorizer.fit_transform(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_list())
 
 #     print("Shape van de vector(Dus de output-shape van de TF-IDF vectorizer): " + str(tfidf_vectorizer_vectors.shape))
 #     print("Voorbeeldje van een waarde naar zo'n vector:")
-#     print("Voor de waarde: " + st.session_state["dataframe"][chosen_column][1])
+#     print("Voor de waarde: " + st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column][1])
 #     print("Vector: ")
 #     print(str(tfidf_vectorizer_vectors[1]))
 #     print("Aantal niet 0 waarden: " + str(tfidf_vectorizer_vectors[0].count_nonzero()))
 
 #     print("Cluster de vectors met behulp een clustering algoritme, bijvoorbeeld K-means")
 #     kmeans = KMeans(chosen_n_clusters).fit(tfidf_vectorizer_vectors)
-#     df = pd.DataFrame({'cluster': kmeans.labels_, 'value': st.session_state["dataframe"][chosen_column].to_list()})
+#     df = pd.DataFrame({'cluster': kmeans.labels_, 'value': st.session_state[VarEnum.sb_LOADED_DATAFRAME.value][chosen_column].to_list()})
 #     df.to_csv("kobe.csv")
 
 

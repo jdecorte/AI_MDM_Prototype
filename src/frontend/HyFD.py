@@ -13,6 +13,9 @@ import numpy as np
 import sys
 import streamlit as st
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 def list_duplicates(seq):
     tally = defaultdict(list)
     for i,item in enumerate(seq):

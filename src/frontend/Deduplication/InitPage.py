@@ -7,6 +7,8 @@ from src.frontend.Deduplication.Enums.ZinggTypesEnum import ZinggTypesEnum
 from src.frontend.Handler.IHandler import IHandler
 from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDisplayerComponent
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
 
 class InitPage:
     def __init__(self, canvas, handler) -> None:
@@ -17,7 +19,7 @@ class InitPage:
 
         with self.canvas.container(): 
             st.title("Deduplication")
-            DatasetDisplayerComponent().show(st.session_state["dataframe"])
+            DatasetDisplayerComponent().show(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
             
             # Select if you want to use Zingg or Dedupe
             # st.subheader("Select an algorithm to use for deduplication")
@@ -35,7 +37,7 @@ class InitPage:
             
             # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
             if st.session_state['dedupe_type_dict'] == {}:
-                st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state["dataframe"].columns}
+                st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
 
 
             col_1, col_3,_ = st.columns([1,2,8])
@@ -55,13 +57,13 @@ class InitPage:
                     start_training_btn = st.button("Start training")
                     if start_training_btn:
                         if st.session_state['selected_deduplication_method'] == "Dedupe":
-                            self.handler.create_deduper_object(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
-                            st.session_state["currentState"] = "LabelRecords_get_record_pair" 
+                            self.handler.create_deduper_object(st.session_state["dedupe_type_dict"], st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json())
+                            st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_get_record_pair" 
                             st.experimental_rerun()    
                         
                         if st.session_state['selected_deduplication_method'] == "Zingg":
-                            self.handler.prepare_zingg(st.session_state["dedupe_type_dict"], st.session_state["dataframe"].to_json())
-                            st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs" 
+                            self.handler.prepare_zingg(st.session_state["dedupe_type_dict"], st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json())
+                            st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_get_all_unmarked_pairs" 
                             st.experimental_rerun()
 
             st.markdown("**Selected:**")
@@ -73,7 +75,7 @@ class InitPage:
     def _show_format_for_dedupe(self):
         colA, colB, colC = st.columns([3,3,8])
         with colA:
-            selected_col = st.selectbox('Column:', st.session_state["dataframe"].columns)
+            selected_col = st.selectbox('Column:', st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
 
         with colB:
             selected_type = st.selectbox('Type:', DeDupeTypesEnum._member_names_)
@@ -88,7 +90,7 @@ class InitPage:
     def _show_format_for_zingg(self):
         colA, colB, colC = st.columns([3,3,8])
         with colA:
-            selected_col = st.selectbox('Column:', st.session_state["dataframe"].columns)
+            selected_col = st.selectbox('Column:', st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
 
         with colB:
             selected_type = st.selectbox('Type:', ZinggTypesEnum._member_names_)

@@ -6,6 +6,9 @@ import requests
 import streamlit as st
 import config as cfg
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class RemoteHandler(IHandler):
 
     def __init__(self, connection_string) -> None:
@@ -20,7 +23,7 @@ class RemoteHandler(IHandler):
         return {k: ColumnRuleView.parse_from_json(v)
                 for (k, v) in requests.post(
                     f"{self.connection_string}/get_all_column_rules_from_df_and_config",
-                    cookies={"session_flask": st.session_state['session_flask']},
+                    cookies={"session_flask": st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]},
                     data=json.dumps(data)).json().items()}
 
     def get_column_rule_from_string(self,dataframe_in_json, rule_string):
@@ -36,7 +39,7 @@ class RemoteHandler(IHandler):
         data["seq"] = seq
         return json.dumps(requests.post(
             f"{self.connection_string}/get_suggestions_given_dataframe_and_column_rules",
-            cookies={"session_flask": st.session_state['session_flask']},
+            cookies={"session_flask": st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]},
             data=json.dumps(data)).json())
 
     def fetch_file_from_filepath(self, filepath:str):
@@ -49,7 +52,7 @@ class RemoteHandler(IHandler):
         data["dataframe_in_json"] = dataframe_in_json
         return requests.post(
             f"{self.connection_string}/get_session_map",
-            cookies={"session_flask": st.session_state['session_flask']},
+            cookies={"session_flask": st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]},
             data=json.dumps(data)).json()
 
     def recalculate_column_rules(
@@ -66,7 +69,7 @@ class RemoteHandler(IHandler):
 
         requests.post(
             f"{self.connection_string}/recalculate_column_rules",
-            cookies={"session_flask": st.session_state['session_flask']},
+            cookies={"session_flask": st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]},
             data=json.dumps(data))
         
 
@@ -75,55 +78,55 @@ class RemoteHandler(IHandler):
         data = {}
         data["dedupe_type_dict"] = dedupe_type_dict
         data["dedupe_data"] = dedupe_data
-        requests.post(f"{self.connection_string}/create_deduper_object", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        requests.post(f"{self.connection_string}/create_deduper_object", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=json.dumps(data))
 
     def dedupe_next_pair(self) -> json:
-        return requests.get(f"{self.connection_string}/dedupe_next_pair", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/dedupe_next_pair", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
     
     def dedupe_mark_pair(self, labeled_pair) -> json:
         data = {}
         data["labeled_pair"] = labeled_pair
         temp_data = json.dumps(data)
-        requests.post(f"{self.connection_string}/dedupe_mark_pair", cookies={"session_flask" : st.session_state['session_flask']}, data=temp_data)
+        requests.post(f"{self.connection_string}/dedupe_mark_pair", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=temp_data)
 
     def dedupe_get_stats(self) -> json:
-        return requests.get(f"{self.connection_string}/dedupe_get_stats", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/dedupe_get_stats", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
 
     def dedupe_train(self):
         data = {}
-        requests.post(f"{self.connection_string}/dedupe_train", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        requests.post(f"{self.connection_string}/dedupe_train", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=json.dumps(data))
 
     def dedupe_get_clusters(self):
-        return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/dedupe_get_clusters", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
     
     # ZINGG
     def prepare_zingg(self, dedupe_type_dict, dedupe_data) -> json:
         data = {}
         data["dedupe_type_dict"] = dedupe_type_dict
         data["dedupe_data"] = dedupe_data
-        return requests.post(f"{self.connection_string}/prepare_zingg", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        return requests.post(f"{self.connection_string}/prepare_zingg", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=json.dumps(data))
 
     def run_zingg_phase(self, phase) -> json:
         data = {}
         data["phase"] = phase
-        return requests.post(f"{self.connection_string}/run_zingg_phase", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        return requests.post(f"{self.connection_string}/run_zingg_phase", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=json.dumps(data))
     
     def zingg_clear(self) -> json:
-        return requests.post(f"{self.connection_string}/zingg_clear", cookies={"session_flask" : st.session_state['session_flask']})
+        return requests.post(f"{self.connection_string}/zingg_clear", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]})
 
     def zingg_unmarked_pairs(self) -> json:
-        return requests.get(f"{self.connection_string}/zingg_unmarked_pairs", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/zingg_unmarked_pairs", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
     
     def zingg_mark_pairs(self, marked_df) -> json:
         data = {}
         data["marked_df"] = marked_df
-        return requests.post(f"{self.connection_string}/zingg_mark_pairs", cookies={"session_flask" : st.session_state['session_flask']}, data=json.dumps(data))
+        return requests.post(f"{self.connection_string}/zingg_mark_pairs", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}, data=json.dumps(data))
 
     def zingg_get_stats(self) -> json:
-        return requests.get(f"{self.connection_string}/zingg_get_stats", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/zingg_get_stats", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
     
     def zingg_get_clusters(self) -> json:
-        return requests.get(f"{self.connection_string}/zingg_get_clusters", cookies={"session_flask" : st.session_state['session_flask']}).json()
+        return requests.get(f"{self.connection_string}/zingg_get_clusters", cookies={"session_flask" : st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]}).json()
     
     # DATA CLEANING
     def clean_dataframe_dataprep(self,dataframe_in_json, custom_pipeline) -> json:

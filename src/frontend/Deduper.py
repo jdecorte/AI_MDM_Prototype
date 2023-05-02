@@ -10,6 +10,9 @@ from os.path import join
 from streamlit.components.v1 import html
 from src.frontend import Helper
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 # PARAMETERS
 data_path = "datasets"
 LR_dup_free = False
@@ -184,7 +187,7 @@ def initOneDedup(canvas, dataframe):
 
                         st.session_state["dubbelsDF"] = preddf
                         st.session_state["dubbelsCertainty"] = certainty
-                        st.session_state["currentState"] = "iterateDubbels"
+                        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "iterateDubbels"
 
 
 
@@ -326,7 +329,7 @@ def iterateDubbels(dataframe, preddf, certainty, canvas):
             terugDatasetForm =  st.form("terug_dataset_form")
             trgNaarDataset = terugDatasetForm.form_submit_button("<- Terug naar Dataset")
             if trgNaarDataset:
-                st.session_state["currentState"] = None
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
                 st.experimental_rerun()
 
         with col2:

@@ -22,6 +22,9 @@ import streamlit.components.v1 as components
 import websockets
 import config as cfg
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 def getOrCreateUID():
     if 'uid' not in st.session_state:
@@ -109,32 +112,32 @@ class WebsocketClient:
 
 
 def _reload_dataframe(uploaded_file):
-    t2 = st.session_state["dataframe"]
-    t3 = st.session_state["dataframe_name"]
-    t4 = st.session_state["session_flask"]
-    t5 = st.session_state["session_flask_local_id"]
-    seperator_input = st.session_state["seperator_input"]
-    t8 = st.session_state["session_map"]
-    t9 = st.session_state["type_handler_input"]
-    t10 = st.session_state["current_functionality"]
-    t11 = st.session_state["current_profiling"]
+    t2 = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]
+    t3 = st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value]
+    t4 = st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]
+    t5 = st.session_state[VarEnum.gb_SESSION_ID.value]
+    seperator_input = st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value]
+    t8 = st.session_state[VarEnum.gb_SESSION_MAP.value]
+    t9 = st.session_state[VarEnum.sb_TYPE_HANDLER.value]
+    t10 = st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value]
+    t11 = st.session_state[VarEnum.sb_CURRENT_PROFILING.value]
 
 
-    st.session_state = {}
-    # for key in st.session_state.keys():
-    #     del st.session_state[key]
+    # st.session_state = {}
+    for key in st.session_state.keys():
+        del st.session_state[key]
 
-    st.session_state["currentState"] = None
-    st.session_state["dataframe"] = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
-    st.session_state["dataframe_name"] = uploaded_file.name
-    st.session_state["session_flask_local_id"] = t5
-    st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
-    st.session_state["seperator_input"] = seperator_input
+    st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
+    st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')
+    st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value] = uploaded_file.name
+    st.session_state[VarEnum.gb_SESSION_ID.value] = t5
+    st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] = f"{st.session_state[VarEnum.gb_SESSION_ID.value]}-{hashlib.md5(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json().encode('utf-8')).hexdigest()}"
+    st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value] = seperator_input
 
-    st.session_state["session_map"] = t8
-    st.session_state["type_handler_input"] = t9
-    st.session_state["current_functionality"] = t10
-    st.session_state["current_profiling"] = t11
+    st.session_state[VarEnum.gb_SESSION_MAP.value] = t8
+    st.session_state[VarEnum.sb_TYPE_HANDLER.value] = t9
+    st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] = t10
+    st.session_state[VarEnum.sb_CURRENT_PROFILING.value] = t11
 
     st.experimental_rerun()
 
@@ -153,75 +156,80 @@ def set_to_local_storage(k, v):
 def main():
 
     # Pagina Stijl:
-    st.set_page_config(page_title="AI MDM Tool", layout = "wide") 
+    st.set_page_config(page_title=DialogEnum.gb_PAGE_TITLE.value, layout = "wide") 
     with open("src/frontend/Resources/css/style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
     # StateManagement init
     StateManager.initStateManagement()
     # Cookie Management
-    if st.session_state["dataframe"] is None and (st.session_state["session_flask"] is None):
-        if "session_flask_local_id" not in st.session_state:
-            url = cfg.configuration["WEBSOCKET_SERVER_URL"]
+    if st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] is None and (st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] is None):
+        if VarEnum.gb_SESSION_ID.value not in st.session_state:
+            url = cfg.configuration[VarEnum.cfg_WEBSOCKET_SERVER_URL.value]
             conn = injectWebsocketCode(hostPort=url, uid=getOrCreateUID())
-            ret = conn.getLocalStorageVal(key='session_flask')
+            ret = conn.getLocalStorageVal(key=VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value)
             if not ret:
                 temp_id = uuid.uuid4()                
-                _ = conn.setLocalStorageVal(key='session_flask', val=str(temp_id))
-                st.session_state["session_flask_local_id"] = temp_id
+                _ = conn.setLocalStorageVal(key=VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value, val=str(temp_id))
+                st.session_state[VarEnum.gb_SESSION_ID.value] = temp_id
             else:
-                st.session_state["session_flask_local_id"] = ret
+                st.session_state[VarEnum.gb_SESSION_ID.value] = ret
 
     # Limit session_flask_local_id to 20 characters to avoid problems with
     # very long file names later.
-    st.session_state["session_flask_local_id"] = \
-        f'{st.session_state["session_flask_local_id"]}'[:20]
+    st.session_state[VarEnum.gb_SESSION_ID.value] = \
+        f'{st.session_state[VarEnum.gb_SESSION_ID.value]}'[:20]
 
-    if st.session_state["dataframe"] is not None:
-        st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
+    if st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] is not None:
+        st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] = f"{st.session_state[VarEnum.gb_SESSION_ID.value]}-{hashlib.md5(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json().encode('utf-8')).hexdigest()}"
 
-    if st.session_state["currentState"] != None:
-        st.sidebar.button("Go back to previous phase", on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state["currentState"],))
+    if st.session_state[VarEnum.gb_CURRENT_STATE.value] != None:
+        st.sidebar.button(DialogEnum.sb_PREVIOUS_STATE_button.value, on_click=StateManager.go_back_to_previous_in_flow, args=(st.session_state[VarEnum.gb_CURRENT_STATE.value],))
 
     # Sidebar vullen met functionaliteit-mogelijkheden
-    st.session_state["current_functionality"] = st.sidebar.selectbox(
-        "Functionality:",
-        ("Data Profiling","Data Extraction","Data Cleaning", "Deduplication", "Rule-learning"), index=3
+    st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] = st.sidebar.selectbox(
+        DialogEnum.sb_FUNCTIONALITY_selectbox,
+        (DialogEnum.sb_FUNCTIONALITY_option_DATA_PROFILING.value,
+        DialogEnum.sb_FUNCTIONALITY_option_DATA_CLEANING.value,
+        DialogEnum.sb_FUNCTIONALITY_option_DATA_EXTRACTION.value,
+        DialogEnum.sb_FUNCTIONALITY_option_DEDUPLICATION.value,
+        DialogEnum.sb_FUNCTIONALITY_option_RULE_LEARNING.value),
+        index=3
     )
 
     # Extra opties voor data profiling
-    if st.session_state["current_functionality"] == "Data Profiling":
+    if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_DATA_PROFILING.value:
         profiling_radio = st.sidebar.radio(
-            "Data Profiling:",
-            ("Pandas Profiling", "Dataprep Profiling"), index=0, horizontal=True
+            DialogEnum.sb_DATA_PROFILING_radio.value,
+            (DialogEnum.sb_DATA_PROFILING_option_dataprep.value, DialogEnum.sb_DATA_PROFILING_option_pandas.value), index=0, horizontal=True
         )
-        st.session_state["current_profiling"] = profiling_radio
+        st.session_state[VarEnum.sb_CURRENT_PROFILING.value] = profiling_radio
 
     # Sidebar vullen met file-upload knop
     # st.sidebar.markdown(f"<h3>Remote handling van een dataset</h3>", unsafe_allow_html=True)
-    uploaded_file = st.sidebar.file_uploader("Choose a .csv file", key="inputOneDataSet")
+    uploaded_file = st.sidebar.file_uploader(DialogEnum.sb_UPLOAD_DATASET, key="inputOneDataSet")
 
     # Sidebar vullen met optionele seperator
     if uploaded_file:
-        with st.sidebar.expander("Optional seperator", expanded=False):
-            st.write("Aan te passen wanneer de seperator niet een ',' is.")
+        with st.sidebar.expander(DialogEnum.sb_OPTIONAL_SEPERATOR.value, expanded=False):
+            st.write(DialogEnum.sb_OPTIONAL_SEPERATOR_DESCRIPTION.value)
             col_sep_left, col_sep_right = st.columns([1,1])
             with col_sep_left:
-                st.session_state["seperator_input"] = st.text_input("Seperator", value=',')
+                st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value] = st.text_input(DialogEnum.sb_SEPERATOR.value, value=',')
             with col_sep_right:
                 st.write("")
                 st.write("")
-                flag_reload = st.button("Reload", key="reload_button")
+                flag_reload = st.button(DialogEnum.sb_RELOAD_BUTTON, key="reload_button")
                 if flag_reload:
                     _reload_dataframe(uploaded_file)
 
     # Sidebar vullen met Remote of local functionaliteit
     # type_handler_input = st.sidebar.radio(
     # "Type Handler:",
-    # ('Remote', 'Local'), horizontal=True, key="type_handler_input" )
+    # ('Remote', 'Local'), horizontal=True, key=VarEnum.sb_TYPE_HANDLER.value )
 
-    if st.session_state['type_handler_input'] == 'Remote':
-        pass
+    if st.session_state[VarEnum.sb_TYPE_HANDLER.value] == DialogEnum.sb_TYPE_HANDLER_option_REMOTE.value:
+        # pass
         # remote_url = st.sidebar.text_input('Remote Location', '127.0.0.1')
         # remote_port = st.sidebar.text_input('Port', '5000')       
         # handler = RemoteHandler(f"http://{remote_url}:{remote_port}")
@@ -231,20 +239,20 @@ def main():
     # handler = RemoteHandler(f"http://127.0.0.1:5000")
 
     if uploaded_file:
-        if st.session_state["dataframe_name"] != uploaded_file.name:
+        if st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value] != uploaded_file.name:
             _reload_dataframe(uploaded_file)
 
         # LOAD IN SESSION_MAP
-        st.session_state['session_map'] = handler.get_session_map(dataframe_in_json=st.session_state["dataframe"].to_json())
+        st.session_state[VarEnum.gb_SESSION_MAP.value] = handler.get_session_map(dataframe_in_json=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json())
 
         # CALCULATE CURRENT SEQ IF NOT ALREADY PRESENT
-        if "current_seq" not in st.session_state:
-            st.session_state["current_seq"] = str(max([int(x) for x in st.session_state['session_map'].keys()], default=0)+1)
+        if VarEnum.gb_CURRENT_SEQUENCE_NUMBER.value not in st.session_state:
+            st.session_state[VarEnum.gb_CURRENT_SEQUENCE_NUMBER.value] = str(max([int(x) for x in st.session_state[VarEnum.gb_SESSION_MAP.value].keys()], default=0)+1)
 
         # CREATE BUTTONS FROM SESSION_MAP TODO
-        button_container =  st.sidebar.expander("Previous results on the dataset", expanded=False)
+        button_container =  st.sidebar.expander(label=DialogEnum.sb_PREVIOUS_RESULTS.value, expanded=False)
 
-        for seq,method_dict in st.session_state['session_map'].items():
+        for seq,method_dict in st.session_state[VarEnum.gb_SESSION_MAP.value].items():
             button_container.write(seq)
             for method, file_name in method_dict.items():
                 button_container.write(method)
@@ -257,9 +265,9 @@ def main():
         # Toevoegen van download knop:
         # st.sidebar.button('Download huidige dataset')
         st.sidebar.download_button(
-                label="Download currently loaded dataset",
-                data=st.session_state["dataframe"].to_csv(index=False).encode('utf-8'),
-                file_name= f'new_{st.session_state["dataframe_name"]}',
+                label=DialogEnum.sb_DOWNLOAD_DATASET.value,
+                data=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_csv(index=False).encode('utf-8'),
+                file_name= f'new_{st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value]}',
                 mime='text/csv',
             )
         
@@ -267,18 +275,18 @@ def main():
 
         # Aanmaken van Router object:
         router = Router(handler=handler)
-        if st.session_state["current_functionality"] == "Data Profiling":
-            if profiling_radio == "Pandas Profiling":
+        if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_DATA_PROFILING.value:
+            if profiling_radio == DialogEnum.sb_DATA_PROFILING_option_pandas.value:
                 router.route_pandas_data_profiling()
-            if profiling_radio == "Dataprep Profiling":
+            if profiling_radio == DialogEnum.sb_DATA_PROFILING_option_dataprep.value:
                 router.route_dataprep_data_profiling()
-        if st.session_state["current_functionality"] == "Data Cleaning":
+        if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_DATA_CLEANING.value:
             router.route_data_cleaning()
-        if st.session_state["current_functionality"] == "Deduplication":
+        if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_DEDUPLICATION.value:
             router.route_dedupe()
-        if st.session_state["current_functionality"] == "Rule-learning":
+        if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_RULE_LEARNING.value:
             router.route_rule_learning()
-        if st.session_state["current_functionality"] == "Data Extraction":
+        if st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] == DialogEnum.sb_FUNCTIONALITY_option_DATA_EXTRACTION.value:
             router.route_data_extraction()
 
 if __name__ == "__main__":

@@ -5,6 +5,9 @@ from src.shared.Views.ColumnRuleView import ColumnRuleView
 from src.frontend.Handler.IHandler import IHandler
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class StateManager:
     def __init__(self) -> None:
         pass
@@ -18,20 +21,6 @@ class StateManager:
         st.session_state[id] = False
 
     @staticmethod
-    def clear_session_state():
-        # Only keep the session_flask and session_flask_local_id, delete the rest
-        tmp1 = st.session_state['session_flask_local_id']
-        tmp2 = st.session_state['session_flask']
-        tmp3 = st.session_state['seperator_input']
-        tmp4 = st.session_state['dataframe_name']
-        st.session_state = {}
-        st.session_state['session_flask_local_id'] = tmp1
-        st.session_state['session_flask'] = tmp2
-        st.session_state['seperator_input'] = tmp3
-        st.session_state['dataframe_name'] = tmp4
-
-
-    @staticmethod
     def restore_state(**kwargs) -> None:
         #file_string = kwargs["file_path"].split("\\")[1]
         file_string = kwargs["file_path"].split("/")[-1]
@@ -41,7 +30,7 @@ class StateManager:
         part_to_check_state = file_string.split('_')[1]
 
         # SET CURRENT_SEQ TO CHOSEN ONE
-        st.session_state["current_seq"] = kwargs["chosen_seq"]
+        st.session_state[VarEnum.gb_CURRENT_SEQUENCE_NUMBER.value] = kwargs["chosen_seq"]
 
         # Grote If statement
         if part_to_check_functionality == "Rule-learning":
@@ -60,14 +49,14 @@ class StateManager:
                     dropping_options=t_dict["dropping_options"],
                     binning_option=t_dict["binning_option"]
                     )
-                st.session_state["currentState"] = "BekijkRules"
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "BekijkRules"
                 
             if part_to_check_state == 'suggestions':
                 # Zoek de rules-file die hieraan gelinkt is, om zo ook de 
                 st.session_state["suggesties_df"] = json.dumps(past_result_content_dict["result"])
                 # FETCH PATH OF OTHER FILE FROM SESSION_MAP
-                StateManager.restore_state(**{"handler" : kwargs["handler"], "file_path": st.session_state["session_map"][kwargs["chosen_seq"]]["rules"], "chosen_seq": kwargs["chosen_seq"]})
-                st.session_state["currentState"] = "BekijkSuggesties"
+                StateManager.restore_state(**{"handler" : kwargs["handler"], "file_path": st.session_state[VarEnum.gb_SESSION_MAP.value][kwargs["chosen_seq"]]["rules"], "chosen_seq": kwargs["chosen_seq"]})
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "BekijkSuggesties"
             return
         return       
 
@@ -75,7 +64,7 @@ class StateManager:
     def go_back_to_previous_in_flow(current_state: str) -> None:
         # RULE LEARNER
         if current_state == "BekijkRules":
-            st.session_state["currentState"] = None
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
 
             # Verschillende knoppen vanop de pagina terug False maken
             st.session_state["validate_own_rule_btn"] = False
@@ -84,56 +73,56 @@ class StateManager:
             
             return
         if current_state == "BekijkSuggesties":
-            st.session_state["currentState"] = "BekijkRules"
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = "BekijkRules"
             return
 
         # DEDUPE
         if current_state == "LabelRecords":
-            st.session_state["currentState"] = None
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
             return
         if current_state == "ViewClusters":
-            st.session_state["currentState"] = "LabelRecords_get_record_pair"
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_get_record_pair"
             return   
         
         # ZINGG
         if current_state == "LabelRecords_get_all_unmarked_pairs":
-            st.session_state["currentState"] = None
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
             return
         
         if current_state == "Zingg_ViewClusters":
-            st.session_state["currentState"] = "LabelRecords_get_all_unmarked_pairs"
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = "LabelRecords_get_all_unmarked_pairs"
             return
 
     @staticmethod
     def initStateManagement():
 
-        if 'dataframe' not in st.session_state:
-            st.session_state['dataframe'] = None
+        if VarEnum.sb_LOADED_DATAFRAME.value not in st.session_state:
+            st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = None
             
         # SESSION
-        if 'session_flask' not in st.session_state:
-            st.session_state['session_flask'] = None
+        if VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value not in st.session_state:
+            st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] = None
 
-        if 'session_flask_local_id' not in st.session_state:
-            st.session_state['session_flask_local_id'] = None
+        if VarEnum.gb_SESSION_ID.value not in st.session_state:
+            st.session_state[VarEnum.gb_SESSION_ID.value] = None
 
-        if 'session_map' not in st.session_state:
-            st.session_state['session_map'] = None
+        if VarEnum.gb_SESSION_MAP.value not in st.session_state:
+            st.session_state[VarEnum.gb_SESSION_MAP.value] = None
 
-        if 'seperator_input' not in st.session_state:
-            st.session_state['seperator_input'] = None
+        if VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value not in st.session_state:
+            st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value] = None
 
         if 'profile_report' not in st.session_state:
             st.session_state['profile_report'] = None
             
-        if 'currentState' not in st.session_state:
-            st.session_state['currentState'] = None
+        if VarEnum.gb_CURRENT_STATE.value not in st.session_state:
+            st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
 
-        if 'current_functionality' not in st.session_state:
-            st.session_state['current_functionality'] = None
+        if VarEnum.sb_CURRENT_FUNCTIONALITY.value not in st.session_state:
+            st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] = None
 
-        if 'current_profiling' not in st.session_state:
-            st.session_state['current_profiling'] = None
+        if VarEnum.sb_CURRENT_PROFILING not in st.session_state:
+            st.session_state[VarEnum.sb_CURRENT_PROFILING.value] = None
 
         if 'currentRegel_LL' not in st.session_state:
             st.session_state['currentRegel_LL'] = None
@@ -153,11 +142,11 @@ class StateManager:
         if "AdviseerOpslaan" not in st.session_state:
             st.session_state["AdviseerOpslaan"] = False
 
-        if "dataframe_name" not in st.session_state:
-            st.session_state["dataframe_name"] = None
+        if VarEnum.sb_LOADED_DATAFRAME_NAME.value not in st.session_state:
+            st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value] = None
 
-        if "type_handler_input" not in st.session_state:
-            st.session_state["type_handler_input"] = "Remote"
+        if VarEnum.sb_TYPE_HANDLER.value not in st.session_state:
+            st.session_state[VarEnum.sb_TYPE_HANDLER.value] = DialogEnum.sb_TYPE_HANDLER_option_REMOTE.value
 
         # BUTTONS
 

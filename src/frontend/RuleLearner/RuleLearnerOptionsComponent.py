@@ -5,6 +5,9 @@ from src.shared.Enums.FiltererEnum import FiltererEnum
 from src.shared.Enums.BinningEnum import BinningEnum
 from src.shared.Enums.DroppingEnum import DroppingEnum
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class RuleLearnerOptionsComponent:
 
@@ -112,7 +115,7 @@ class RuleLearnerOptionsComponent:
                 with col1:
                     kolom_specific = st.selectbox(
                         'Column:',
-                        [e for e in st.session_state["dataframe"].columns])
+                        [e for e in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns])
                 with col2:
                     vw_specific = st.selectbox(
                         'Condition:',
@@ -142,7 +145,7 @@ class RuleLearnerOptionsComponent:
                     'Use the default dropping options',
                     value=True)
                 temp_dict = {key: preview_default_to_show.copy()
-                             for key in st.session_state["dataframe"].columns}
+                             for key in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
                 if use_default:
                     if preview_total_to_show is None:
                         preview_total_to_show = self._create_total_dropping_dict({})
@@ -180,7 +183,7 @@ class RuleLearnerOptionsComponent:
                     value=False,
                     key="checkbox_default_binning")
                 temp_dict_binning = {key: default_binning_option
-                                     for key in st.session_state["dataframe"].columns}
+                                     for key in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
 
                 if use_default_binning:
                     for k, v in temp_dict_binning.items():
@@ -197,7 +200,7 @@ class RuleLearnerOptionsComponent:
                 with col1:
                     kolom_specific_binnig = st.selectbox(
                         'Column:',
-                        [e for e in st.session_state["dataframe"].columns],
+                        [e for e in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns],
                         key="Kolom_Binning")
                 with col2:
                     specific_binnig = st.selectbox(

@@ -1,6 +1,9 @@
 import streamlit as st
 import config as cfg
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class CleanerFuzzyMatchingRedirectPage:
 
@@ -31,14 +34,14 @@ class CleanerFuzzyMatchingRedirectPage:
                     tmpList.append(e["record_id"])
                     accumulated_confidence += float(e["record_confidence"])
 
-                records = st.session_state["dataframe"].iloc[tmpList]
+                records = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].iloc[tmpList]
                 list_of_cluster_view.append(
                     FuzzyClusterView(k, accumulated_confidence/len(v),
                                      records, records.head(1)))
 
         st.session_state['list_of_cluster_view'] = list_of_cluster_view
 
-        st.session_state['currentState'] = "ViewClusters"
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "ViewClusters"
         st.experimental_rerun()
 
 

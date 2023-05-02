@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class DatasetDisplayerComponent: 
 
     def show(self, dataframe:pd.DataFrame):

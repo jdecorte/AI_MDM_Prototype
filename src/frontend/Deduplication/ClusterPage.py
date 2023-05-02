@@ -4,6 +4,9 @@ import numpy as np
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import hashlib
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 class DeDupeClusterRedirectPage:
     def __init__(self, canvas, handler) -> None:
         self.canvas = canvas
@@ -31,12 +34,12 @@ class DeDupeClusterRedirectPage:
                     tmpList.append(e["record_id"])
                     accumulated_confidence = accumulated_confidence + float(e["record_confidence"])
                 
-                records = st.session_state["dataframe"].iloc[tmpList]
+                records = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].iloc[tmpList]
                 list_of_cluster_view.append(DedupeClusterView(k,accumulated_confidence/len(v),records, records.head(1)))
         
         st.session_state['list_of_cluster_view'] = list_of_cluster_view
 
-        st.session_state['currentState'] = "ViewClusters"
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "ViewClusters"
         st.experimental_rerun()
 
 
@@ -70,7 +73,7 @@ class ZinggClusterRedirectPage:
 
         st.session_state['list_of_cluster_view'] = list_of_cluster_view
 
-        st.session_state['currentState'] = "Zingg_ViewClusters"
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = "Zingg_ViewClusters"
         st.experimental_rerun()
 
 class ZinggClusterPage:
@@ -79,29 +82,29 @@ class ZinggClusterPage:
     TEXT_DEDUP_TRUE = "deleted and replaced with one record:"
 
     def _reload_dataframe(self):
-        t2 = st.session_state["dataframe"]
-        t3 = st.session_state["dataframe_name"]
-        t4 = st.session_state["session_flask"]
-        t5 = st.session_state["session_flask_local_id"]
-        seperator_input = st.session_state["seperator_input"]
-        t8 = st.session_state["session_map"]
-        t9 = st.session_state["type_handler_input"]
-        t10 = st.session_state["current_functionality"]
-        t11 = st.session_state["current_profiling"]
+        t2 = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]
+        t3 = st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value]
+        t4 = st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value]
+        t5 = st.session_state[VarEnum.gb_SESSION_ID.value]
+        seperator_input = st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value]
+        t8 = st.session_state[VarEnum.gb_SESSION_MAP.value]
+        t9 = st.session_state[VarEnum.sb_TYPE_HANDLER.value]
+        t10 = st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value]
+        t11 = st.session_state[VarEnum.sb_CURRENT_PROFILING.value]
 
         st.session_state = {}
 
-        st.session_state["currentState"] = None
-        st.session_state["dataframe"] = t2
-        st.session_state["dataframe_name"] = t3
-        st.session_state["session_flask_local_id"] = t5
-        st.session_state["session_flask"] = f"{st.session_state['session_flask_local_id']}-{hashlib.md5(st.session_state['dataframe'].to_json().encode('utf-8')).hexdigest()}"
-        st.session_state["seperator_input"] = seperator_input
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
+        st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = t2
+        st.session_state[VarEnum.sb_LOADED_DATAFRAME_NAME.value] = t3
+        st.session_state[VarEnum.gb_SESSION_ID.value] = t5
+        st.session_state[VarEnum.gb_SESSION_ID_WITH_FILE_HASH.value] = f"{st.session_state[VarEnum.gb_SESSION_ID.value]}-{hashlib.md5(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json().encode('utf-8')).hexdigest()}"
+        st.session_state[VarEnum.sb_LOADED_DATAFRAME_SEPERATOR.value] = seperator_input
 
-        st.session_state["session_map"] = t8
-        st.session_state["type_handler_input"] = t9
-        st.session_state["current_functionality"] = t10
-        st.session_state["current_profiling"] = t11
+        st.session_state[VarEnum.gb_SESSION_MAP.value] = t8
+        st.session_state[VarEnum.sb_TYPE_HANDLER.value] = t9
+        st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] = t10
+        st.session_state[VarEnum.sb_CURRENT_PROFILING.value] = t11
 
         st.experimental_rerun()
     
@@ -147,7 +150,7 @@ class ZinggClusterPage:
         with self.canvas.container(): 
             st.title("Found Clusters")
             # Give which columns are primary keys
-            pks = st.multiselect("Select the columns that form primary key, they well be left alone during merging of records", st.session_state["dataframe"].columns)
+            pks = st.multiselect("Select the columns that form primary key, they well be left alone during merging of records", st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
 
             col0, col1 = st.columns([6,2])
             with col0:
@@ -190,7 +193,7 @@ class ZinggClusterPage:
                 
     def _merge_clusters(self, list_of_cluster_view, pks):
 
-        merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
+        merged_df = pd.DataFrame(columns=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
         for cv in list_of_cluster_view:
 
             # rows that are not-selected must be added to the merged_df, but left in their original form
@@ -226,14 +229,14 @@ class ZinggClusterPage:
                     merged_df = pd.concat([merged_df, row], ignore_index=True)
                     # merged_df.append(row, ignore_index=True)
 
-        st.session_state["currentState"] = None
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
         if set(['_selectedRowNodeInfo', 'exists']) <= set(list(merged_df.columns)):
             merged_df = merged_df.drop(columns=['_selectedRowNodeInfo', 'exists'])
 
         if set(['z_minScore', 'z_maxScore', 'z_cluster']) <= set(list(merged_df.columns)):
             merged_df = merged_df.drop(columns=['z_minScore', 'z_maxScore', 'z_cluster'])
 
-        st.session_state["dataframe"] = merged_df
+        st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = merged_df
         self._reload_dataframe()
 
     def _create_cluster_card(self, idx, cv, pks):
@@ -396,8 +399,8 @@ class ClusterPage:
                 
     def _merge_clusters(self, list_of_cluster_view):
         # Itereer over alle clusterview
-        # df_to_use  = st.session_state["dataframe"]
-        merged_df = pd.DataFrame(columns=st.session_state["dataframe"].columns)
+        # df_to_use  = st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]
+        merged_df = pd.DataFrame(columns=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns)
         for cv in list_of_cluster_view:
             if st.session_state[f'merge_{cv.cluster_id}']:
                 merged_df = pd.concat([merged_df, cv.new_row], ignore_index=True)
@@ -408,8 +411,8 @@ class ClusterPage:
                     merged_df = pd.concat([merged_df, row], ignore_index=True)
                     # merged_df.append(row, ignore_index=True)
 
-        st.session_state["currentState"] = None
-        st.session_state["dataframe"] = merged_df
+        st.session_state[VarEnum.gb_CURRENT_STATE.value] = None
+        st.session_state[VarEnum.sb_LOADED_DATAFRAME.value] = merged_df
         st.experimental_rerun()
 
     def _create_cluster_card(self, idx, cv):

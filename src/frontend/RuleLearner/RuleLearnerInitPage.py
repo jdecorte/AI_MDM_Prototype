@@ -11,6 +11,9 @@ from src.shared.Enums.FiltererEnum import FiltererEnum
 from src.shared.Enums.BinningEnum import BinningEnum
 from src.shared.Enums.DroppingEnum import DroppingEnum
 
+from src.frontend.enums.DialogEnum import DialogEnum
+from src.frontend.enums.VarEnum import VarEnum
+
 
 class RuleLearnerInitPage:
 
@@ -49,7 +52,7 @@ class RuleLearnerInitPage:
         ROW_HEIGHT = 60
 
         st.markdown("<h4>Loaded dataset: </h4>", unsafe_allow_html=True)
-        gb = GridOptionsBuilder.from_dataframe(st.session_state["dataframe"])
+        gb = GridOptionsBuilder.from_dataframe(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
         gb.configure_side_bar()
         gb.configure_default_column(
             groupable=True,
@@ -59,15 +62,15 @@ class RuleLearnerInitPage:
             editable=False)
         gridOptions = gb.build()
         grid_response = AgGrid(
-            st.session_state["dataframe"],
+            st.session_state[VarEnum.sb_LOADED_DATAFRAME.value],
             gridOptions=gridOptions,
             enable_enterprise_modules=True,
-            height=min(MIN_HEIGHT + len(st.session_state["dataframe"]) * ROW_HEIGHT, MAX_HEIGHT))
+            height=min(MIN_HEIGHT + len(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value]) * ROW_HEIGHT, MAX_HEIGHT))
 
     def show(self):
         with self.canvas.container():
             st.title("Rule Learning")
-            DatasetDisplayerComponent().show(st.session_state["dataframe"])
+            DatasetDisplayerComponent().show(st.session_state[VarEnum.sb_LOADED_DATAFRAME.value])
             # # Default values:
             if "rule_finding_config" not in st.session_state:
                 default_rule_length = 3
@@ -165,7 +168,7 @@ class RuleLearnerInitPage:
                     with col1:
                         kolom_specific = st.selectbox(
                             'Column:',
-                            [e for e in st.session_state["dataframe"].columns])
+                            [e for e in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns])
                     with col2:
                         vw_specific = st.selectbox(
                             'Condition:',
@@ -195,7 +198,7 @@ class RuleLearnerInitPage:
                         'Use default conditions',
                         value=True)
                     temp_dict = {key: preview_default_to_show.copy()
-                                for key in st.session_state["dataframe"].columns}
+                                for key in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
                     if use_default:
                         if preview_total_to_show is None:
                             preview_total_to_show = self._create_total_dropping_dict({})
@@ -233,7 +236,7 @@ class RuleLearnerInitPage:
                         value=False,
                         key="checkbox_default_binning")
                     temp_dict_binning = {key: default_binning_option
-                                        for key in st.session_state["dataframe"].columns}
+                                        for key in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
 
                     if use_default_binning:
                         for k, v in temp_dict_binning.items():
@@ -250,7 +253,7 @@ class RuleLearnerInitPage:
                     with col1:
                         kolom_specific_binnig = st.selectbox(
                             'Column:',
-                            [e for e in st.session_state["dataframe"].columns],
+                            [e for e in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns],
                             key="Kolom_Binning")
                     with col2:
                         specific_binnig = st.selectbox(
@@ -287,8 +290,8 @@ class RuleLearnerInitPage:
 
                 # Set session_state attributes
                 st.session_state['gevonden_rules_dict'] = self.handler.get_column_rules(
-                    dataframe_in_json=st.session_state["dataframe"].to_json(),
+                    dataframe_in_json=st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].to_json(),
                     rule_finding_config_in_json=json_rule_finding_config,
-                    seq=st.session_state["current_seq"])
-                st.session_state["currentState"] = "BekijkRules"
+                    seq=st.session_state[VarEnum.gb_CURRENT_SEQUENCE_NUMBER.value])
+                st.session_state[VarEnum.gb_CURRENT_STATE.value] = "BekijkRules"
                 st.experimental_rerun()
