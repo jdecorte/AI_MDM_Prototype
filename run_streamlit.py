@@ -119,7 +119,10 @@ def _reload_dataframe(uploaded_file):
     t10 = st.session_state["current_functionality"]
     t11 = st.session_state["current_profiling"]
 
+
     st.session_state = {}
+    # for key in st.session_state.keys():
+    #     del st.session_state[key]
 
     st.session_state["currentState"] = None
     st.session_state["dataframe"] = pd.read_csv(uploaded_file, delimiter= seperator_input if seperator_input else ',')

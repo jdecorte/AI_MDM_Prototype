@@ -197,6 +197,9 @@ class StateManager:
         if "pipeline" not in st.session_state:
             st.session_state['pipeline'] = {}
 
+        if 'idx_of_structure_df' not in st.session_state:
+            st.session_state['idx_of_structure_df'] = None
+
         if "cleaned_column_from_pipeline" not in st.session_state:
             st.session_state['cleaned_column_from_pipeline'] = None
         

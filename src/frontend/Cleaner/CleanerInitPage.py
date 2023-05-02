@@ -207,6 +207,9 @@ class CleanerInitPage:
                                     else None)
                 if selected_pattern is not None:
                     df_for_aggrid2 = st.session_state['dataframe'][simple_repr.values == selected_pattern]
+
+                    if st.session_state["idx_of_structure_df"] is None:
+                        st.session_state["idx_of_structure_df"] = list(df_for_aggrid2.index)
                     gb2 = GridOptionsBuilder.from_dataframe(df_for_aggrid2)
                     gb2.configure_side_bar()
                     gb2.configure_default_column(
@@ -215,9 +218,16 @@ class CleanerInitPage:
                     gridOptions = gb2.build()
                     grid = AgGrid(df_for_aggrid2, gridOptions=gridOptions,
                                   enable_enterprise_modules=False, height=500)
+                    
+                    st.write("The records that match the selected pattern are:")
+                    grid['data'].index = st.session_state["idx_of_structure_df"]
+
                     if st.button("Save"):
                         # Replace values in the dataframe with the (possibly) new values
                         st.session_state['dataframe'].loc[grid['data'].index] = grid['data']
+                        st.experimental_rerun()
+            else:
+                st.session_state["idx_of_structure_df"] = None
 
     def _show_fuzzy_matching_tab(self):
         st.header('Fuzzy Matching:')
