@@ -25,3 +25,4 @@ werkzeug==2.1.2
 streamlit_aggrid
 streamlit_javascript
 websockets
+zingg
