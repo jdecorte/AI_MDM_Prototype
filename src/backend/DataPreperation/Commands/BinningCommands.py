@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from sklearn.cluster import KMeans
 
 import pandas as pd
-import numpy as np
 from src.backend.HelperFunctions import HelperFunctions
 
 class BinningCommand(ABC):

@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from src.frontend.RuleLearner.RuleLearnerSuggestionsPage import RuleLearnerSuggestionsPage
 
 from src.frontend.RuleLearner.RuleLearnerInitPage import RuleLearnerInitPage
@@ -11,7 +10,6 @@ from src.frontend.RuleLearner.RuleLearnerSummaryRulesPage import RuleLearnerSumm
 # from src.frontend import Cleaner
 from src.frontend.Handler.IHandler import IHandler
 from src.frontend.Cleaner.CleanerInitPage import CleanerInitPage
-from streamlit_pandas_profiling import st_profile_report
 from src.frontend.Deduplication.InitPage import InitPage
 from src.frontend.Deduplication.LabelPage import DeDupeLabelPage, DeDupeRedirectLabelPage
 from src.frontend.Deduplication.ClusterPage import ClusterPage, DeDupeClusterRedirectPage, ZinggClusterRedirectPage, ZinggClusterPage
@@ -19,7 +17,6 @@ from src.frontend.Profiler.ProfilerInitPage import ProfilerInitPage
 from src.frontend.Extractor.DataExtractorInitPage import DataExtractorInitPage
 from src.frontend.Deduplication.LabelPage import ZinggLabelPage
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 class Router:

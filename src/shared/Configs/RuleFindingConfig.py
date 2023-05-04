@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import Dict
 from src.shared.Enums.BinningEnum import BinningEnum 
 
 class RuleFindingConfig:

@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 from src.backend.DataPreperation.DataPrepperCommandFactory import DataPrepperCommandFactory
 from typing import List, Set, Dict
-from src.shared.Enums.BinningEnum import BinningEnum
-from src.shared.Enums.DroppingEnum import DroppingEnum
 
 class DataPrepper:
     def __init__(self) -> None:

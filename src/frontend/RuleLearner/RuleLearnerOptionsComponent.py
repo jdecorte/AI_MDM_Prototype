@@ -5,7 +5,6 @@ from src.shared.Enums.FiltererEnum import FiltererEnum
 from src.shared.Enums.BinningEnum import BinningEnum
 from src.shared.Enums.DroppingEnum import DroppingEnum
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 

@@ -1,7 +1,5 @@
-import pandas as pd
-import numpy as np
 import itertools
-from typing import List, Set, Dict, Iterable, Any
+from typing import List, Set, Iterable, Any
 import os
 # from python_arptable import get_arp_table
 

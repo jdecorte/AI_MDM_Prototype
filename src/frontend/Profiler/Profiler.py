@@ -1,11 +1,6 @@
 import streamlit as st
-import pandas_profiling
 from streamlit_pandas_profiling import st_profile_report
-import pandas as pd
-from src.frontend import HyFD
 
-from src.frontend.enums.DialogEnum import DialogEnum
-from src.frontend.enums.VarEnum import VarEnum
 
 def generate_profile_report(df, minimal):
     pr = df.profile_report(lazy=True, minimal=minimal)

@@ -4,9 +4,7 @@ from src.shared.Views.ColumnRuleView import ColumnRuleView
 from typing import List
 import requests
 import streamlit as st
-import config as cfg
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 class RemoteHandler(IHandler):

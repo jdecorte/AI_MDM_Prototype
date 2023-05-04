@@ -12,7 +12,6 @@ from unicodedata import normalize
 
 import dask.dataframe as dd
 import numpy as np
-import pandas as pd
 
 english_stopwords = {
     "i",

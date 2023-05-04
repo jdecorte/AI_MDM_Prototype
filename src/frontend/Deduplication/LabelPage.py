@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-import json
-import math
 
-from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
-from src.frontend.enums.DialogEnum import DialogEnum
+from st_aggrid import GridOptionsBuilder, AgGrid
+
 from src.frontend.enums.VarEnum import VarEnum
 
 class DeDupeRedirectLabelPage:

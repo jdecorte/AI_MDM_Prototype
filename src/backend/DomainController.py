@@ -1,10 +1,7 @@
 import pandas as pd
-import numpy as np
-import json
 import hashlib
 import glob
 import os
-import datetime
 import config as cfg
 
 from src.backend.HelperFunctions import HelperFunctions
@@ -16,8 +13,7 @@ from src.backend.DataPreperation.DataPrepper import DataPrepper
 from src.backend.DataCleaning.DataFrameCleaner import DataFrameCleaner
 from src.shared.Configs.RuleFindingConfig import RuleFindingConfig
 from src.backend.Deduplication.DeduperSessionManager import DeduperSessionManager
-from typing import Dict
-from flask import Flask, json, session, request
+from flask import json, request
 from flask_classful import FlaskView, route
 from src.backend.DataCleaning.FuzzyMatcher import FuzzyMatcher
 from src.backend.DataCleaning.StructureDetector import StructureDetector

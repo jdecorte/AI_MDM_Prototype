@@ -1,18 +1,11 @@
-from cProfile import label
 from cmath import nan
 import pandas as pd
-import numpy as np
 import streamlit as st
 import re
-import statistics
 
-import matplotlib.pyplot as plt
-
-from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
-from src.frontend.enums.DialogEnum import DialogEnum
-from src.frontend.enums.VarEnum import VarEnum
+
 
 # HELP FUNCTIONS
 def makeItalic(s):
