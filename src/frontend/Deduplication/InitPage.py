@@ -1,13 +1,9 @@
 import streamlit as st
-import pandas as pd
 
-from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 from src.frontend.Deduplication.Enums.DeDupeTypesEnum import DeDupeTypesEnum
 from src.frontend.Deduplication.Enums.ZinggTypesEnum import ZinggTypesEnum
-from src.frontend.Handler.IHandler import IHandler
 from src.frontend.DatasetDisplayer.DatasetDisplayerComponent import DatasetDisplayerComponent
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 class InitPage:

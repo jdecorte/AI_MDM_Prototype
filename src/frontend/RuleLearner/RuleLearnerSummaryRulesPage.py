@@ -7,7 +7,6 @@ from src.frontend.Handler.IHandler import IHandler
 import json
 import math
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 

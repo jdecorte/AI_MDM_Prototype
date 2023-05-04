@@ -6,7 +6,6 @@ from src.frontend.Handler.IHandler import IHandler
 import config as cfg
 import hashlib
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 

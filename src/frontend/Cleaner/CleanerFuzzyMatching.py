@@ -1,7 +1,6 @@
 import streamlit as st
 import config as cfg
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 

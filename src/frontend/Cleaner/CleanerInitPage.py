@@ -6,7 +6,6 @@ from src.frontend.Cleaner.CleanerFuzzyMatching import FuzzyClusterView
 import re
 import extra_streamlit_components as stx
 
-from src.frontend.enums.DialogEnum import DialogEnum
 from src.frontend.enums.VarEnum import VarEnum
 
 
