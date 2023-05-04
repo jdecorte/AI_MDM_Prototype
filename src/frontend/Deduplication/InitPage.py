@@ -36,7 +36,7 @@ class InitPage:
 
             
             # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
-            if st.session_state['dedupe_type_dict'] == {}:
+            if (st.session_state['dedupe_type_dict'] == {} )or ('dedupe_type_dict' not in st.session_state ):
                 st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
 
 
@@ -45,12 +45,6 @@ class InitPage:
                 add_btn = st.button("Change type")
                 if add_btn:
                     st.session_state["dedupe_type_dict"][selected_col] = selected_type
-                    
-            # with col_2:
-            #     remove_btn = st.button("Verwijder")
-            #     if remove_btn:
-            #         if selected_col in st.session_state["dedupe_type_dict"]:
-            #             del st.session_state["dedupe_type_dict"][selected_col]
             
             with col_3:
                 if len(st.session_state['dedupe_type_dict'].values()) > 0:

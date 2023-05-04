@@ -139,8 +139,6 @@ def _reload_dataframe(uploaded_file):
     st.session_state[VarEnum.sb_CURRENT_FUNCTIONALITY.value] = t10
     st.session_state[VarEnum.sb_CURRENT_PROFILING.value] = t11
 
-    st.experimental_rerun()
-
 def get_from_local_storage(k):
     v = st_javascript(
         f"JSON.parse(localStorage.getItem('{k}'));"
