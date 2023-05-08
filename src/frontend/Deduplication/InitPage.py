@@ -11,7 +11,7 @@ class InitPage:
         self.canvas = canvas
         self.handler = handler
 
-    def show(self):        
+    def show(self):      
 
         with self.canvas.container(): 
             st.title("Deduplication")
@@ -32,7 +32,7 @@ class InitPage:
 
             
             # FOR DEBUG ON RESTOS.CSV PRE-DEFINED FIELDS:
-            if (st.session_state['dedupe_type_dict'] == {} )or ('dedupe_type_dict' not in st.session_state ):
+            if ('dedupe_type_dict' not in st.session_state ) or (st.session_state['dedupe_type_dict'] == {} ):
                 st.session_state['dedupe_type_dict'] = {k: "String" if st.session_state['selected_deduplication_method'] == "Dedupe" else "FUZZY" for k in st.session_state[VarEnum.sb_LOADED_DATAFRAME.value].columns}
 
 
